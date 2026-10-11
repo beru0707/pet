@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Khu Vườn Thú Cưng</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="hud">
+    <div class="chip">🪙 <span id="h-coins">200</span></div>
+    <div class="chip">⭐ Lv.<span id="h-lv">1</span></div>
+    <button class="chip" id="btn-deco" style="margin-left:auto;cursor:pointer;font-family:inherit">🎨 Trang trí</button>
+  </div>
+  <div id="deco" class="hidden">
+    <div class="d-tabs">
+      <button data-t="path" class="on">🛤️ Làm đường</button>
+      <button data-t="item">🪴 Đặt vật phẩm</button>
+      <button data-t="move">✋ Chỉnh sửa</button>
+      <button id="d-done">✔ Xong</button>
+    </div>
+    <div class="d-body" id="d-body"></div>
+  </div>
+  <input type="file" id="f-files" accept="image/*" multiple hidden>
+  <input type="file" id="f-dir" accept="image/*" multiple webkitdirectory hidden>
+  <div id="pet-panel" class="hidden">
+    <button id="pp-close" onclick="closePetPanel()">✕</button>
+    <img id="pp-img" src="">
+    <div id="pp-name">—</div>
+    <div class="sbar">🍖 <div class="sbar-bg"><div class="sbar-fill" id="b-hun" style="background:#f59e0b;width:100%"></div></div></div>
+    <div class="sbar">❤️ <div class="sbar-bg"><div class="sbar-fill" id="b-hap" style="background:#ec4899;width:100%"></div></div></div>
+    <div class="sbar">⚡ <div class="sbar-bg"><div class="sbar-fill" id="b-ene" style="background:#38bdf8;width:100%"></div></div></div>
+    <button class="pp-btn" onclick="dofeed()">🍖 Cho ăn (10🪙)</button>
+    <button class="pp-btn" onclick="doplay()">🎾 Chơi đùa</button>
+    <button class="pp-btn" onclick="dosleep()">💤 Ngủ</button>
+  </div>
+  <div id="toast"></div>
+</div>
+<script src="js/config.js"></script>
+<script src="js/core.js"></script>
+<script src="js/assets.js"></script>
+<script src="js/state.js"></script>
+<script src="js/pets.js"></script>
+<script src="js/input.js"></script>
+<script src="js/render.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/decor.js"></script>
+<script src="js/decor-ui.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
