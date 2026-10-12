@@ -13,14 +13,15 @@ const FORBIDDEN = [];
 // PETS
 // scale: hệ số nhân kích thước riêng cho từng con (1.0 = bình thường, 0.8 = nhỏ hơn 20%, 1.2 = lớn hơn 20%)
 const PET_DEF = [
-  {name:'Sói Sét',        col:0,row:0, sx:50, sy:20, sw:780,sh:640, scale:1, imgKey:'swiftfox'},
+  {name:'Sói Sét',        col:0,row:0, sx:50, sy:20, sw:780,sh:640, scale:1,   imgKey:'swiftfox'},
   {name:'Bọ Hoa Tiên',    col:1,row:0, sx:100,sy:20, sw:700,sh:650, scale:0.8, imgKey:'flowerbeetle'},
   {name:'Cún Shiba',      col:2,row:0, sx:50, sy:30, sw:780,sh:680, scale:0.8, imgKey:'shiba'},
   {name:'Rồng Lửa',       col:0,row:1, sx:30, sy:20, sw:820,sh:700, scale:0.9, imgKey:'firedragon'},
   {name:'Thằn Lằn Băng',  col:1,row:1, sx:60, sy:30, sw:780,sh:700, scale:0.8, imgKey:'waterdragon'},
   {name:'Cáo Lửa',        col:2,row:1, sx:50, sy:30, sw:780,sh:680, scale:0.8, imgKey:'firefox'},
+  {name:'Gecko',          col:2,row:1, sx:50, sy:30, sw:780,sh:680, scale:0.7, imgKey:'bluegecko'},
   {name:'Shibav2',        col:2,row:1, sx:50, sy:30, sw:780,sh:680, scale:0.8, imgKey:'shibav2'},
-  {name:'Shibav3_1',      col:2,row:1, sx:50, sy:30, sw:780,sh:680, scale:0.9,   imgKey:'shibav3_1'},
+  {name:'Shibav3_1',      col:2,row:1, sx:50, sy:30, sw:780,sh:680, scale:0.9, imgKey:'shibav3_1'},
 ].map(d=>({...d, srcX:d.col*917+d.sx, srcY:d.row*768+d.sy}));
 // ============ CẤU HÌNH ANIMATION CHO TỪNG THÚ (bạn chỉnh ở đây) ============
 // Tạo thư mục chứa các khung hình (sprite_1.png, sprite_2.png, ... đánh số liên tiếp từ 1), game tự đếm số khung.
@@ -35,9 +36,20 @@ const PET_ANIM = {
   'Bọ Hoa Tiên':    {folder:'assets/flowerbeetle',stride:1, speed:1},
   'Rồng Lửa':       {folder:'assets/firedragon',  stride:1, speed:1},
   'Thằn Lằn Băng':  {folder:'assets/waterdragon', stride:1, speed:1},
+  'Gecko':          {folder:'assets/bluegecko',   stride:1, speed:1},
   'Shibav2':        {folder:'assets/shibav2',     stride:1, speed:1},
-  'Shibav3_1':      {folder:'assets/shibav3_1',   stride:1, speed:1},   
+  'Shibav3_1': {
+    folder:'assets/shibav3_1/walk', 
+    attackFolder:'assets/shibav3_1/attack/fireball', 
+    stride:1, 
+    speed:1},   
 };
+
+// Cấu hình kỹ năng bắn lửa (thêm vào cuối config.js)
+const FIREBALL_SPEED = 600; // Tốc độ bay của quả cầu lửa
+const FIREBALL_LIFESPAN = 2.5; // Thời gian tồn tại của quả cầu lửa (giây)
+
+
 // Kích thước thú CỐ ĐỊNH ở mọi vị trí (không còn to dần khi lại gần màn hình).
 // Đổi cỡ chung cho tất cả thú: sửa PET_BASE_SIZE. Cỡ riêng từng con: sửa scale trong PET_DEF.
 const PET_BASE_SIZE = 100;
@@ -58,3 +70,4 @@ const KNOWN_ITEMS = [
   ['sprite_12','Bát hồng',40],['sprite_9','Bóng xanh',30],['sprite_8','Bóng trắng',30]
 ];
 const TREE_KEYS = ['sprite_7'];   // cây: thú được đi qua (đi sau tán cây). Muốn thêm loại khác thì thêm tên file vào đây
+

@@ -20,6 +20,15 @@ loadImg('swiftfox', 'assets/pet/swiftfox.png');
 loadImg('waterdragon', 'assets/pet/waterdragon.png');
 loadImg('flowerbeetle', 'assets/pet/flowerbeetle.png');
 loadImg('shibav2', 'assets/pet/shibav2.png');
+for (let i = 1; i <= 19; i++) {
+  if (i <= 8) {
+    loadImg(`shibav3_1_attack_${i}`, `assets/shibav3_1/attack/fireball/sprite_${i}.png`);
+  } else if (i <= 13) {
+    loadImg(`shiba_fireball_${i - 8}`, `assets/shibav3_1/attack/fireball/sprite_${i}.png`);
+  } else {
+    loadImg(`shiba_explosion_${i - 13}`, `assets/shibav3_1/attack/fireball/sprite_${i}.png`);
+  }
+}
 // Cáo Lửa: tự dò khung hình trong assets/firefox/ (sprite_1.png, sprite_2.png, ... hoặc 1.png, 2.png, ... hoặc firefox_1.png ...)
 function tryImg(src){ return new Promise(r=>{ const im=new Image(); im.onload=()=>r(im); im.onerror=()=>r(null); im.src=src; }); }
 async function probeAnim(petName, imgPrefix, dir, names, opt){
@@ -36,7 +45,18 @@ async function probeAnim(petName, imgPrefix, dir, names, opt){
   console.warn('[PET_ANIM] "'+petName+'": không tìm thấy ảnh trong thư mục '+dir+' (cần '+dir+'/sprite_1.png, sprite_2.png, ... liên tiếp từ 1) – dùng ảnh tĩnh.');
   return 0;
 }
-Object.entries(PET_ANIM).forEach(([name,c])=>{
-  const prefix=c.folder.split('/').pop();
-  probeAnim(name,prefix,c.folder,['sprite_#.png','#.png',prefix+'_#.png',prefix+'#.png','frame_#.png'],{stride:c.stride||1,speedMul:c.speed||1});
+
+//Attack shiba
+Object.entries(PET_ANIM).forEach(([name, c]) => {
+  const prefix = c.folder.split('/').pop();
+  probeAnim(name, prefix, c.folder, ['sprite_#.png', '#.png'], { stride: c.stride || 1, speedMul: c.speed || 1 });
+
+  if (c.attackFolder) {
+    const atkPrefix = name.toLowerCase() + '_attack';
+    // Đếm và nạp tối đa 7 frame đầu cho động tác nhân vật
+    probeAnim(name, atkPrefix, c.attackFolder, ['sprite_#.png', '#.png'], {}).then(frameCount => {
+      const def = PET_DEF.find(d => d.name === name);
+      if (def) def.attackAnimFrames = Math.min(frameCount, 7); // Chỉ lấy 7 frame đầu
+    });
+  }
 });

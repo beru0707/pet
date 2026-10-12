@@ -72,6 +72,32 @@ function updateWalker(p, t, dt){
   else { p.animPhase = 0; p.animFrame = 0; p.moving = false; }
 }
 function updatePet(p, t, dt){
+  // Xử lý khi Pet đang trong trạng thái tấn công (Attack Animation)
+  if (p.isAttacking) {
+    p.vx = 0; p.vy = 0; p.tvx = 0; p.tvy = 0; // Đứng yên khi bắn
+    p.attackTime = (p.attackTime || 0) + dt;
+    const totalFrames = p.def.attackAnimFrames || 10;
+    const frameDur = 0.08; // Tốc độ mỗi frame (80ms)
+    
+    p.attackFrame = Math.floor(p.attackTime / frameDur);
+
+    // Khi phát tới frame bắn (ví dụ frame 7) -> Phóng quả cầu lửa đi
+    if (p.attackFrame >= 6 && !p.hasFired) {
+      p.hasFired = true;
+      let tx = p.target ? p.target.x : (p.x + (p.facingLeft ? -300 : 300));
+      let ty = p.target ? p.target.y : (p.y - 30);
+      spawnFireball(p, tx, ty);
+    }
+
+    // Khi chạy hết chuỗi frame tấn công -> Trở lại trạng thái bình thường
+    if (p.attackFrame >= totalFrames) {
+      p.isAttacking = false;
+      p.hasFired = false;
+      p.attackTime = 0;
+    }
+    return; // Dừng logic di chuyển khi đang attack
+  }
+
   // hướng đi: ưu tiên phím WASD/mũi tên; nếu không có thì đi tới điểm vừa bấm (p.target)
   let kd = (p.selected && !DECOR.active) ? keyDir() : {x:0,y:0};
   if(kd.x || kd.y){ p.target = null; }
@@ -126,6 +152,93 @@ function updatePet(p, t, dt){
     } else {
       p.animFrame = 0;  // Reset về frame đứng yên
       p.animTime = 0;
+    }
+  }
+}
+
+// Hàm kích hoạt lệnh bắn
+// Khai báo mảng chứa đạn và vụ nổ
+let PROJECTILES = [];
+let EXPLOSIONS = [];
+
+// Hàm kích hoạt tấn công (Chỉ cho Shibav3_1)
+function triggerAttack(pet) {
+  if (!pet || pet.def.name !== 'Shibav3_1' || pet.isAttacking) return;
+  pet.isAttacking = true;
+  pet.attackTime = 0;
+  pet.hasFired = false;
+}
+
+// Hàm sinh quả cầu lửa bay tới điểm chỉ định
+function spawnFireball(pet, targetX, targetY) {
+  const fireX = pet.x + (pet.facingLeft ? -40 : 40);
+  const fireY = pet.y - 45;
+
+  const dx = targetX - fireX;
+  const dy = targetY - fireY;
+  const targetDist = Math.hypot(dx, dy);
+  const angle = Math.atan2(dy, dx);
+
+  PROJECTILES.push({
+    x: fireX,
+    y: fireY,
+    startX: fireX,
+    startY: fireY,
+    targetX: targetX,
+    targetY: targetY,
+    maxDistance: targetDist,
+    vx: Math.cos(angle) * FIREBALL_SPEED,
+    vy: Math.sin(angle) * FIREBALL_SPEED,
+    rotation: angle,
+    life: FIREBALL_LIFESPAN,
+    animFrame: 0,
+    animTime: 0
+  });
+}
+
+// Hàm sinh vụ nổ
+function spawnExplosion(x, y) {
+  EXPLOSIONS.push({
+    x: x,
+    y: y,
+    frame: 1,
+    animTime: 0
+  });
+}
+
+// Hàm cập nhật đạn và vụ nổ theo thời gian
+function updateProjectiles(dt) {
+  for (let i = PROJECTILES.length - 1; i >= 0; i--) {
+    const p = PROJECTILES[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.life -= dt;
+
+    p.animTime += dt;
+    if (p.animTime >= 0.15) {
+      p.animTime = 0;
+      p.animFrame = (p.animFrame + 1) % 5;
+    }
+
+    const travelled = Math.hypot(p.x - p.startX, p.y - p.startY);
+
+    // Chạm vị trí đích -> Tạo vụ nổ và xóa quả cầu
+    if (travelled >= p.maxDistance || p.life <= 0 || p.x < 0 || p.x > CW || p.y < 0 || p.y > CH) {
+      spawnExplosion(p.targetX || p.x, p.targetY || p.y);
+      PROJECTILES.splice(i, 1);
+    }
+  }
+
+  // Cập nhật hiệu ứng vụ nổ
+  for (let i = EXPLOSIONS.length - 1; i >= 0; i--) {
+    const ex = EXPLOSIONS[i];
+    ex.animTime += dt;
+    if (ex.animTime >= 0.06) {
+      ex.animTime = 0;
+      ex.frame++;
+      if (ex.frame > 6) {
+        EXPLOSIONS.splice(i, 1);
+      }
     }
   }
 }

@@ -11,8 +11,14 @@ setInterval(()=>{
 
 let lastT=0;
 function frame(ts){
-  const t=ts*.001, dt=Math.min(.05,t-lastT); lastT=t;
-  PETS.forEach(p=>updatePet(p,t,dt));
+  const t = ts * .001, dt = Math.min(.05, t - lastT); lastT = t;
+  PETS.forEach(p => updatePet(p, t, dt));
+  
+ 
+  if (typeof updateProjectiles === 'function') {
+    updateProjectiles(dt);
+  }
+  
   drawScene(t);
   requestAnimationFrame(frame);
 }

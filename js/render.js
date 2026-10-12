@@ -21,10 +21,14 @@ function drawScene(t){
     const src = IMGS.pets;
     // Lấy ảnh đúng: animation frame hoặc ảnh đơn
     let customImg = null;
-    if(p.def.animFrames){
-      // Pet có animation: chọn frame theo animFrame hiện tại (1-indexed)
+    if (p.isAttacking) {
+      // Ưu tiên lấy ảnh từ thư mục attack
+      const atkKey = p.def.name.toLowerCase() + '_attack_';
+      customImg = IMGS[atkKey + (p.attackFrame + 1)];
+    } else if (p.def.animFrames) {
+      // Lấy ảnh đi bộ bình thường
       customImg = IMGS[p.def.imgKey.replace('_anim','_') + (p.animFrame + 1)];
-    } else if(p.def.imgKey){
+    } else if (p.def.imgKey) {
       customImg = IMGS[p.def.imgKey];
     }
 
@@ -74,4 +78,38 @@ function drawScene(t){
     cx.beginPath(); cx.ellipse(p.target.x,p.target.y,14+k*16,(14+k*16)*.4,0,0,Math.PI*2); cx.stroke();
     cx.fillStyle='rgba(255,230,90,.9)'; cx.beginPath(); cx.ellipse(p.target.x,p.target.y,5,2.5,0,0,Math.PI*2); cx.fill(); cx.restore();
   });
+  
+  //Quả cầu lửa
+  // 1. Vẽ quả cầu lửa đang bay (sprite 1-5)
+  if (typeof PROJECTILES !== 'undefined') {
+    PROJECTILES.forEach(p => {
+      cx.save();
+      cx.translate(p.x, p.y);
+      cx.rotate(p.rotation);
+
+      const img = IMGS[`shiba_fireball_${p.animFrame + 1}`];
+      if (img && img.complete && img.naturalWidth) {
+        const w = 80;
+        const h = w * (img.naturalHeight / img.naturalWidth);
+        cx.drawImage(img, -w / 2, -h / 2, w, h);
+      }
+      cx.restore();
+    });
+  }
+
+  // 2. Vẽ hiệu ứng vụ nổ khi va chạm (sprite 6-11)
+  if (typeof EXPLOSIONS !== 'undefined') {
+    EXPLOSIONS.forEach(ex => {
+      cx.save();
+      cx.translate(ex.x, ex.y);
+
+      const img = IMGS[`shiba_explosion_${ex.frame}`];
+      if (img && img.complete && img.naturalWidth) {
+        const w = 140; // Kích thước vụ nổ
+        const h = w * (img.naturalHeight / img.naturalWidth);
+        cx.drawImage(img, -w / 2, -h / 2, w, h);
+      }
+      cx.restore();
+    });
+  }
 }

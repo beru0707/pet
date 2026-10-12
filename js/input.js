@@ -35,3 +35,21 @@ cv.addEventListener('pointerdown', e => {
     clickMarker = {x:cur.target.x, y:cur.target.y, t:performance.now()};
   } else { closePetPanel(); }
 });
+
+window.addEventListener('keydown', e => {
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '')) return;
+
+  if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+    const selectedPet = PETS.find(p => p.selected);
+    
+    // Chỉ kích hoạt nếu chọn Shibav3_1
+    if (selectedPet && selectedPet.def.name === 'Shibav3_1' && !DECOR.active) {
+      e.preventDefault();
+      triggerAttack(selectedPet);
+    }
+    return;
+  }
+
+  const k = MOVE_KEYS[e.code]; if(!k) return;
+  if(PETS.some(p=>p.selected) && !DECOR.active){ e.preventDefault(); KEYS[k]=true; }
+});
