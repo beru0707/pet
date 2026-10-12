@@ -16,24 +16,29 @@ function idbSync(){ // ghi toàn bộ danh sách ảnh tùy chỉnh hiện tại
     st.clear(); DECOR.customs.forEach(c=>st.put(c)); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }));
 }
 function saveCustoms(){ idbSync().catch(()=>toast('Không lưu được ảnh tải lên (trình duyệt chặn lưu trữ)')); }
-function saveDecor(){
+function saveDecor(){   // lưu đường + vật phẩm của TẤT CẢ map
   try{
-    let bin=''; for(let i=0;i<DECOR.grid.length;i++) bin+=String.fromCharCode(DECOR.grid[i]);
-    localStorage.setItem(DECOR_KEY, JSON.stringify({grid:btoa(bin),gw:GW,items:DECOR.items}));
+    const maps={};
+    MAPS.forEach(m=>{ const D=MAPDATA[m.id]; let bin=''; for(let i=0;i<D.grid.length;i++) bin+=String.fromCharCode(D.grid[i]);
+      maps[m.id]={grid:btoa(bin),gw:GW,items:D.items}; });
+    localStorage.setItem(DECOR_KEY, JSON.stringify({v:2,maps}));
   }catch(e){ toast('Không lưu được (bộ nhớ trình duyệt đầy)'); }
 }
 function loadDecor(){
   KNOWN_ITEMS.forEach(([k,n,h])=>addDef(k,n,'assets/'+k+'.png',h));
   for(let i=1;i<=60;i++){ const k='sprite_'+i; if(!KNOWN_ITEMS.some(a=>a[0]===k)) addDef(k,'Vật phẩm '+i,'assets/'+k+'.png',90); }
   let old=[];
+  // gw = số cột lúc lưu (bản cũ không có -> 64); đổi kích thước thế giới vẫn giữ nguyên vị trí đường
+  const applyMap=(id,o)=>{ const D=MAPDATA[id]; if(!D||!o) return;
+    if(o.grid){ const bin=atob(o.grid), og=o.gw||64, rows=Math.floor(bin.length/og);
+      for(let j=0;j<Math.min(rows,GH);j++) for(let i=0;i<Math.min(og,GW);i++) D.grid[j*GW+i]=bin.charCodeAt(j*og+i);
+      dirtyPaths(id); }
+    D.items=o.items||[]; };
   try{
     const o=JSON.parse(localStorage.getItem(DECOR_KEY)||'null');
     if(o){
-      if(o.grid){   // gw = số cột lúc lưu (bản cũ không có -> 64); đổi kích thước thế giới vẫn giữ nguyên vị trí đường
-        const bin=atob(o.grid), og=o.gw||64, rows=Math.floor(bin.length/og);
-        for(let j=0;j<Math.min(rows,GH);j++) for(let i=0;i<Math.min(og,GW);i++) DECOR.grid[j*GW+i]=bin.charCodeAt(j*og+i);
-        pathDirty=true; }
-      DECOR.items=o.items||[]; old=o.customs||[];
+      if(o.v===2 && o.maps) MAPS.forEach(m=>applyMap(m.id,o.maps[m.id]));
+      else { applyMap(MAPS[0].id,o); old=o.customs||[]; }   // dữ liệu cũ (1 map) -> map đầu tiên
     }
   }catch(e){}
   const use=list=>list.forEach(c=>{ if(DECOR.customs.some(x=>x.key===c.key)) return; DECOR.customs.push(c); addDef(c.key,c.name,c.src,c.h0); });

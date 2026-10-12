@@ -6,7 +6,7 @@
 // GAME STATE
 let state = { coins:200, xp:0, lv:1, petsData:[] };
 function saveGame(){
-  state.petsData = PETS.map(p=>({hunger:p.hunger, happy:p.happy, energy:p.energy, x:p.x, y:p.y}));
+  state.petsData = PETS.map(p=>({hunger:p.hunger, happy:p.happy, energy:p.energy, x:p.x, y:p.y, map:p.map}));
   localStorage.setItem(SAVE, JSON.stringify(state));
 }
 function loadGame(){

@@ -3,18 +3,24 @@
    Vẽ đường, đặt vật phẩm, khung chặn thú, kéo thả
    ================================================================== */
 
-const DECOR = { active:false, tab:'path', brush:{type:0,r:2}, sel:null, selId:null, items:[], grid:new Uint8Array(GW*GH),
+const DECOR = { active:false, tab:'path', brush:{type:0,r:2}, sel:null, selId:null,
                 defs:{}, order:[], customs:[], dragItem:null, painting:false, last:null };
-const pathCv = document.createElement('canvas'); pathCv.width = CW; pathCv.height = CH;
-let pathDirty = true;
+// items / grid luôn là của MAP ĐANG XEM (mỗi map có đường + vật phẩm riêng, lưu trong MAPDATA – xem maps.js)
+Object.defineProperty(DECOR,'items',{ get:()=>MAPDATA[ACTIVE_MAP].items, set:v=>{ MAPDATA[ACTIVE_MAP].items = v; } });
+Object.defineProperty(DECOR,'grid', { get:()=>MAPDATA[ACTIVE_MAP].grid,  set:v=>{ MAPDATA[ACTIVE_MAP].grid = v; } });
+// mỗi map có 1 lớp đường riêng (canvas + cờ cần vẽ lại)
+const MAPPATH = {};
+MAPS.forEach(m=>{ const c=document.createElement('canvas'); c.width=CW; c.height=CH; MAPPATH[m.id]={cv:c,dirty:true}; });
+const dirtyPaths = (id=ACTIVE_MAP)=>{ if(MAPPATH[id]) MAPPATH[id].dirty=true; };
 
 function rngFrom(seed){ let s = (seed*2654435761 % 2147483647) || 1; const f = () => { s = (s*16807) % 2147483647; return s/2147483647; }; f();f();f(); return f; }
 function rrect(c,x,y,w,h,r){ c.beginPath(); if(c.roundRect) c.roundRect(x,y,w,h,r); else c.rect(x,y,w,h); c.fill(); }
 
-function renderPaths(){
-  const c = pathCv.getContext('2d'); c.clearRect(0,0,CW,CH);
+function renderPaths(id=ACTIVE_MAP){
+  const grid = MAPDATA[id].grid;
+  const c = MAPPATH[id].cv.getContext('2d'); c.clearRect(0,0,CW,CH);
   PATH_TYPES.forEach((T,ti)=>{
-    const cells=[]; for(let i=0;i<DECOR.grid.length;i++) if(DECOR.grid[i]===ti+1) cells.push(i);
+    const cells=[]; for(let i=0;i<grid.length;i++) if(grid[i]===ti+1) cells.push(i);
     if(!cells.length) return;
     const xy = i => [(i%GW)*CELL, ((i/GW)|0)*CELL];
     c.fillStyle = T.e; cells.forEach(i=>{ const [x,y]=xy(i); rrect(c,x-4,y-4,CELL+8,CELL+8,13); });
@@ -31,13 +37,13 @@ function renderPaths(){
     });
   });
 }
-function drawPathLayer(){ if(pathDirty){ renderPaths(); pathDirty=false; } cx.drawImage(pathCv,0,0); }
+function drawPathLayer(id=ACTIVE_MAP){ const P=MAPPATH[id]; if(P.dirty){ renderPaths(id); P.dirty=false; } cx.drawImage(P.cv,0,0); }
 
 function paintAt(x,y,erase){
   const gx=x/CELL-.5, gy=y/CELL-.5, R=DECOR.brush.r-.5+.01, v = erase ? 0 : DECOR.brush.type+1;
   for(let j=Math.floor(gy-R);j<=Math.ceil(gy+R);j++) for(let i=Math.floor(gx-R);i<=Math.ceil(gx+R);i++){
     if(i<0||j<0||i>=GW||j>=GH) continue;
-    if((i-gx)**2+(j-gy)**2<=R*R+.15){ DECOR.grid[j*GW+i]=v; pathDirty=true; }
+    if((i-gx)**2+(j-gy)**2<=R*R+.15){ DECOR.grid[j*GW+i]=v; dirtyPaths(); }
   }
 }
 function paintLine(a,b,erase){
@@ -80,11 +86,12 @@ function itemBlock(it){
 const BM=10; // lề cho bề rộng thân thú
 const inRect=(b,x,y)=>x>b.x0-BM&&x<b.x1+BM&&y>b.y0-BM&&y<b.y1+BM;
 function blockedByItem(x,y){
-  for(const it of DECOR.items){ const b=itemBlock(it); if(b&&inRect(b,x,y)) return true; }
+  for(const it of simItems()){ const b=itemBlock(it); if(b&&inRect(b,x,y)) return true; }
   return false;
 }
 function ejectPets(){   // đẩy thú ra cạnh gần nhất của khung nếu bị đặt vật phẩm lên đầu
   PETS.forEach(p=>{
+    if(p.map!==ACTIVE_MAP) return;
     for(let i=0;i<20;i++){
       let nb=null;
       for(const it of DECOR.items){ const b=itemBlock(it); if(b&&inRect(b,p.x,p.y)){ nb=b; break; } }

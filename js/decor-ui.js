@@ -5,6 +5,7 @@
 
 // ---- bảng điều khiển ----
 function renderDeco(){
+  if(typeof MENU!=='undefined' && MENU.tab!=='deco'){ renderMenuBody(); return; }   // tab Danh sách pet / Map: xem menu.js
   const b=document.getElementById('d-body'); let h='';
   if(DECOR.tab==='path'){
     h+=PATH_TYPES.map((T,i)=>`<button class="dbtn ${DECOR.brush.type===i?'on':''}" data-pt="${i}"><i style="background:${T.c};border-color:${T.e}"></i>${T.n}</button>`).join('');
@@ -24,20 +25,15 @@ function renderDeco(){
   b.innerHTML=h;
   document.querySelectorAll('#deco .d-tabs [data-t]').forEach(x=>x.classList.toggle('on',x.dataset.t===DECOR.tab));
 }
-function setDecor(on){
-  DECOR.active=on; document.getElementById('deco').classList.toggle('hidden',!on);
-  cv.style.cursor = on ? 'crosshair' : 'pointer';
-  if(on){ PETS.forEach(p=>p.selected=false); closePetPanel(); renderDeco(); toast('Chế độ trang trí – kéo chuột để vẽ đường / đặt vật phẩm'); }
-  else { DECOR.dragItem=null; DECOR.painting=false; DECOR.selId=null; saveDecor(); }
-}
-document.getElementById('btn-deco').addEventListener('click',()=>setDecor(!DECOR.active));
+// setDecor(on) / mở-đóng menu: xem menu.js
+document.getElementById('btn-deco').addEventListener('click',()=>setDecor(!MENU.open));
 document.getElementById('d-done').addEventListener('click',()=>setDecor(false));
 document.querySelector('#deco .d-tabs').addEventListener('click',e=>{ const t=e.target.closest('[data-t]'); if(t){ DECOR.tab=t.dataset.t; renderDeco(); } });
 document.getElementById('d-body').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
   if(d.pt!==undefined){ DECOR.brush.type=+d.pt; }
   else if(d.pr){ DECOR.brush.r=+d.pr; }
-  else if(d.clearpath){ if(confirm('Xóa toàn bộ đường đã làm?')){ DECOR.grid.fill(0); pathDirty=true; saveDecor(); } }
+  else if(d.clearpath){ if(confirm('Xóa toàn bộ đường đã làm?')){ DECOR.grid.fill(0); dirtyPaths(); saveDecor(); } }
   else if(d.it){ DECOR.sel=d.it; }
   else if(d.addfiles){ document.getElementById('f-files').click(); return; }
   else if(d.adddir){ document.getElementById('f-dir').click(); return; }

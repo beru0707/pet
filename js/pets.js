@@ -31,9 +31,14 @@ function spawnPos(){
 function initPets(){
   PETS = PET_DEF.map((def, idx) => {
     const saved = state.petsData[idx] || {};
+    // map của thú: dữ liệu cũ chưa có -> theo PETS_START_PLACED; null = đang nằm trong danh sách (chưa thả)
+    let map = saved.map !== undefined ? saved.map : (PETS_START_PLACED ? MAPS[0].id : null);
+    if(map && !MAPDATA[map]) map = MAPS[0].id;
+    SIM_MAP = map;
     const sp = (saved.x && saved.y) ? {x:saved.x, y:saved.y} : spawnPos();
+    SIM_MAP = null;
     return {
-      def, x:sp.x, y:sp.y, vx:0, vy:0, phase:Math.random()*7, nextTurn:0, idleUntil:0, facingLeft:false,
+      def, map, x:sp.x, y:sp.y, vx:0, vy:0, phase:Math.random()*7, nextTurn:0, idleUntil:0, facingLeft:false,
       hunger:saved.hunger??100, happy:saved.happy??100, energy:saved.energy??100, selected:false,
       animFrame:0, animTime:0   // dùng cho animation đa frame
     };
@@ -97,6 +102,18 @@ function updatePet(p, t, dt){
     }
     return; // Dừng logic di chuyển khi đang attack
   }
+
+  // Đang ngủ: đứng yên (ảnh ngủ), tự dậy khi hết giờ hoặc khi có lệnh đi (phím WASD / bấm điểm đến)
+  if (t < (p.sleepUntil||0)) {
+    const kdw = (p.selected && !DECOR.active) ? keyDir() : {x:0,y:0};
+    if (!(kdw.x || kdw.y || p.target)) {
+      p.vx = 0; p.vy = 0; if (p.tvx !== undefined) { p.tvx = 0; p.tvy = 0; }
+      p.moving = false; p.animFrame = 0; p.animPhase = 0; p.sleeping = true;
+      return;
+    }
+    p.sleepUntil = 0;
+  }
+  p.sleeping = false;
 
   // hướng đi: ưu tiên phím WASD/mũi tên; nếu không có thì đi tới điểm vừa bấm (p.target)
   let kd = (p.selected && !DECOR.active) ? keyDir() : {x:0,y:0};
@@ -164,7 +181,7 @@ let EXPLOSIONS = [];
 // Hàm kích hoạt tấn công (Chỉ cho Shibav3_1)
 function triggerAttack(pet) {
   if (!pet || pet.def.name !== 'Shibav3_1' || pet.isAttacking) return;
-  pet.isAttacking = true;
+  pet.isAttacking = true; pet.sleepUntil = 0; pet.sleeping = false;
   pet.attackTime = 0;
   pet.hasFired = false;
 }
@@ -190,6 +207,7 @@ function spawnFireball(pet, targetX, targetY) {
     vx: Math.cos(angle) * FIREBALL_SPEED,
     vy: Math.sin(angle) * FIREBALL_SPEED,
     rotation: angle,
+    map: pet.map,
     life: FIREBALL_LIFESPAN,
     animFrame: 0,
     animTime: 0
@@ -197,8 +215,9 @@ function spawnFireball(pet, targetX, targetY) {
 }
 
 // Hàm sinh vụ nổ
-function spawnExplosion(x, y) {
+function spawnExplosion(x, y, map) {
   EXPLOSIONS.push({
+    map: map,
     x: x,
     y: y,
     frame: 1,
@@ -224,7 +243,7 @@ function updateProjectiles(dt) {
 
     // Chạm vị trí đích -> Tạo vụ nổ và xóa quả cầu
     if (travelled >= p.maxDistance || p.life <= 0 || p.x < 0 || p.x > CW || p.y < 0 || p.y > CH) {
-      spawnExplosion(p.targetX || p.x, p.targetY || p.y);
+      spawnExplosion(p.targetX || p.x, p.targetY || p.y, p.map);
       PROJECTILES.splice(i, 1);
     }
   }

@@ -13,14 +13,19 @@
   <div id="hud">
     <div class="chip">🪙 <span id="h-coins">200</span></div>
     <div class="chip">⭐ Lv.<span id="h-lv">1</span></div>
-    <button class="chip" id="btn-deco" style="margin-left:auto;cursor:pointer;font-family:inherit">🎨 Trang trí</button>
+    <button class="chip" id="btn-deco" style="margin-left:auto;cursor:pointer;font-family:inherit">🧰 Chức năng</button>
   </div>
   <div id="deco" class="hidden">
-    <div class="d-tabs">
+    <div class="m-tabs" id="m-tabs">
+      <button data-m="deco" class="on">🎨 Trang trí</button>
+      <button data-m="pets">🐾 Danh sách pet</button>
+      <button data-m="maps">🗺️ Map</button>
+      <button id="d-done">✔ Đóng</button>
+    </div>
+    <div class="d-tabs" id="d-sub">
       <button data-t="path" class="on">🛤️ Làm đường</button>
       <button data-t="item">🪴 Đặt vật phẩm</button>
       <button data-t="move">✋ Chỉnh sửa</button>
-      <button id="d-done">✔ Xong</button>
     </div>
     <div class="d-body" id="d-body"></div>
   </div>
@@ -36,6 +41,7 @@
     <button class="pp-btn" onclick="dofeed()">🍖 Cho ăn (10🪙)</button>
     <button class="pp-btn" onclick="doplay()">🎾 Chơi đùa</button>
     <button class="pp-btn" onclick="dosleep()">💤 Ngủ</button>
+    <button class="pp-btn" onclick="dostash()">🏠 Cất vào danh sách</button>
   </div>
   <div id="toast"></div>
 </div>
@@ -47,8 +53,10 @@
 <script src="js/input.js"></script>
 <script src="js/render.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/maps.js"></script>
 <script src="js/decor.js"></script>
 <script src="js/decor-ui.js"></script>
+<script src="js/menu.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/main.js"></script>
 </body>
