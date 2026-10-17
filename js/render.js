@@ -49,13 +49,18 @@ function drawMapScene(mid,t){
     } else if (p.def.animFrames) {
       const walkKey = p.def.imgKey.replace('_anim','_');
       if (p.sleeping) {                                                                            // đang ngủ
-        customImg = p.def.sleepImg || p.def.idleImg || IMGS[walkKey + 1];
-        if (customImg !== IMGS[walkKey + 1]) { fitMode = p.def.sleepFit || 'width'; userK = p.def.sleepScale || 1; }
+        const SF = p.def.sleepFrames;
+        if (SF && SF.length > 1) { customImg = SF[Math.floor(t * (p.def.sleepFps || 6) + p.phase * 7) % SF.length]; fitImg = SF[0]; }
+        else customImg = p.def.sleepImg || p.def.idleImg || IMGS[walkKey + 1];
+        if (customImg !== IMGS[walkKey + 1]) { fitMode = p.def.sleepFit || 'none'; userK = p.def.sleepScale || 1; }
       } else if (p.moving) {                                                                       // đang đi: khung đi bộ
         customImg = IMGS[walkKey + (p.animFrame + 1)];
       } else {                                                                                     // đứng yên
-        customImg = p.def.idleImg || IMGS[walkKey + 1];
-        if (customImg !== IMGS[walkKey + 1]) { fitMode = p.def.idleFit || 'height'; userK = p.def.idleScale || 1; }
+        const IF = p.def.idleFrames;
+        if (IF && IF.length > 1) {                                                                 // animation chớp mắt (thư mục idle)
+          customImg = IF[Math.floor(t * (p.def.idleFps || 12) + p.phase * 7) % IF.length]; fitImg = IF[0];
+        } else customImg = p.def.idleImg || IMGS[walkKey + 1];
+        if (customImg !== IMGS[walkKey + 1]) { fitMode = p.def.idleFit || 'none'; userK = p.def.idleScale || 1; }
       }
     } else if (p.def.imgKey) {
       customImg = IMGS[p.def.imgKey];
@@ -92,22 +97,25 @@ function drawMapScene(mid,t){
       if (!(bb && rb && fitMode !== 'none')) { offL = -drawW/2; offT = -drawH; }
     }
 
+    //Scale 
+    const ws = (p.moving && !p.sleeping && !p.isAttacking && p.def.walkScale) || 1;
+    if (ws !== 1) { drawH *= ws; drawW *= ws; offL = -drawW/2; offT = -drawH; }
 
-    if(p.selected){
-      cx.save(); cx.strokeStyle='#fbbf24'; cx.lineWidth=4;
-      cx.beginPath(); cx.ellipse(p.x,p.y+2,dw*.46,dh*.14,0,0,Math.PI*2); cx.stroke(); cx.restore();
-    }
-    softShadow(p.x + dw*.07, p.y+3, dw*.42, dh*.11, 0.36 * (1 + actualBob/60));
+    softShadow(p.x + dw*ws*.07, p.y+3, dw*ws*.42, dh*ws*.11, 0.36 * (1 + actualBob/60));
 
     cx.save();
-
-    // Draw pet image
-    if(p.facingLeft){
-      cx.translate(rd(p.x-offL),rd(p.y+offT+actualBob)); cx.scale(-1,1);
-      if(customImg?.complete && customImg.naturalWidth) cx.drawImage(customImg,0,0,drawW,drawH);
-    } else {
-      if(customImg?.complete && customImg.naturalWidth) cx.drawImage(customImg,rd(p.x+offL),rd(p.y+offT+actualBob),drawW,drawH);
-    }
+    const paint = () => {   // vẽ ảnh thú (lật theo hướng nhìn)
+      if(!(customImg?.complete && customImg.naturalWidth)) return;
+      if(p.facingLeft){ cx.save(); cx.translate(rd(p.x-offL),rd(p.y+offT+actualBob)); cx.scale(-1,1); cx.drawImage(customImg,0,0,drawW,drawH); cx.restore(); }
+      else cx.drawImage(customImg,rd(p.x+offL),rd(p.y+offT+actualBob),drawW,drawH);
+    };
+    if(p.selected){   // vầng sáng ôm theo hình thú: viền trắng-vàng sát + 2 lớp quầng vàng, chồng nhiều lần cho đậm
+      const k = cx.getTransform().a, pulse = 1 + .2*Math.sin(t*4);
+      const L = [ ['rgba(255,252,200,1)', 3,  2],    // viền sát, gần như trắng
+                  ['rgba(255,226,80,1)',  12, 3],    // quầng trong, vàng đậm
+                  ['rgba(255,190,20,1)',  34*pulse, 3] ];   // quầng ngoài, rộng và nhấp nhô
+      L.forEach(([c,b,n]) => { cx.shadowColor = c; cx.shadowBlur = b*k; for(let i=0;i<n;i++) paint(); });
+    } else paint();
     cx.restore();
 
     // (đã xoá tên dưới chân)
@@ -134,9 +142,9 @@ function drawMapScene(mid,t){
       cx.translate(p.x, p.y);
       cx.rotate(p.rotation);
 
-      const img = IMGS[`shiba_fireball_${p.animFrame + 1}`];
+      const img = p.def.fireballFrames && p.def.fireballFrames[p.animFrame];
       if (img && img.complete && img.naturalWidth) {
-        const w = 80;
+        const w = 80 * (p.def.fireballScale || 1);
         const h = w * (img.naturalHeight / img.naturalWidth);
         cx.drawImage(img, -w / 2, -h / 2, w, h);
       }
@@ -151,9 +159,9 @@ function drawMapScene(mid,t){
       cx.save();
       cx.translate(ex.x, ex.y);
 
-      const img = IMGS[`shiba_explosion_${ex.frame}`];
+      const img = ex.def.explosionFrames[ex.frame - 1];
       if (img && img.complete && img.naturalWidth) {
-        const w = 140; // Kích thước vụ nổ
+        const w = 140 * (ex.def.explosionScale || 1); 
         const h = w * (img.naturalHeight / img.naturalWidth);
         cx.drawImage(img, -w / 2, -h / 2, w, h);
       }
@@ -185,6 +193,6 @@ function drawOverview(t){
     const w = cx.measureText(lab).width + 24;
     cx.fillStyle = '#000a'; cx.fillRect(x+10, y+10, w, 44);
     cx.fillStyle = '#fff'; cx.fillText(lab, x+22, y+43);
-    VIEW.tiles.push({id:m.id, x, y, w:tw, h:th});
+    VIEW.tiles.push({id:m.id, x, y, w:tw, h:th, lw:w+10});
   });
 }

@@ -72,7 +72,7 @@ function updateWalker(p, t, dt){
   const speed = Math.hypot(p.vx, p.vy) * depth;
   const img = IMGS[p.def.imgKey.replace('_anim','_')+'1'];
   const ratio = (img && img.naturalWidth) ? img.naturalWidth/img.naturalHeight : 1;
-  const cycleLen = pSize(p.y) * (p.def.scale||1) * ratio * .85 * (p.def.stride||1);
+  const cycleLen = pSize(p.y) * (p.def.scale||1) * (p.def.walkScale||1) * ratio * .85 * (p.def.stride||1);
   if(speed > 5){ p.animPhase = (p.animPhase + speed*dt/cycleLen) % 1; p.animFrame = Math.floor(p.animPhase * p.def.animFrames) % p.def.animFrames; p.moving = true; }
   else { p.animPhase = 0; p.animFrame = 0; p.moving = false; }
 }
@@ -82,12 +82,14 @@ function updatePet(p, t, dt){
     p.vx = 0; p.vy = 0; p.tvx = 0; p.tvy = 0; // Đứng yên khi bắn
     p.attackTime = (p.attackTime || 0) + dt;
     const totalFrames = p.def.attackAnimFrames || 10;
-    const frameDur = 0.08; // Tốc độ mỗi frame (80ms)
+    const frameDur = 1/(p.def.attackFps || 12.5); // mỗi frame 80ms (attackFps: số khung/giây)
     
     p.attackFrame = Math.floor(p.attackTime / frameDur);
 
-    // Khi phát tới frame bắn (ví dụ frame 7) -> Phóng quả cầu lửa đi
-    if (p.attackFrame >= 6 && !p.hasFired) {
+    // Tụ lực: mặc định phát HẾT attackSheet rồi mới bắn (fireFrame = totalFrames).
+    // Muốn thú nào bắn sớm hơn thì ghi fireFrame trong attackSheet của thú đó.
+    const fireFrame = Math.min(p.def.attackFireFrame ?? totalFrames, totalFrames);
+    if (p.def.fireball && p.attackFrame >= fireFrame && !p.hasFired) {
       p.hasFired = true;
       let tx = p.target ? p.target.x : (p.x + (p.facingLeft ? -300 : 300));
       let ty = p.target ? p.target.y : (p.y - 30);
@@ -105,7 +107,7 @@ function updatePet(p, t, dt){
 
   // Đang ngủ: đứng yên (ảnh ngủ), tự dậy khi hết giờ hoặc khi có lệnh đi (phím WASD / bấm điểm đến)
   if (t < (p.sleepUntil||0)) {
-    const kdw = (p.selected && !DECOR.active) ? keyDir() : {x:0,y:0};
+    const kdw = (p.selected && (!DECOR.active || VIEW.overview)) ? keyDir() : {x:0,y:0};
     if (!(kdw.x || kdw.y || p.target)) {
       p.vx = 0; p.vy = 0; if (p.tvx !== undefined) { p.tvx = 0; p.tvy = 0; }
       p.moving = false; p.animFrame = 0; p.animPhase = 0; p.sleeping = true;
@@ -116,7 +118,7 @@ function updatePet(p, t, dt){
   p.sleeping = false;
 
   // hướng đi: ưu tiên phím WASD/mũi tên; nếu không có thì đi tới điểm vừa bấm (p.target)
-  let kd = (p.selected && !DECOR.active) ? keyDir() : {x:0,y:0};
+  let kd = (p.selected && (!DECOR.active || VIEW.overview)) ? keyDir() : {x:0,y:0};
   if(kd.x || kd.y){ p.target = null; }
   else if(p.target){
     const dx = p.target.x - p.x, dy = p.target.y - p.y, dist = Math.hypot(dx, dy);
@@ -180,7 +182,7 @@ let EXPLOSIONS = [];
 
 // Hàm kích hoạt tấn công (Chỉ cho Shibav3_1)
 function triggerAttack(pet) {
-  if (!pet || pet.def.name !== 'Shibav3_1' || pet.isAttacking) return;
+  if (!pet || !pet.def.attackAnimFrames || pet.isAttacking) return;
   pet.isAttacking = true; pet.sleepUntil = 0; pet.sleeping = false;
   pet.attackTime = 0;
   pet.hasFired = false;
@@ -208,6 +210,7 @@ function spawnFireball(pet, targetX, targetY) {
     vy: Math.sin(angle) * FIREBALL_SPEED,
     rotation: angle,
     map: pet.map,
+    def: pet.def,
     life: FIREBALL_LIFESPAN,
     animFrame: 0,
     animTime: 0
@@ -215,9 +218,13 @@ function spawnFireball(pet, targetX, targetY) {
 }
 
 // Hàm sinh vụ nổ
-function spawnExplosion(x, y, map) {
+function spawnExplosion(x, y, map, def) {
+  if (typeof battleOnBlast === 'function') 
+    battleOnBlast(x, y, map, def);
+  if (!def || !def.explosionFrames) return;
   EXPLOSIONS.push({
     map: map,
+    def: def,
     x: x,
     y: y,
     frame: 1,
@@ -234,16 +241,16 @@ function updateProjectiles(dt) {
     p.life -= dt;
 
     p.animTime += dt;
-    if (p.animTime >= 0.15) {
+    if (p.animTime >= 1/(p.def.fireballFps||6.67)) { 
       p.animTime = 0;
-      p.animFrame = (p.animFrame + 1) % 5;
+      p.animFrame = (p.animFrame + 1) % (p.def.fireballFrames ? p.def.fireballFrames.length : 1);
     }
 
     const travelled = Math.hypot(p.x - p.startX, p.y - p.startY);
 
     // Chạm vị trí đích -> Tạo vụ nổ và xóa quả cầu
     if (travelled >= p.maxDistance || p.life <= 0 || p.x < 0 || p.x > CW || p.y < 0 || p.y > CH) {
-      spawnExplosion(p.targetX || p.x, p.targetY || p.y, p.map);
+      spawnExplosion(p.targetX || p.x, p.targetY || p.y, p.map, p.def);
       PROJECTILES.splice(i, 1);
     }
   }
@@ -252,10 +259,10 @@ function updateProjectiles(dt) {
   for (let i = EXPLOSIONS.length - 1; i >= 0; i--) {
     const ex = EXPLOSIONS[i];
     ex.animTime += dt;
-    if (ex.animTime >= 0.06) {
+    if (ex.animTime >= 1/(ex.def.explosionFps||16.7)) {
       ex.animTime = 0;
       ex.frame++;
-      if (ex.frame > 6) {
+      if (ex.frame > ex.def.explosionFrames.length) {
         EXPLOSIONS.splice(i, 1);
       }
     }

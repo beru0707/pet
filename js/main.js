@@ -17,15 +17,16 @@ function frame(ts){
   SIM_MAP = null;
   
  
-  if (typeof updateProjectiles === 'function') {
+  if (typeof updateProjectiles === 'function') 
     updateProjectiles(dt);
-  }
+  if (typeof updateBattle === 'function') 
+      updateBattle(t, dt);
   
   drawScene(t);
   requestAnimationFrame(frame);
 }
 
-function onAllLoaded(){
+bootAssets().catch(e=>console.error('[boot]',e)).then(()=>{
   loadGame(); initPets(); updateHUD(); requestAnimationFrame(frame);
-}
-if(loaded_===toLoad) onAllLoaded();
+  startBackgroundLoad();
+});

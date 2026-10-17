@@ -24,9 +24,10 @@ const PETS_START_PLACED = true;
 // scale: hệ số nhân kích thước riêng cho từng con (1.0 = bình thường, 0.8 = nhỏ hơn 20%, 1.2 = lớn hơn 20%)
 //        MỘT scale này áp dụng chung cho mọi trạng thái: đi, đứng yên, ngủ, tấn công (game tự cân ảnh các trạng thái cho nhân vật to bằng nhau)
 const PET_DEF = [
-  {name:'Sói Sét', scale:1, sw:780, sh:640},
-  {name:'Bọ Hoa Tiên', scale:0.8, sw:700, sh:650},
-  {name:'Cún Shiba', scale:0.8, sw:780, sh:680},
+  {name:'Worm', scale:1, sw:780, sh:640},
+  {name:'Swiftfox', scale:1, sw:780, sh:640},
+  {name:'Flowerbeetle', scale:0.8, sw:700, sh:650},
+  {name:'Shiba', scale:0.8, sw:780, sh:680},
   {name:'Rồng Lửa', scale:0.9, sw:820, sh:700},
   {name:'Thằn Lằn Băng', scale:0.8, sw:780, sh:700},
   {name:'Cáo Lửa', scale:0.8, sw:780, sh:680},
@@ -38,44 +39,309 @@ const PET_DEF = [
   {name:'Shibav2', scale:0.8, sw:780, sh:680},
   {name:'Shibav3_1', scale:1, sw:780, sh:680},
   {name:'Voltreaver', scale:1.15, sw:780, sh:680},
+  {name:'Dewgrub', scale:0.58, sw:780, sh:680},
+  {name:'Ripplewing', scale:1, sw:780, sh:680},
+  
 ];
 // ============ CẤU HÌNH ANIMATION CHO TỪNG THÚ (bạn chỉnh ở đây) ============
-// Tạo thư mục chứa các khung hình (sprite_1.png, sprite_2.png, ... đánh số liên tiếp từ 1), game tự đếm số khung.
-// Thú nào chưa có thư mục / chưa có ảnh -> không hiện (console F12 có cảnh báo [PET_ANIM]). Không còn ảnh tĩnh dự phòng.
-//   folder : thư mục ảnh
+// CHỈ DÙNG SPRITE SHEET: mỗi trạng thái là 1 ảnh ghép nhiều khung, game tự cắt theo lưới rồi phát animation.
+// Số khung KHÔNG cố định: game tự nhận số cột / hàng / khung của từng sheet (6x6, 5x3, 8x1 ... đều được), đọc từ trái sang phải, từ trên xuống.
+// Điều kiện: giữa các khung có lề trong suốt, và mở game qua http/https (Live Server...). Mở file:// thì ghi tay {src, cols, rows, frames}.
+const SHEET_DEFAULT = {cols:6, rows:6, max:320};   // cols/rows: chỉ dùng khi KHÔNG tự nhận được (file://) · max: cạnh dài tối đa (px) của mỗi khung sau khi cắt (đỡ tốn bộ nhớ)
+//   walkSheet   : (BẮT BUỘC) sheet ĐI BỘ.  Thú nào chưa có walkSheet -> không hiện (F12 có cảnh báo [PET_ANIM])
+//   idleSheet   : sheet ĐỨNG YÊN (nhiều khung = chớp mắt). Bỏ trống = tự tìm idle.png cạnh walk.png; không có thì dùng khung 1 của walk
+//   sleepSheet  : ảnh NGỦ. Bỏ trống = tự tìm sleep.png (ảnh đơn); không có thì dùng ảnh đứng yên
+//   attackSheet : sheet TẤN CÔNG (chỉ Shibav3_1, phím Enter)
+//   fireballSheet / explosionSheet : sheet quả cầu lửa / vụ nổ của kỹ năng bắn (ghi kèm frames: số khung thật)
+//   Mỗi mục viết ngắn 'đường dẫn.png' (tự nhận lưới) hoặc ép tay {src:'...', cols:5, rows:3, frames:13}. Ảnh đơn: {src:'...', cols:1, rows:1}
 //   stride : độ dài 1 chu kỳ bước (lớn hơn = chân bước chậm hơn so với quãng đường; mặc định 1)
 //   speed  : hệ số tốc độ đi (mặc định 1; 0.7 = chậm hơn, 1.3 = nhanh hơn)
-//   idle   : (tùy chọn) ảnh khi đứng yên. Mặc định tự lấy assets/pet/<tên thư mục>.png ; idle:false để tắt
-//   idleFit / sleepFit : (tùy chọn) cách cân cỡ ảnh đứng yên / ngủ cho bằng nhân vật lúc đi: 'height' (bằng chiều cao, mặc định cho idle), 'width' (bằng chiều ngang, mặc định cho sleep), 'none' (không cân)
-//   attackFit / attackScale : giống trên, cho ảnh tấn công (mặc định 'height')
-//   idleScale / sleepScale : (tùy chọn) nhân thêm cỡ cho ảnh đứng yên / ngủ (1 = giữ nguyên; 1.2 = to hơn 20%)
-//   sleep  : (tùy chọn) ảnh khi ngủ. Mặc định assets/<thư mục>/sleep/<thư mục>_sleep.png ; thiếu thì dùng ảnh đứng yên ; sleep:false để tắt
+//   idleFps / sleepFps : số khung/giây của idle (mặc định 12) / ngủ (mặc định 6) · attackFps (mặc định 12.5) · attackFireFrame: khung thứ mấy thì bắn (mặc định 6)
+//   idleFit / sleepFit / attackFit : cách cân cỡ ảnh cho bằng nhân vật lúc đi: 'height' (idle, attack mặc định), 'width' (sleep mặc định), 'none' (không cân)
+//   idleScale / sleepScale / attackScale : nhân thêm cỡ (1 = giữ nguyên; 1.2 = to hơn 20%)
 const PET_ANIM = {
-  'Cún Shiba':      {folder:'assets/shiba',       stride:1, speed:1},
-  'Cáo Lửa':        {folder:'assets/firefox',     stride:1, speed:1},
-  'Sói Sét':        {folder:'assets/swiftfox',    stride:1, speed:1},
-  'Bọ Hoa Tiên':    {folder:'assets/flowerbeetle',stride:1, speed:1},
-  'Rồng Lửa':       {folder:'assets/firedragon',  stride:1, speed:1},
-  'Thằn Lằn Băng':  {folder:'assets/waterdragon', stride:1, speed:1},
-  'Gecko':          {folder:'assets/bluegecko',   stride:1, speed:1},
-  'Snowbunny':      {folder:'assets/snowbunny',   stride:1, speed:1},
-  'Wukong':         {folder:'assets/wukong',      stride:1, speed:1},
-  'Wukongv2':       {folder:'assets/wukongv2',    stride:1, speed:1},
-  'Wukongv3':       {folder:'assets/wukongv3',    stride:1, speed:1},
+  'Worm' : {
+    idleSheet: {
+      src: 'assets/worm/worm.webp',
+      fps: 12,
+      scale: 1,
+      cols: 5,
+      rows: 5
+    },
+    walkSheet: {
+      src: 'assets/worm/worm.webp',
+      stride: 1,
+      speed: 1,
+      cols: 5,
+      rows: 5
+    },
+    sleepSheet: {
+      src: 'assets/worm/walk.webp',
+      cols: 1,
+      rows: 1
+    },
+  },
+  'Shiba': {
+    idleSheet: {
+      src: 'assets/shiba/idle.png',
+      fps: 12,
+      scale: 1
+    },
+    walkSheet: {
+      src: 'assets/shiba/walk.png',        
+      stride: 1, 
+      speed: 1
+    },
+    sleepSheet: {
+      src: 'assets/shiba/sleep.png',
+      cols: 1,
+      rows: 1
+    },
+  },
+  'Cáo Lửa':        {walkSheet:'assets/firefox/walk.png',      stride:1, speed:1},
+  'Swiftfox': {
+    idleSheet: {
+      src: 'assets/swiftfox/idle.png',
+      fps: 12,
+      scale: 1
+    },
+    walkSheet: {
+      src: 'assets/swiftfox/walk.png',     
+      stride: 1, 
+      speed: 1
+    },
+    sleepSheet: {
+      src: 'assets/swiftfox/sleep.png',
+      cols: 1,
+      rows: 1
+    },
+  },
+  'Flowerbeetle': {
+    idleSheet: {
+      src: 'assets/flowerbeetle/idle.png',
+      fps: 12,
+      scale: 1
+    },
+    walkSheet: {
+      src: 'assets/flowerbeetle/walk.png', 
+      stride: 1, 
+      speed: 1,
+      scale: 1.05
+    },
+    sleepSheet: {
+      src: 'assets/flowerbeetle/sleep.png',
+      cols: 1,
+      rows: 1
+    },
+  },
+  'Rồng Lửa':       {walkSheet:'assets/firedragon/walk.png',   stride:1, speed:1},
+  'Thằn Lằn Băng':  {walkSheet:'assets/waterdragon/walk.png',  stride:1, speed:1},
+  'Gecko': {
+    idleSheet: {
+      src: 'assets/gecko/idle.png',
+      fps: 12,
+      scale: 1
+    },
+    walkSheet: {
+      src: 'assets/gecko/walk.png',    
+      stride: 1, 
+      speed: 1
+    },
+    sleepSheet: {
+      src: 'assets/gecko/sleep.png',
+      cols: 1,
+      rows: 1
+    },
+  },
+  'Snowbunny': {
+    idleSheet: {
+      src: 'assets/snowbunny/idle.png',
+      fps: 12,
+      scale: 1
+    },
+    walkSheet: {
+      src: 'assets/snowbunny/walk.png',    
+      stride:1, 
+      speed:1
+    },
+    sleepSheet: {
+      src: 'assets/snowbunny/sleep.png',
+      cols: 1,
+      rows: 1
+    },
+  },
+  'Wukong': {   
+    idleSheet: {
+      src: 'assets/wukong/idle.png',
+      fps: 12,
+      scale: 1
+    },     
+    walkSheet: {
+      src: 'assets/wukong/walk.png',
+      stride: 1,
+      speed: 1
+    },
+    sleepSheet: {
+      src: 'assets/wukong/sleep.png',
+      cols: 1,
+      rows: 1
+    },
+    attackSheet: {
+      src: 'assets/wukong/attack.png',
+      cols:5,
+      rows:5, 
+      scale: 1.8
+    },    
+  },
+  'Wukongv2': {
+    idleSheet: {
+      src: 'assets/wukongv2/idle.png',
+      fps: 12,
+      scale: 1
+    },
+    walkSheet: {
+      src: 'assets/wukongv2/walk.png',
+      stride: 1,
+      speed: 1
+    },    
+    sleepSheet: {
+      src:'assets/wukongv2/sleep.png', 
+      cols: 1, 
+      rows: 1
+    }, 
+  },
+  'Wukongv3': {
+    idleSheet: {
+      src: 'assets/wukongv3/idle.png',
+      fps: 12,
+      scale: 1
+    },
+    walkSheet: {
+      src: 'assets/wukongv3/walk.png',
+      stride: 1,
+      speed: 1
+    },     
+    sleepSheet: {
+      src: 'assets/wukongv3/sleep.png',
+      cols: 1,
+      rows: 1
+    },
+    attackSheet: {
+      src: 'assets/wukongv3/attack.png',
+      cols:5,
+      rows:5,
+      scale: 2.8
+    }, 
+  },
+  'Dewgrub': {
+    idleSheet: {
+      src: 'assets/dewgrub/idle.png',
+      fps: 12,
+    },
+    walkSheet: {
+      src: 'assets/dewgrub/walk.png',      
+      stride: 1, 
+      speed: 1,
+      scale: 1.1
+    },
+    sleepSheet: {
+      src: 'assets/dewgrub/sleep.png',
+      cols: 1,
+      rows: 1,
+    },
+  },
+  'Ripplewing': {
+    idleSheet: {
+      src: 'assets/ripplewing/idle.png',
+      fps: 12,
+      scale: 0.9
+    },
+    walkSheet: {
+      src: 'assets/ripplewing/walk.png',   
+      stride: 1, 
+      speed: 1
+    },
+    sleepSheet: {
+      src: 'assets/ripplewing/sleep.png',
+      cols: 1,
+      rows: 1,
+      scale: 0.88
+    },
+  },
   'Voltreaver': {
-    folder:'assets/voltreaver/walk',  
-    stride:1, 
-    speed:1},
-  'Shibav2':        {folder:'assets/shibav2',     stride:1, speed:1},
+    idleSheet: {
+      src: 'assets/voltreaver/idle.png',
+      fps: 12,
+    },
+    walkSheet: {
+      src: 'assets/voltreaver/walk.png',
+      stride: 1,
+      speed: 1
+    },
+    sleepSheet:{
+      src:'assets/voltreaver/sleep.png', 
+      cols: 1, 
+      rows: 1
+    },
+  },
+  'Shibav2': {
+    idleSheet: {
+      src: 'assets/shibav2/idle.png',
+      fps: 12,
+    },
+    walkSheet: {
+      src: 'assets/shibav2/walk.png',      
+      stride: 1, 
+      speed: 1,
+    },
+    sleepSheet: {
+      src: 'assets/shibav2/sleep.png',
+      cols: 1,
+      rows: 1
+    },
+  },
   'Shibav3_1': {
-    folder:'assets/shibav3_1/walk', 
-    attackFolder:'assets/shibav3_1/attack/fireball', 
-    stride:1, 
-    speed:1},   
+    idleSheet: {
+      src: 'assets/shibav3_1/idle.png',
+      fps: 12,
+      scale: 1
+    },
+    walkSheet: {
+      src: 'assets/shibav3_1/walk.png',
+      cols: 6,
+      rows: 6,
+      stride: 1,
+      speed: 1
+    },
+    sleepSheet: {
+      src:'assets/shibav3_1/sleep.png', 
+      cols: 1, 
+      rows: 1
+    },
+    attackSheet: {
+      src: 'assets/shibav3_1/attack.png',
+      cols: 7,
+      rows: 3,
+      frames: 21,
+      scale: 0.9,
+      fps: 30
+    },
+    fireballSheet: {
+      src:'assets/shibav3_1/fireball.png', 
+      scale: 1.5
+    },
+    explosionSheet: {
+      src:'assets/shibav3_1/explosion.png', 
+      cols: 4,
+      rows: 5,
+      frames: 20,
+      scale: 2
+    },
+  },
 };
 
 // Cấu hình kỹ năng bắn lửa (thêm vào cuối config.js)
-const FIREBALL_SPEED = 600; // Tốc độ bay của quả cầu lửa
+const FIREBALL_SPEED = 750; // Tốc độ bay của quả cầu lửa
 const FIREBALL_LIFESPAN = 2.5; // Thời gian tồn tại của quả cầu lửa (giây)
 
 

@@ -6,11 +6,6 @@
 // ---- Điều khiển bằng bàn phím: thú đang được chọn đi theo WASD / phím mũi tên ----
 const KEYS = {};
 const MOVE_KEYS = {KeyW:'u',ArrowUp:'u',KeyS:'d',ArrowDown:'d',KeyA:'l',ArrowLeft:'l',KeyD:'r',ArrowRight:'r'};
-window.addEventListener('keydown', e=>{
-  const k = MOVE_KEYS[e.code]; if(!k) return;
-  if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName||'')) return;
-  if(PETS.some(p=>p.selected) && !DECOR.active){ e.preventDefault(); KEYS[k]=true; }
-});
 window.addEventListener('keyup', e=>{ const k = MOVE_KEYS[e.code]; if(k) KEYS[k]=false; });
 window.addEventListener('blur', ()=>{ for(const k in KEYS) KEYS[k]=false; });
 function keyDir(){ return {x:(KEYS.r?1:0)-(KEYS.l?1:0), y:(KEYS.d?1:0)-(KEYS.u?1:0)}; }
@@ -18,6 +13,7 @@ function keyDir(){ return {x:(KEYS.r?1:0)-(KEYS.l?1:0), y:(KEYS.d?1:0)-(KEYS.u?1
 let clickMarker = null;   // vòng tròn báo điểm vừa bấm
 function tileAt(pos){ return VIEW.tiles.find(q=>pos.x>=q.x && pos.x<=q.x+q.w && pos.y>=q.y && pos.y<=q.y+q.h); }
 const toMapXY = (pos,tl)=>({ x:Math.max(100,Math.min(CW-100,(pos.x-tl.x)/tl.w*CW)), y:Math.max(180,Math.min(950,(pos.y-tl.y)/tl.h*CH)) });
+const inLabel=(pos,tl)=>pos.x<=tl.x+tl.lw && pos.y<=tl.y+54 && pos.x>=tl.x && pos.y>=tl.y;
 let _ovDrag = null;   // kéo pet giữa các map trong chế độ xem toàn bộ
 function ovMove(e){
   const d=_ovDrag; if(!d) return; const pos=scaleXY(e);
@@ -30,7 +26,7 @@ function ovUp(e){
   window.removeEventListener('pointermove',ovMove); window.removeEventListener('pointerup',ovUp); window.removeEventListener('pointercancel',ovUp);
   const d=_ovDrag; _ovDrag=null; if(!d) return; cv.style.cursor='pointer';
   const p=d.pet; p.dragging=false;
-  if(!d.moved){ VIEW.overview=false; setActiveMap(d.tile.id); if(MENU.open) renderDeco(); return; }   // chỉ bấm: vào map đó
+  if(!d.moved){ PETS.forEach(q=>q.selected=false); p.selected=true; p.target=null; openPetPanel(p); return; }   // chỉ bấm: chọn pet (điều khiển như bình thường)
   const tl=e.type==='pointerup' ? tileAt(scaleXY(e)) : null;
   if(!tl){ Object.assign(p,d.orig); return; }   // thả ngoài ô: trả về chỗ cũ
   const m=toMapXY(scaleXY(e),tl); placePetAt(p,m.x,m.y,tl.id);
@@ -45,7 +41,13 @@ cv.addEventListener('pointerdown', e => {
     PETS.forEach(p=>{ if(p.map!==tl.id) return; const d=Math.hypot(mp.x-p.x,mp.y-p.y); if(d<pSize(p.y)*0.7 && d<minD){ minD=d; hit=p; } });
     if(hit){ _ovDrag={pet:hit,tile:tl,p0:pos,moved:false,orig:{map:hit.map,x:hit.x,y:hit.y,vx:0,vy:0}};
       window.addEventListener('pointermove',ovMove); window.addEventListener('pointerup',ovUp); window.addEventListener('pointercancel',ovUp); }
-    else { VIEW.overview=false; setActiveMap(tl.id); if(MENU.open) renderDeco(); }
+    else if(inLabel(pos,tl)){ VIEW.overview=false; setActiveMap(tl.id); if(MENU.open) renderDeco(); }   // bấm vào nhãn tên map: vào map đó
+    else{
+      const cur = PETS.find(q=>q.selected);
+      if(cur && cur.map===tl.id){   // đang chọn pet ở ô này: bấm chỗ trống -> pet đi tới đó
+        cur.target = {x:mp.x, y:mp.y}; cur.idleUntil = 0; cur.nextTurn = 0;
+      } else { PETS.forEach(q=>q.selected=false); closePetPanel(); }
+    }
     return;
   }
   if(DECOR.active){ decorDown(e); return; }
@@ -72,8 +74,8 @@ window.addEventListener('keydown', e => {
   if (e.code === 'Enter' || e.code === 'NumpadEnter') {
     const selectedPet = PETS.find(p => p.selected);
     
-    // Chỉ kích hoạt nếu chọn Shibav3_1
-    if (selectedPet && selectedPet.def.name === 'Shibav3_1' && !DECOR.active) {
+    //kich hoat
+    if (selectedPet && selectedPet.def.attackAnimFrames && (!DECOR.active || VIEW.overview)) {
       e.preventDefault();
       triggerAttack(selectedPet);
     }
@@ -81,5 +83,5 @@ window.addEventListener('keydown', e => {
   }
 
   const k = MOVE_KEYS[e.code]; if(!k) return;
-  if(PETS.some(p=>p.selected) && !DECOR.active){ e.preventDefault(); KEYS[k]=true; }
+  if(PETS.some(p=>p.selected) && (!DECOR.active || VIEW.overview)){ e.preventDefault(); KEYS[k]=true; }
 });

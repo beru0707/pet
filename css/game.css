@@ -3,7 +3,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#2f5a1c;font-family:
 body{display:flex;align-items:center;justify-content:center}
 /* Khung game giữ tỉ lệ 3:2 nên màn hình rộng/cao hơn sẽ thừa 2 bên (hoặc trên dưới).
    Phần thừa được lấp bằng chính ảnh cỏ, làm mờ + hơi tối để nhìn liền mạch thay vì viền đen. */
-body::before{content:"";position:fixed;inset:-20px;z-index:-1;background:var(--bgurl,url(../assets/background/grass.png)) center/cover no-repeat;filter:blur(10px) brightness(.8) saturate(1.05)}
+body::before{content:"";position:fixed;inset:-20px;z-index:-1;background:var(--bgurl,none) center/cover no-repeat;filter:blur(10px) brightness(.8) saturate(1.05)}
 
 #wrap{position:relative;width:min(100vw,calc(100vh*var(--ar,1.5)));height:min(100vh,calc(100vw/var(--ar,1.5)));box-shadow:0 0 40px rgba(0,0,0,.35)}
 #c{position:absolute;inset:0;width:100%;height:100%;cursor:pointer}
@@ -45,7 +45,7 @@ body::before{content:"";position:fixed;inset:-20px;z-index:-1;background:var(--b
 
 /* THẺ PET + THẺ MAP + ẢNH KÉO */
 .pcard,.mcard{flex:0 0 auto;width:104px;padding:6px;border-radius:12px;border:2px solid #ffffff22;background:#ffffff12;color:#e6f7c8;font:600 12px 'Fredoka',sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;cursor:pointer;touch-action:pan-x}
-.pcard img{width:64px;height:64px;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
+.pcard img,.pcard canvas{width:64px;height:64px;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
 .pcard b,.mcard b{font-size:12px;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pcard small,.mcard small{font-size:10px;opacity:.75}
 .pcard.here{border-color:#a4e27a;background:#4a8a2a44}

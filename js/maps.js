@@ -16,7 +16,8 @@ function setOverview(on){
     PETS.forEach(p => { p.selected = false; p.target = null; }); closePetPanel();
     for(const k in KEYS) KEYS[k] = false;
     DECOR.dragItem = null; DECOR.painting = false; DECOR.selId = null;
-    toast('Bấm vào một map để xem');
+    toast('Chọn pet để điều khiển · bấm nhãn tên map để vào map');
+    MAPS.forEach(m => ensureMap(m.id));
   }
 }
 const mapById = id => MAPS.find(m => m.id === id);
@@ -29,7 +30,8 @@ function setActiveMap(id){
   for(const k in KEYS) KEYS[k] = false;
   DECOR.dragItem = null; DECOR.painting = false; DECOR.selId = null;
   ACTIVE_MAP = id;
-  document.documentElement.style.setProperty('--bgurl', 'url('+mapById(id).bg+')');
+  if(bgSrc(id)) setBgVar(bgSrc(id));
+  ensureMap(id);
   toast('Map: ' + mapById(id).name);
 }
 

@@ -54,7 +54,7 @@ function importFiles(list){
   let added=0, pending=files.length; if(!pending) return;
   files.forEach(f=>{
     const rel='/'+(f.webkitRelativePath||f.name);
-    if(/\/(background|pet)\//i.test(rel) || Object.values(PET_ANIM).some(c=>rel.toLowerCase().includes('/'+c.folder.split('/').pop().toLowerCase()+'/'))){ if(--pending===0) done(); return; }
+    if(/\/(background|pet)\//i.test(rel) || Object.values(PET_ANIM).some(c=>rel.toLowerCase().includes('/'+c._base.split('/').pop().toLowerCase()+'/'))){ if(--pending===0) done(); return; }
     const key=f.name.replace(/\.[^.]+$/,''); 
     if(DECOR.defs[key]){ if(--pending===0) done(); return; }
     const fr=new FileReader();
