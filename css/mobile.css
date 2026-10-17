@@ -1,0 +1,76 @@
+/* ==================================================================
+   MOBILE – điện thoại xoay ngang để chơi
+   - màn hình thấp (<= 520px cao, nằm ngang): thu nhỏ HUD / menu / bảng thú / thanh chuẩn bị trận
+   - màn hình dọc trên điện thoại: hiện lời nhắc xoay ngang
+   - dùng 100dvh để không bị thanh địa chỉ trình duyệt che
+   ================================================================== */
+@supports (height:100dvh){
+  html,body{height:100dvh}
+  #wrap{width:min(100vw,calc(100dvh*var(--ar,1.5)));height:min(100dvh,calc(100vw/var(--ar,1.5)))}
+}
+#hud{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+
+/* ---------- lời nhắc xoay ngang ---------- */
+#rot{display:none;position:fixed;inset:0;z-index:99995;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;background:#0f1d0a;color:#e6f7c8;font:600 18px Fredoka,sans-serif}
+#rot .rot-ph{font-size:72px;animation:rotphone 2.2s ease-in-out infinite}
+@keyframes rotphone{0%,25%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+#rot button{border:0;border-radius:99px;padding:12px 24px;font:700 16px Fredoka,sans-serif;color:#fff;background:linear-gradient(180deg,#6fd13e,#3d9a1e)}
+#rot button.sec{background:#ffffff26;font-size:14px;padding:8px 18px}
+@media (orientation:portrait) and (pointer:coarse){ body:not(.rot-skip) #rot{display:flex} }
+
+/* ---------- nút toàn màn hình + nút tấn công (chỉ trên cảm ứng) ---------- */
+#fs-btn,#bt-atk{display:none;position:fixed;z-index:30;border:2px solid #fff6;color:#fff;font-family:Fredoka,sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.45)}
+#fs-btn{left:max(8px,env(safe-area-inset-left));bottom:8px;width:40px;height:40px;border-radius:12px;background:#0009;font-size:20px}
+#bt-atk{right:max(16px,env(safe-area-inset-right));bottom:16px;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9a5a,#d9361b);font-size:30px;line-height:1}
+#bt-atk:active{transform:scale(.92)}
+@media (pointer:coarse){ #fs-btn.can{display:block} body.bt-fight #bt-atk{display:block} }
+body.is-fs #fs-btn{opacity:.6}
+#wrap.menu-open ~ #fs-btn{display:none !important}
+
+/* ---------- điện thoại nằm ngang (màn hình thấp) ---------- */
+@media (max-height:520px) and (orientation:landscape){
+  #hud{padding-top:6px;padding-bottom:6px;gap:6px}
+  .chip{padding:3px 10px;font-size:13px;border-width:1.5px}
+  #toast{top:12%;padding:6px 16px;font-size:13px}
+
+  /* bảng thú: nhỏ gọn, không che cả màn hình */
+  #pet-panel{right:8px;width:158px;padding:8px 10px;border-radius:12px;max-height:calc(100% - 16px)}
+  #pp-img{height:54px;margin-bottom:4px}
+  #pp-name{font-size:14px;margin:2px 0 6px}
+  .sbar{font-size:12px;margin-bottom:4px}.sbar-bg{height:8px}
+  .pp-btn{padding:5px;font-size:12px;margin-top:5px;border-radius:8px}
+  #pp-close{top:4px;right:8px;font-size:16px}
+  #wrap.menu-open #pet-panel{top:40px;max-height:calc(100% - 40px - 118px)}
+
+  /* thanh chức năng ở đáy: thấp hơn nhiều */
+  #deco{padding:4px 8px 6px;border-top-width:2px}
+  .d-tabs,.m-tabs{gap:5px;margin-bottom:4px}
+  .d-tabs button,.m-tabs button{padding:4px 4px;font-size:12px;border-radius:8px}
+  .m-tabs #d-done{padding:4px 12px}
+  .d-body{min-height:0;gap:6px;padding-bottom:2px}
+  .dbtn{min-width:58px;padding:3px 5px;font-size:10px;gap:2px;border-radius:9px}
+  .dbtn img{width:34px;height:34px}.dbtn i{width:28px;height:28px;border-width:2px}
+  .dlabel{font-size:10px;max-width:110px;line-height:1.2}
+  .pcard{width:74px;padding:3px;gap:1px;border-radius:9px}
+  .pcard img,.pcard canvas{width:38px;height:38px}
+  .pcard b{font-size:10px}.pcard small{font-size:9px}
+  .mcard{width:100px;padding:3px;gap:1px}.mthumb{height:34px}.mcard b{font-size:10px}.mcard small{font-size:9px}
+
+  /* nút Vào trận / chuẩn bị trận / HUD trận */
+  #wrap.menu-open ~ #bt-open{display:none}
+  body #bt-open{right:max(10px,env(safe-area-inset-right));bottom:10px;padding:7px 14px;font-size:13px}
+  body #bt-bar{bottom:6px;gap:8px;padding:5px 10px;border-radius:12px;max-width:min(96vw,760px);font-size:12px}
+  body #bt-bar .bt-t small{font-size:10px;max-width:150px;white-space:normal;line-height:1.2}
+  body #bt-list{gap:5px;max-width:52vw}
+  body .bt-card{width:52px;padding:3px 2px;border-radius:9px;touch-action:pan-x}
+  body .bt-card canvas,body .bt-card img{width:34px;height:34px}
+  body .bt-card b{font-size:9px}
+  body .bt-btn{padding:6px 12px;font-size:13px}
+  body #bt-hud{top:6px;padding:4px 14px;font-size:13px}
+  body #bt-banner{font-size:34px}
+  body #bt-res .card{padding:12px 18px;max-height:94vh;overflow:auto;font-size:13px}
+  body #bt-res h2{font-size:22px;margin-bottom:6px}
+  body #bt-res table{margin:6px 0 10px;font-size:12px}
+  body #bt-atk{width:68px;height:68px;font-size:26px;bottom:10px}
+}
+@media (pointer:coarse){ body .bt-card{touch-action:pan-x} }
