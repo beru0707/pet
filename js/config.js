@@ -82,12 +82,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/shiba/idle.webp',
       fps: 12,
-      scale: 1
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/shiba/walk.webp',        
       stride: 1, 
-      speed: 1
+      speed: 1,
+      cols: 6,
+      rows: 6
     },
     sleepSheet: {
       src: 'assets/shiba/sleep.webp',
@@ -99,12 +103,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/swiftfox/idle.webp',
       fps: 12,
-      scale: 1
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/swiftfox/walk.webp',     
       stride: 1, 
-      speed: 1
+      speed: 1,
+      cols: 6,
+      rows: 6
     },
     sleepSheet: {
       src: 'assets/swiftfox/sleep.webp',
@@ -116,13 +124,17 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/flowerbeetle/idle.webp',
       fps: 12,
-      scale: 1
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/flowerbeetle/walk.webp', 
       stride: 1, 
       speed: 1,
-      scale: 1.05
+      scale: 1.05,
+      cols: 6,
+      rows: 6
     },
     sleepSheet: {
       src: 'assets/flowerbeetle/sleep.webp',
@@ -134,12 +146,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/gecko/idle.webp',
       fps: 12,
-      scale: 1
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/gecko/walk.webp',    
       stride: 1, 
-      speed: 1
+      speed: 1,
+      cols: 6,
+      rows: 6
     },
     sleepSheet: {
       src: 'assets/gecko/sleep.webp',
@@ -151,12 +167,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/snowbunny/idle.webp',
       fps: 12,
-      scale: 1
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/snowbunny/walk.webp',    
-      stride:1, 
-      speed:1
+      stride: 1, 
+      speed: 1,
+      cols: 6,
+      rows: 6
     },
     sleepSheet: {
       src: 'assets/snowbunny/sleep.webp',
@@ -168,12 +188,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/wukong/idle.webp',
       fps: 12,
-      scale: 1
+      scale: 1,
+      cols: 6,
+      rows: 6
     },     
     walkSheet: {
       src: 'assets/wukong/walk.webp',
       stride: 1,
-      speed: 1
+      speed: 1,
+      cols: 6,
+      rows: 6
     },
     sleepSheet: {
       src: 'assets/wukong/sleep.webp',
@@ -191,12 +215,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/wukongv2/idle.webp',
       fps: 12,
-      scale: 1
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/wukongv2/walk.webp',
       stride: 1,
-      speed: 1
+      speed: 1,
+      cols: 6,
+      rows: 6
     },    
     sleepSheet: {
       src:'assets/wukongv2/sleep.webp', 
@@ -208,12 +236,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/wukongv3/idle.webp',
       fps: 12,
-      scale: 1
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/wukongv3/walk.webp',
       stride: 1,
-      speed: 1
+      speed: 1,
+      cols: 6,
+      rows: 6
     },     
     sleepSheet: {
       src: 'assets/wukongv3/sleep.webp',
@@ -231,12 +263,17 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/dewgrub/idle.webp',
       fps: 12,
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/dewgrub/walk.webp',      
       stride: 1, 
       speed: 1,
-      scale: 1.1
+      scale: 1.1,
+      cols: 6,
+      rows: 6
     },
     sleepSheet: {
       src: 'assets/dewgrub/sleep.webp',
@@ -248,12 +285,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/ripplewing/idle.webp',
       fps: 12,
-      scale: 0.9
+      scale: 0.9,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/ripplewing/walk.webp',   
       stride: 1, 
-      speed: 1
+      speed: 1,
+      cols: 6,
+      rows: 6
     },
     sleepSheet: {
       src: 'assets/ripplewing/sleep.webp',
@@ -266,11 +307,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/voltreaver/idle.webp',
       fps: 12,
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/voltreaver/walk.webp',
       stride: 1,
-      speed: 1
+      speed: 1,
+      cols: 6,
+      rows: 6
     },
     sleepSheet:{
       src:'assets/voltreaver/sleep.webp', 
@@ -282,11 +328,16 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/shibav2/idle.webp',
       fps: 12,
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/shibav2/walk.webp',      
       stride: 1, 
       speed: 1,
+      cols: 6,
+      rows: 6
     },
     sleepSheet: {
       src: 'assets/shibav2/sleep.webp',
@@ -298,7 +349,9 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/shibav3_1/idle.webp',
       fps: 12,
-      scale: 1
+      scale: 1,
+      cols: 6,
+      rows: 6
     },
     walkSheet: {
       src: 'assets/shibav3_1/walk.webp',
