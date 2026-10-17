@@ -28,9 +28,6 @@ const PET_DEF = [
   {name:'Swiftfox', scale:1, sw:780, sh:640},
   {name:'Flowerbeetle', scale:0.8, sw:700, sh:650},
   {name:'Shiba', scale:0.8, sw:780, sh:680},
-  {name:'Rồng Lửa', scale:0.9, sw:820, sh:700},
-  {name:'Thằn Lằn Băng', scale:0.8, sw:780, sh:700},
-  {name:'Cáo Lửa', scale:0.8, sw:780, sh:680},
   {name:'Gecko', scale:0.7, sw:780, sh:680},
   {name:'Snowbunny', scale:0.8, sw:780, sh:680},
   {name:'Wukong', scale:0.8, sw:780, sh:680},
@@ -83,111 +80,108 @@ const PET_ANIM = {
   },
   'Shiba': {
     idleSheet: {
-      src: 'assets/shiba/idle.png',
+      src: 'assets/shiba/idle.webp',
       fps: 12,
       scale: 1
     },
     walkSheet: {
-      src: 'assets/shiba/walk.png',        
+      src: 'assets/shiba/walk.webp',        
       stride: 1, 
       speed: 1
     },
     sleepSheet: {
-      src: 'assets/shiba/sleep.png',
+      src: 'assets/shiba/sleep.webp',
       cols: 1,
       rows: 1
     },
   },
-  'Cáo Lửa':        {walkSheet:'assets/firefox/walk.png',      stride:1, speed:1},
   'Swiftfox': {
     idleSheet: {
-      src: 'assets/swiftfox/idle.png',
+      src: 'assets/swiftfox/idle.webp',
       fps: 12,
       scale: 1
     },
     walkSheet: {
-      src: 'assets/swiftfox/walk.png',     
+      src: 'assets/swiftfox/walk.webp',     
       stride: 1, 
       speed: 1
     },
     sleepSheet: {
-      src: 'assets/swiftfox/sleep.png',
+      src: 'assets/swiftfox/sleep.webp',
       cols: 1,
       rows: 1
     },
   },
   'Flowerbeetle': {
     idleSheet: {
-      src: 'assets/flowerbeetle/idle.png',
+      src: 'assets/flowerbeetle/idle.webp',
       fps: 12,
       scale: 1
     },
     walkSheet: {
-      src: 'assets/flowerbeetle/walk.png', 
+      src: 'assets/flowerbeetle/walk.webp', 
       stride: 1, 
       speed: 1,
       scale: 1.05
     },
     sleepSheet: {
-      src: 'assets/flowerbeetle/sleep.png',
+      src: 'assets/flowerbeetle/sleep.webp',
       cols: 1,
       rows: 1
     },
   },
-  'Rồng Lửa':       {walkSheet:'assets/firedragon/walk.png',   stride:1, speed:1},
-  'Thằn Lằn Băng':  {walkSheet:'assets/waterdragon/walk.png',  stride:1, speed:1},
   'Gecko': {
     idleSheet: {
-      src: 'assets/gecko/idle.png',
+      src: 'assets/gecko/idle.webp',
       fps: 12,
       scale: 1
     },
     walkSheet: {
-      src: 'assets/gecko/walk.png',    
+      src: 'assets/gecko/walk.webp',    
       stride: 1, 
       speed: 1
     },
     sleepSheet: {
-      src: 'assets/gecko/sleep.png',
+      src: 'assets/gecko/sleep.webp',
       cols: 1,
       rows: 1
     },
   },
   'Snowbunny': {
     idleSheet: {
-      src: 'assets/snowbunny/idle.png',
+      src: 'assets/snowbunny/idle.webp',
       fps: 12,
       scale: 1
     },
     walkSheet: {
-      src: 'assets/snowbunny/walk.png',    
+      src: 'assets/snowbunny/walk.webp',    
       stride:1, 
       speed:1
     },
     sleepSheet: {
-      src: 'assets/snowbunny/sleep.png',
+      src: 'assets/snowbunny/sleep.webp',
       cols: 1,
       rows: 1
     },
   },
   'Wukong': {   
     idleSheet: {
-      src: 'assets/wukong/idle.png',
+      src: 'assets/wukong/idle.webp',
       fps: 12,
       scale: 1
     },     
     walkSheet: {
-      src: 'assets/wukong/walk.png',
+      src: 'assets/wukong/walk.webp',
       stride: 1,
       speed: 1
     },
     sleepSheet: {
-      src: 'assets/wukong/sleep.png',
+      src: 'assets/wukong/sleep.webp',
       cols: 1,
       rows: 1
     },
     attackSheet: {
-      src: 'assets/wukong/attack.png',
+      src: 'assets/wukong/attack.webp',
       cols:5,
       rows:5, 
       scale: 1.8
@@ -195,39 +189,39 @@ const PET_ANIM = {
   },
   'Wukongv2': {
     idleSheet: {
-      src: 'assets/wukongv2/idle.png',
+      src: 'assets/wukongv2/idle.webp',
       fps: 12,
       scale: 1
     },
     walkSheet: {
-      src: 'assets/wukongv2/walk.png',
+      src: 'assets/wukongv2/walk.webp',
       stride: 1,
       speed: 1
     },    
     sleepSheet: {
-      src:'assets/wukongv2/sleep.png', 
+      src:'assets/wukongv2/sleep.webp', 
       cols: 1, 
       rows: 1
     }, 
   },
   'Wukongv3': {
     idleSheet: {
-      src: 'assets/wukongv3/idle.png',
+      src: 'assets/wukongv3/idle.webp',
       fps: 12,
       scale: 1
     },
     walkSheet: {
-      src: 'assets/wukongv3/walk.png',
+      src: 'assets/wukongv3/walk.webp',
       stride: 1,
       speed: 1
     },     
     sleepSheet: {
-      src: 'assets/wukongv3/sleep.png',
+      src: 'assets/wukongv3/sleep.webp',
       cols: 1,
       rows: 1
     },
     attackSheet: {
-      src: 'assets/wukongv3/attack.png',
+      src: 'assets/wukongv3/attack.webp',
       cols:5,
       rows:5,
       scale: 2.8
@@ -235,34 +229,34 @@ const PET_ANIM = {
   },
   'Dewgrub': {
     idleSheet: {
-      src: 'assets/dewgrub/idle.png',
+      src: 'assets/dewgrub/idle.webp',
       fps: 12,
     },
     walkSheet: {
-      src: 'assets/dewgrub/walk.png',      
+      src: 'assets/dewgrub/walk.webp',      
       stride: 1, 
       speed: 1,
       scale: 1.1
     },
     sleepSheet: {
-      src: 'assets/dewgrub/sleep.png',
+      src: 'assets/dewgrub/sleep.webp',
       cols: 1,
       rows: 1,
     },
   },
   'Ripplewing': {
     idleSheet: {
-      src: 'assets/ripplewing/idle.png',
+      src: 'assets/ripplewing/idle.webp',
       fps: 12,
       scale: 0.9
     },
     walkSheet: {
-      src: 'assets/ripplewing/walk.png',   
+      src: 'assets/ripplewing/walk.webp',   
       stride: 1, 
       speed: 1
     },
     sleepSheet: {
-      src: 'assets/ripplewing/sleep.png',
+      src: 'assets/ripplewing/sleep.webp',
       cols: 1,
       rows: 1,
       scale: 0.88
@@ -270,56 +264,56 @@ const PET_ANIM = {
   },
   'Voltreaver': {
     idleSheet: {
-      src: 'assets/voltreaver/idle.png',
+      src: 'assets/voltreaver/idle.webp',
       fps: 12,
     },
     walkSheet: {
-      src: 'assets/voltreaver/walk.png',
+      src: 'assets/voltreaver/walk.webp',
       stride: 1,
       speed: 1
     },
     sleepSheet:{
-      src:'assets/voltreaver/sleep.png', 
+      src:'assets/voltreaver/sleep.webp', 
       cols: 1, 
       rows: 1
     },
   },
   'Shibav2': {
     idleSheet: {
-      src: 'assets/shibav2/idle.png',
+      src: 'assets/shibav2/idle.webp',
       fps: 12,
     },
     walkSheet: {
-      src: 'assets/shibav2/walk.png',      
+      src: 'assets/shibav2/walk.webp',      
       stride: 1, 
       speed: 1,
     },
     sleepSheet: {
-      src: 'assets/shibav2/sleep.png',
+      src: 'assets/shibav2/sleep.webp',
       cols: 1,
       rows: 1
     },
   },
   'Shibav3_1': {
     idleSheet: {
-      src: 'assets/shibav3_1/idle.png',
+      src: 'assets/shibav3_1/idle.webp',
       fps: 12,
       scale: 1
     },
     walkSheet: {
-      src: 'assets/shibav3_1/walk.png',
+      src: 'assets/shibav3_1/walk.webp',
       cols: 6,
       rows: 6,
       stride: 1,
       speed: 1
     },
     sleepSheet: {
-      src:'assets/shibav3_1/sleep.png', 
+      src:'assets/shibav3_1/sleep.webp', 
       cols: 1, 
       rows: 1
     },
     attackSheet: {
-      src: 'assets/shibav3_1/attack.png',
+      src: 'assets/shibav3_1/attack.webp',
       cols: 7,
       rows: 3,
       frames: 21,
@@ -327,11 +321,11 @@ const PET_ANIM = {
       fps: 30
     },
     fireballSheet: {
-      src:'assets/shibav3_1/fireball.png', 
+      src:'assets/shibav3_1/fireball.webp', 
       scale: 1.5
     },
     explosionSheet: {
-      src:'assets/shibav3_1/explosion.png', 
+      src:'assets/shibav3_1/explosion.webp', 
       cols: 4,
       rows: 5,
       frames: 20,
