@@ -31,15 +31,16 @@ const range = (a, n) => Array.from({length:n}, (_, i) => a + i);
 const ENEMY_TYPES = {
   worm: { name:'Sâu Cát', hp:70, dmg:9, speed:80, h:230, anchor:.86, range:150, cd:1.2,
     sheets: {
-      main:   {src:'assets/worm/worm.webp',   cols:6, rows:6, frames:36, max:360},   // 36 khung: 16 lặn + 4 đi + 16 trồi
-      attack: {src:'assets/worm/attack.webp', cols:6, rows:6, frames:36, max:360},   // 36 khung tấn công
+      main:   {src:'assets/worm/worm.webp',   cols:5, rows:5, frames:25, max:360},   // 36 khung: 16 lặn + 4 đi + 16 trồi
+      attack: {src:'assets/worm/attack.webp', cols:4, rows:4, frames:16, max:360},   // 36 khung tấn công
     },
     anim: {
-      dive:   {sheet:'main',   seq:range(0,16),  fps:14, scale: 1},
-      travel: {sheet:'main',   seq:range(16,4),  fps:6, scale: 1},
-      emerge: {sheet:'main',   seq:range(20,16), fps:14, scale:1},
-      attack: {sheet:'attack', seq:range(0,36),  fps:18, hitAt:22, scale:1},
-    } }
+      dive:   {sheet:'main',   seq:range(0,9),  fps:14, scale: 0.68},
+      travel: {sheet:'main',   seq:range(9,1),  fps:6, scale: 0.68},
+      emerge: {sheet:'main',   seq:range(10,15), fps:14, scale:0.68},
+      attack: {sheet:'attack', seq:range(0,16),  fps:12, hitAt:8, scale:0.68},
+    }, 
+  }
 };
 // Chỉ số chiến đấu của pet (không khai = mặc định). range: tầm đánh · cd: giây giữa 2 đòn
 const PET_BATTLE_DEFAULT = {hp:100, dmg:12, range:170, cd:1.6};

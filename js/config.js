@@ -24,7 +24,6 @@ const PETS_START_PLACED = true;
 // scale: hệ số nhân kích thước riêng cho từng con (1.0 = bình thường, 0.8 = nhỏ hơn 20%, 1.2 = lớn hơn 20%)
 //        MỘT scale này áp dụng chung cho mọi trạng thái: đi, đứng yên, ngủ, tấn công (game tự cân ảnh các trạng thái cho nhân vật to bằng nhau)
 const PET_DEF = [
-  {name:'Worm', scale:1, sw:780, sh:640},
   {name:'Swiftfox', scale:1, sw:780, sh:640},
   {name:'Flowerbeetle', scale:0.8, sw:700, sh:650},
   {name:'Shiba', scale:0.8, sw:780, sh:680},
@@ -57,27 +56,6 @@ const SHEET_DEFAULT = {cols:6, rows:6, max:320};   // cols/rows: chỉ dùng khi
 //   idleFit / sleepFit / attackFit : cách cân cỡ ảnh cho bằng nhân vật lúc đi: 'height' (idle, attack mặc định), 'width' (sleep mặc định), 'none' (không cân)
 //   idleScale / sleepScale / attackScale : nhân thêm cỡ (1 = giữ nguyên; 1.2 = to hơn 20%)
 const PET_ANIM = {
-  'Worm' : {
-    idleSheet: {
-      src: 'assets/worm/worm.webp',
-      fps: 12,
-      scale: 1,
-      cols: 5,
-      rows: 5
-    },
-    walkSheet: {
-      src: 'assets/worm/worm.webp',
-      stride: 1,
-      speed: 1,
-      cols: 5,
-      rows: 5
-    },
-    sleepSheet: {
-      src: 'assets/worm/walk.webp',
-      cols: 1,
-      rows: 1
-    },
-  },
   'Shiba': {
     idleSheet: {
       src: 'assets/shiba/idle.webp',
