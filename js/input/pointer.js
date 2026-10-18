@@ -1,14 +1,8 @@
 /* ==================================================================
-   INPUT
-   Phím WASD / mũi tên và bấm chuột chọn thú
+   INPUT – CHUỘT / CẢM ỨNG TRÊN MAP
+   Bấm chọn thú, bấm chỗ trống để thú đi tới, kéo thú giữa các map ở chế độ xem toàn bộ.
    ================================================================== */
 
-// ---- Điều khiển bằng bàn phím: thú đang được chọn đi theo WASD / phím mũi tên ----
-const KEYS = {};
-const MOVE_KEYS = {KeyW:'u',ArrowUp:'u',KeyS:'d',ArrowDown:'d',KeyA:'l',ArrowLeft:'l',KeyD:'r',ArrowRight:'r'};
-window.addEventListener('keyup', e=>{ const k = MOVE_KEYS[e.code]; if(k) KEYS[k]=false; });
-window.addEventListener('blur', ()=>{ for(const k in KEYS) KEYS[k]=false; });
-function keyDir(){ return {x:(KEYS.r?1:0)-(KEYS.l?1:0), y:(KEYS.d?1:0)-(KEYS.u?1:0)}; }
 // INTERACTION
 let clickMarker = null;   // vòng tròn báo điểm vừa bấm
 function tileAt(pos){ return VIEW.tiles.find(q=>pos.x>=q.x && pos.x<=q.x+q.w && pos.y>=q.y && pos.y<=q.y+q.h); }
@@ -66,22 +60,4 @@ cv.addEventListener('pointerdown', e => {
     cur.idleUntil = 0; cur.nextTurn = 0;
     clickMarker = {x:cur.target.x, y:cur.target.y, t:performance.now()};
   } else { closePetPanel(); }
-});
-
-window.addEventListener('keydown', e => {
-  if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '')) return;
-
-  if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-    const selectedPet = PETS.find(p => p.selected);
-    
-    //kich hoat
-    if (selectedPet && selectedPet.def.attackAnimFrames && (!DECOR.active || VIEW.overview)) {
-      e.preventDefault();
-      triggerAttack(selectedPet);
-    }
-    return;
-  }
-
-  const k = MOVE_KEYS[e.code]; if(!k) return;
-  if(PETS.some(p=>p.selected) && (!DECOR.active || VIEW.overview)){ e.preventDefault(); KEYS[k]=true; }
 });

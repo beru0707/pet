@@ -1,6 +1,6 @@
 /* ==================================================================
    MAPS
-   Dữ liệu từng map (đường + vật phẩm), map đang xem, đổi map, thả thú vào map
+   Dữ liệu từng map (đường + vật phẩm), map đang xem, đổi map, thả thú vào map.
    Mọi map đều chạy liên tục: thú ở map không xem vẫn đi lại bình thường.
    ================================================================== */
 

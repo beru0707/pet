@@ -1,0 +1,33 @@
+/* ==================================================================
+   MENU CHỨC NĂNG – thanh dưới, tab, nút, thẻ pet / map, ảnh kéo
+   ================================================================== */
+/* DECOR */
+#deco{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#183010f2,#102208f7);border-top:3px solid #5aa332;z-index:15;padding:8px 14px 12px;color:#e6f7c8}
+#deco.hidden{display:none}
+.d-tabs,.m-tabs{display:flex;gap:8px;margin-bottom:8px}
+.d-tabs button,.m-tabs button{flex:1;padding:8px 6px;border-radius:10px;border:2px solid #ffffff22;background:#ffffff14;color:#e6f7c8;font:700 clamp(12px,1.6vw,16px) 'Fredoka',sans-serif;cursor:pointer}
+.d-tabs button.on,.m-tabs button.on{background:#4a8a2a;border-color:#a4e27a;color:#fff}
+.m-tabs #d-done{flex:0 0 auto;background:#e08a1e;border-color:#ffd08a;color:#fff;padding:8px 18px}
+.d-body{display:flex;gap:10px;align-items:stretch;overflow-x:auto;padding-bottom:4px;min-height:88px}
+.dbtn{flex:0 0 auto;min-width:78px;padding:6px 8px;border-radius:12px;border:2px solid #ffffff22;background:#ffffff12;color:#e6f7c8;font:600 12px 'Fredoka',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
+.dbtn.on{border-color:#ffd54a;background:#ffffff30;box-shadow:0 0 0 2px #ffd54a55}
+.dbtn img{width:56px;height:56px;object-fit:contain;image-rendering:auto}
+.dbtn i{width:42px;height:42px;border-radius:50%;border:3px solid #fff8;display:block}
+.dbtn.big{font-size:20px}
+.dlabel{flex:0 0 auto;align-self:center;font:600 12px 'Fredoka',sans-serif;opacity:.8;padding:0 6px}
+/* THẺ PET + THẺ MAP + ẢNH KÉO */
+.pcard,.mcard{flex:0 0 auto;width:104px;padding:6px;border-radius:12px;border:2px solid #ffffff22;background:#ffffff12;color:#e6f7c8;font:600 12px 'Fredoka',sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;cursor:pointer;touch-action:pan-x}
+.pcard img,.pcard canvas{width:64px;height:64px;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
+.pcard b,.mcard b{font-size:12px;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcard small,.mcard small{font-size:10px;opacity:.75}
+.pcard.here{border-color:#a4e27a;background:#4a8a2a44}
+.pcard.free{border-style:dashed}
+.pcard:active{cursor:grabbing}
+.mcard{width:132px;cursor:pointer}
+.mcard.on{border-color:#ffd54a;background:#ffffff30;box-shadow:0 0 0 2px #ffd54a55}
+.mcard.all.on{border-color:#7ddcff;box-shadow:0 0 0 2px #7ddcff55}
+.mthumb.mosaic{display:grid;gap:2px;overflow:hidden;padding:0;background:#10200a}
+.mthumb.mosaic i{background-size:cover;background-position:center;min-height:0}
+.mthumb{width:100%;height:56px;border-radius:8px;background-size:cover;background-position:center;background-color:#2f5a1c}
+.drag-ghost{position:fixed;width:72px;height:72px;object-fit:contain;pointer-events:none;opacity:.88;z-index:100;transform:translate(-50%,-80%);filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.dlabel{max-width:150px;line-height:1.3}

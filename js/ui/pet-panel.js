@@ -1,9 +1,8 @@
 /* ==================================================================
-   UI
-   Bảng thông tin thú, nút chăm sóc, HUD, thông báo
+   UI – BẢNG THÔNG TIN THÚ
+   Bảng bên phải khi chọn thú: ảnh, thanh đói / vui / năng lượng, nút cho ăn, chơi, ngủ, cất.
    ================================================================== */
 
-// UI
 let selPet = null;
 function openPetPanel(p){
   selPet = p; document.getElementById('pet-panel').classList.remove('hidden');
@@ -56,6 +55,3 @@ function doplay(){
   toast('Chơi rất vui! ❤️'); refreshPanel(); updateHUD(); saveGame();
 }
 function dosleep(){ selPet.sleepUntil=performance.now()/1000+8; selPet.target=null; selPet.idleUntil=performance.now()/1000+8; selPet.vx=0; selPet.vy=0; toast('Đang ngủ... 💤'); saveGame(); }
-
-function updateHUD(){ document.getElementById('h-coins').textContent=state.coins; document.getElementById('h-lv').textContent=state.lv; }
-let _t; function toast(m){ const e=document.getElementById('toast'); e.textContent=m; e.classList.add('show'); clearTimeout(_t); _t=setTimeout(()=>e.classList.remove('show'),2200); }

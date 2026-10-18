@@ -1,50 +1,8 @@
 /* ==================================================================
-   PETS
-   Vùng đi được, khởi tạo thú, di chuyển (tự đi, ảnh động, bàn phím)
+   PETS – DI CHUYỂN
+   Tự đi lang thang, đi theo phím WASD / cần ảo / điểm bấm, ngủ, ảnh động bước chân.
    ================================================================== */
 
-function inPoly(px, py, poly) {
-  let inside = false;
-  for (let i=0, j=poly.length-1; i<poly.length; j=i++) {
-    const [xi,yi]=poly[i], [xj,yj]=poly[j];
-    if (((yi>py)!==(yj>py)) && (px < (xj-xi)*(py-yi)/(yj-yi)+xi)) inside=!inside;
-  }
-  return inside;
-}
-function walkable(x, y) {
-  if (!inPoly(x, y, WALK_POLY)) return false;
-  for (const z of FORBIDDEN) {
-    if (z.type==='rect') { if (x>=z.x && x<=z.x+z.w && y>=z.y && y<=z.y+z.h) return false; }
-    else { if ((x-z.cx)**2+(y-z.cy)**2 < z.r*z.r) return false; }
-  }
-  return !blockedByItem(x, y);
-}
-let PETS = [];
-function spawnPos(){
-  for(let i=0;i<300;i++){
-    const x = 200+Math.random()*(CW-436), y = 300+Math.random()*600;
-    if(walkable(x,y)) return {x,y};
-  }
-  return {x:CW/2,y:CH/2};
-}
-
-function initPets(){
-  PETS = PET_DEF.map((def, idx) => {
-    const saved = state.petsData[idx] || {};
-    // map của thú: dữ liệu cũ chưa có -> theo PETS_START_PLACED; null = đang nằm trong danh sách (chưa thả)
-    let map = saved.map !== undefined ? saved.map : (PETS_START_PLACED ? MAPS[0].id : null);
-    if(map && !MAPDATA[map]) map = MAPS[0].id;
-    SIM_MAP = map;
-    const sp = (saved.x && saved.y) ? {x:saved.x, y:saved.y} : spawnPos();
-    SIM_MAP = null;
-    return {
-      def, map, x:sp.x, y:sp.y, vx:0, vy:0, phase:Math.random()*7, nextTurn:0, idleUntil:0, facingLeft:false,
-      hunger:saved.hunger??100, happy:saved.happy??100, energy:saved.energy??100, selected:false,
-      animFrame:0, animTime:0   // dùng cho animation đa frame
-    };
-  });
-}
-function pSize(y){ return PET_BASE_SIZE; }
 // ---- Thú đi bộ: mượt, chân khớp quãng đường ----
 function updateWalker(p, t, dt){
   const depth = pSize(p.y) / 100;                 // = 1 (cỡ cố định)
@@ -171,100 +129,6 @@ function updatePet(p, t, dt){
     } else {
       p.animFrame = 0;  // Reset về frame đứng yên
       p.animTime = 0;
-    }
-  }
-}
-
-// Hàm kích hoạt lệnh bắn
-// Khai báo mảng chứa đạn và vụ nổ
-let PROJECTILES = [];
-let EXPLOSIONS = [];
-
-// Hàm kích hoạt tấn công (Chỉ cho Shibav3_1)
-function triggerAttack(pet) {
-  if (!pet || !pet.def.attackAnimFrames || pet.isAttacking) return;
-  pet.isAttacking = true; pet.sleepUntil = 0; pet.sleeping = false;
-  pet.attackTime = 0;
-  pet.hasFired = false;
-}
-
-// Hàm sinh quả cầu lửa bay tới điểm chỉ định
-function spawnFireball(pet, targetX, targetY) {
-  const fireX = pet.x + (pet.facingLeft ? -40 : 40);
-  const fireY = pet.y - 45;
-
-  const dx = targetX - fireX;
-  const dy = targetY - fireY;
-  const targetDist = Math.hypot(dx, dy);
-  const angle = Math.atan2(dy, dx);
-
-  PROJECTILES.push({
-    x: fireX,
-    y: fireY,
-    startX: fireX,
-    startY: fireY,
-    targetX: targetX,
-    targetY: targetY,
-    maxDistance: targetDist,
-    vx: Math.cos(angle) * FIREBALL_SPEED,
-    vy: Math.sin(angle) * FIREBALL_SPEED,
-    rotation: angle,
-    map: pet.map,
-    def: pet.def,
-    life: FIREBALL_LIFESPAN,
-    animFrame: 0,
-    animTime: 0
-  });
-}
-
-// Hàm sinh vụ nổ
-function spawnExplosion(x, y, map, def) {
-  if (typeof battleOnBlast === 'function') 
-    battleOnBlast(x, y, map, def);
-  if (!def || !def.explosionFrames) return;
-  EXPLOSIONS.push({
-    map: map,
-    def: def,
-    x: x,
-    y: y,
-    frame: 1,
-    animTime: 0
-  });
-}
-
-// Hàm cập nhật đạn và vụ nổ theo thời gian
-function updateProjectiles(dt) {
-  for (let i = PROJECTILES.length - 1; i >= 0; i--) {
-    const p = PROJECTILES[i];
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    p.life -= dt;
-
-    p.animTime += dt;
-    if (p.animTime >= 1/(p.def.fireballFps||6.67)) { 
-      p.animTime = 0;
-      p.animFrame = (p.animFrame + 1) % (p.def.fireballFrames ? p.def.fireballFrames.length : 1);
-    }
-
-    const travelled = Math.hypot(p.x - p.startX, p.y - p.startY);
-
-    // Chạm vị trí đích -> Tạo vụ nổ và xóa quả cầu
-    if (travelled >= p.maxDistance || p.life <= 0 || p.x < 0 || p.x > CW || p.y < 0 || p.y > CH) {
-      spawnExplosion(p.targetX || p.x, p.targetY || p.y, p.map, p.def);
-      PROJECTILES.splice(i, 1);
-    }
-  }
-
-  // Cập nhật hiệu ứng vụ nổ
-  for (let i = EXPLOSIONS.length - 1; i >= 0; i--) {
-    const ex = EXPLOSIONS[i];
-    ex.animTime += dt;
-    if (ex.animTime >= 1/(ex.def.explosionFps||16.7)) {
-      ex.animTime = 0;
-      ex.frame++;
-      if (ex.frame > ex.def.explosionFrames.length) {
-        EXPLOSIONS.splice(i, 1);
-      }
     }
   }
 }

@@ -1,6 +1,6 @@
 /* ==================================================================
-   STATE
-   Trạng thái game (xu, cấp) và lưu/tải vào localStorage
+   DATA – LƯU GAME
+   Trạng thái game (xu, cấp, dữ liệu thú) + lưu / tải localStorage.
    ================================================================== */
 
 // GAME STATE

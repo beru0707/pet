@@ -1,6 +1,7 @@
 /* ==================================================================
-   STORAGE
-   Lưu/tải trang trí: đường + vật phẩm (localStorage), ảnh tải lên (IndexedDB)
+   DATA – LƯU TRANG TRÍ
+   Lưu / tải đường + vật phẩm (localStorage), ảnh tải lên (IndexedDB). Gọi loadDecor() ngay khi nạp file.
+   Phải nạp SAU các file decor/*.
    ================================================================== */
 
 // ---- lưu / tải ----

@@ -1,0 +1,26 @@
+/* ==================================================================
+   BATTLE – kiểu dáng nút Vào trận, thanh chuẩn bị, HUD, banner, bảng tổng kết
+   (trước đây nằm trong battle.js)
+   ================================================================== */
+#bt-open{position:fixed;right:16px;bottom:16px;z-index:30;padding:12px 20px;border:0;border-radius:99px;background:linear-gradient(180deg,#ff7a45,#d9361b);color:#fff;font:700 16px Fredoka,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.45);transition:transform .15s}
+#bt-open:hover{transform:translateY(-2px) scale(1.04)}
+#bt-ov{position:fixed;z-index:6;pointer-events:none;display:none}
+#bt-fade{position:fixed;inset:0;z-index:99990;background:#000;opacity:0;pointer-events:none;transition:opacity .45s}
+#bt-bar{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:31;display:none;align-items:center;gap:12px;max-width:min(96vw,1000px);padding:10px 14px;border-radius:16px;background:rgba(20,28,16,.9);color:#eaf6d4;font:600 14px Fredoka,sans-serif;box-shadow:0 6px 22px rgba(0,0,0,.5)}
+#bt-bar .bt-t{white-space:nowrap}#bt-bar .bt-t small{display:block;opacity:.75;font-weight:500}
+#bt-list{display:flex;gap:8px;overflow-x:auto;padding:4px 2px;max-width:60vw}
+.bt-card{flex:0 0 auto;width:68px;text-align:center;padding:6px 4px;border-radius:12px;background:#ffffff14;border:2px solid transparent;cursor:grab;user-select:none;touch-action:none}
+.bt-card.on{border-color:#7bd34a;background:#7bd34a26}
+.bt-card canvas,.bt-card img{width:48px;height:48px;object-fit:contain;pointer-events:none}
+.bt-card b{display:block;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bt-btn{border:0;border-radius:99px;padding:10px 18px;font:700 15px Fredoka,sans-serif;cursor:pointer;color:#fff}
+#bt-go{background:linear-gradient(180deg,#6fd13e,#3d9a1e)}#bt-go[disabled]{opacity:.5;cursor:default}
+#bt-quit{background:#ffffff26}
+#bt-hud{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:31;display:none;padding:8px 20px;border-radius:99px;background:rgba(20,28,16,.85);color:#fff;font:700 16px Fredoka,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap}
+#bt-banner{position:fixed;top:30%;left:50%;transform:translate(-50%,-50%);z-index:31;display:none;color:#fff;font:700 54px Fredoka,sans-serif;text-shadow:0 4px 14px rgba(0,0,0,.7);pointer-events:none}
+#bt-res{position:fixed;inset:0;z-index:99980;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55)}
+#bt-res .card{min-width:min(92vw,420px);padding:24px 28px;border-radius:20px;background:#1b2814;color:#eaf6d4;font:600 16px Fredoka,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.6);text-align:center}
+#bt-res h2{margin:0 0 12px;font-size:32px}
+#bt-res table{width:100%;margin:12px 0 18px;border-collapse:collapse;font-size:14px}
+#bt-res td,#bt-res th{padding:4px 6px;text-align:right}#bt-res td:first-child,#bt-res th:first-child{text-align:left}
+#bt-res tr+tr td{border-top:1px solid #ffffff1a}

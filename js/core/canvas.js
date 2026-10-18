@@ -1,6 +1,6 @@
 /* ==================================================================
-   CORE
-   Canvas, quy đổi tọa độ chuột, bóng đổ
+   CORE – CANVAS
+   Canvas chính, quy đổi tọa độ chuột -> tọa độ thế giới, bóng đổ.
    ================================================================== */
 
 const cv = document.getElementById('c');

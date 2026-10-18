@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Khu Vườn Thú Cưng</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/hud.css">
+<link rel="stylesheet" href="css/pet-panel.css">
+<link rel="stylesheet" href="css/menu.css">
+<link rel="stylesheet" href="css/battle.css">
 <link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
@@ -46,21 +50,45 @@
   </div>
   <div id="toast"></div>
 </div>
-<script src="js/config.js"></script>
-<script src="js/core.js"></script>
-<script src="js/assets.js"></script>
-<script src="js/state.js"></script>
-<script src="js/pets.js"></script>
-<script src="js/input.js"></script>
-<script src="js/render.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/maps.js"></script>
-<script src="js/decor.js"></script>
-<script src="js/decor-ui.js"></script>
-<script src="js/menu.js"></script>
-<script src="js/storage.js"></script>
-<script src="js/battle.js"></script>
-<script src="js/mobile.js"></script>
+<script src="js/config/world.js"></script>
+<script src="js/config/pets.js"></script>
+<script src="js/config/decor.js"></script>
+<script src="js/config/battle.js"></script>
+<script src="js/core/canvas.js"></script>
+<script src="js/data/game-save.js"></script>
+<script src="js/assets/images.js"></script>
+<script src="js/assets/sprites.js"></script>
+<script src="js/assets/pet-loader.js"></script>
+<script src="js/assets/boot.js"></script>
+<script src="js/pets/world.js"></script>
+<script src="js/pets/movement.js"></script>
+<script src="js/pets/skills.js"></script>
+<script src="js/input/keyboard.js"></script>
+<script src="js/input/pointer.js"></script>
+<script src="js/render/pet-draw.js"></script>
+<script src="js/render/fx-draw.js"></script>
+<script src="js/render/scene.js"></script>
+<script src="js/ui/pet-panel.js"></script>
+<script src="js/ui/hud.js"></script>
+<script src="js/maps/maps.js"></script>
+<script src="js/decor/core.js"></script>
+<script src="js/decor/paths.js"></script>
+<script src="js/decor/items.js"></script>
+<script src="js/decor/edit.js"></script>
+<script src="js/decor/ui.js"></script>
+<script src="js/decor/import.js"></script>
+<script src="js/menu/menu.js"></script>
+<script src="js/menu/body.js"></script>
+<script src="js/menu/pet-drag.js"></script>
+<script src="js/data/decor-save.js"></script>
+<script src="js/battle/state.js"></script>
+<script src="js/battle/ui.js"></script>
+<script src="js/battle/prep.js"></script>
+<script src="js/battle/enemies.js"></script>
+<script src="js/battle/draw.js"></script>
+<script src="js/battle/flow.js"></script>
+<script src="js/mobile/layout.js"></script>
+<script src="js/mobile/controls.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
