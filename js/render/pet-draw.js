@@ -88,6 +88,9 @@ function drawPet(p, t){
     if (!(bb && rb && fitMode !== 'none')) { offL = -drawW/2; offT = -drawH; }
   }
 
+  const st = p.isAttacking ? 'attack' : p.sleeping ? 'sleep' : !p.moving ? 'idle' : null;   // trạng thái đang vẽ
+  if (fitMode && customImg && st) { offL += (p.def[st+'DX'] || 0) * drawH; offT += (p.def[st+'DY'] || 0) * drawH; }
+
   //Scale 
   const ws = (p.moving && !p.sleeping && !p.isAttacking && p.def.walkScale) || 1;
   if (ws !== 1) { drawH *= ws; drawW *= ws; offL = -drawW/2; offT = -drawH; }

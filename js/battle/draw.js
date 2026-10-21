@@ -59,7 +59,7 @@ function btDraw(t){
   // pet: thanh máu 
   PETS.forEach(p => {
     if(p.map !== BT.map || p.bdead || !p.bmax) return;
-    const by = p.y - BATTLE_CFG.barDY*(p.def.scale || 1);
+    const by = p.y - (p.def.barDY ?? BATTLE_CFG.barDY) * (p.def.scale || 1);
     btBar(p.x, by, 84, p.bhp/p.bmax, 'pet');
   });
   // chữ bay

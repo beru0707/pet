@@ -39,10 +39,11 @@ function petOpts(c){
     idleFit: sv(c.idleSheet,'fit') ?? c.idleFit, sleepFit: sv(c.sleepSheet,'fit') ?? c.sleepFit, attackFit: sv(c.attackSheet,'fit') ?? c.attackFit,
     idleScale: sv(c.idleSheet,'scale') ?? c.idleScale, sleepScale: sv(c.sleepSheet,'scale') ?? c.sleepScale, walkScale: sv(c.walkSheet,'scale') ?? 1, attackScale: sv(c.attackSheet,'scale') ?? c.attackScale, fireballScale: sv(c.fireballSheet,'scale') ?? 1, explosionScale: sv(c.explosionSheet,'scale') ?? 1,
     idleFps: sv(c.idleSheet,'fps') ?? c.idleFps ?? 12, sleepFps: sv(c.sleepSheet,'fps') ?? c.sleepFps ?? 6, attackFps: sv(c.attackSheet,'fps') ?? c.attackFps, fireballFps: sv(c.fireballSheet,'fps') ?? 6.67, explosionFps: sv(c.explosionSheet,'fps') ?? 16.7,
-    attackFireFrame: sv(c.attackSheet,'fireFrame') ?? c.attackFireFrame
+    attackFireFrame: sv(c.attackSheet,'fireFrame') ?? c.attackFireFrame,
+    idleDX: sv(c.idleSheet,'dx'), idleDY: sv(c.idleSheet,'dy'), sleepDX: sv(c.sleepSheet,'dx'), sleepDY: sv(c.sleepSheet,'dy'), attackDX: sv(c.attackSheet,'dx'), attackDY: sv(c.attackSheet,'dy')
   };
 }
-const refreshPetMenu = () => { if(typeof MENU !== 'undefined' && MENU.open && MENU.tab === 'pets') renderDeco(); };
+const refreshPetMenu = () => { if(typeof MENU !== 'undefined' && MENU.open && MENU.tab === 'pets') renderMenu(); };
 
 function loadPetWalk(n){
   const j = petJob(n); if(j.walk) return j.walk;
@@ -86,10 +87,11 @@ Object.entries(PET_ANIM).forEach(([name,c])=>{
 
 // ---------- NẠP THEO NHU CẦU ----------
 const petsOnMap = id => PETS.filter(p=>p.map===id).map(p=>p.def.name);
+const ensurePet = p => loadPetWalk(p.def.name).then(()=>loadPetLook(p.def.name)).then(()=>loadPetSkills(p.def.name));
 function ensureMap(id){
   const names = petsOnMap(id);
   return Promise.all([
     loadBg(id),
-    runPool(names.map(n => () => loadPetWalk(n).then(()=>loadPetLook(n)).then(()=>loadPetSkills(n))), LOAD_PARALLEL)
+    runPool(PETS.filter(p=>p.map===id).map(p => () => ensurePet(p)), LOAD_PARALLEL)
   ]);
 }

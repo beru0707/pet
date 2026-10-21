@@ -1,20 +1,13 @@
 /* ==================================================================
    RENDER – CẢNH
-   Vẽ 1 map (nền, đường, vật phẩm + thú xếp theo trục y, hiệu ứng) và chế độ xem toàn bộ map.
+   Vẽ 1 map (nền, thú xếp theo trục y, hiệu ứng) và chế độ xem toàn bộ map.
    ================================================================== */
 
 function drawMapScene(mid,t){
-  const ITEMS = MAPDATA[mid].items;
   { const B=IMGS['bg_'+mid];
     if(B?.complete && B.naturalWidth){ const k=Math.max(CW/B.naturalWidth,CH/B.naturalHeight),w=B.naturalWidth*k,h=B.naturalHeight*k; cx.drawImage(B,(CW-w)/2,(CH-h)/2,w,h); }
     else { cx.fillStyle='#86bf3b'; cx.fillRect(0,0,CW,CH); } }
-  drawPathLayer(mid);
-
-  const drawList = [...PETS.filter(p=>p.map===mid).map(p=>({y:p.y,pet:p})), ...ITEMS.map(it=>({y:it.y,item:it}))].sort((a,b)=>a.y-b.y);
-  drawList.forEach(o => {
-    if(o.item){ drawItem(o.item); return; }
-    drawPet(o.pet, t);
-  });
+  PETS.filter(p=>p.map===mid).sort((a,b)=>a.y-b.y).forEach(p => drawPet(p, t));
   drawTargetMarkers(mid, t);
   drawProjectiles(mid);
   drawExplosions(mid);

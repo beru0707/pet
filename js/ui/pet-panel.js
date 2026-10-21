@@ -35,7 +35,7 @@ function closePetPanel(){ if(selPet){ selPet.selected=false; selPet.target=null;
 function dostash(){   // cất thú về danh sách (khỏi map)
   if(!selPet) return; const p = selPet; closePetPanel();
   p.map = null; p.target = null; p.vx = 0; p.vy = 0; saveGame();
-  if(typeof MENU !== 'undefined' && MENU.open) renderDeco();
+  if(typeof MENU !== 'undefined' && MENU.open) renderMenu();
   toast(p.def.name + ' đã về danh sách');
 }
 function refreshPanel(){

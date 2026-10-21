@@ -17,7 +17,7 @@ function petThumbSrc(def){
   return im || '';
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function renderMenuBody(){
+function renderMenu(){
   const b = document.getElementById('d-body'); let h = '';
   if(MENU.tab === 'pets'){
     h += `<span class="dlabel">Kéo thẻ vào map để thả thú · bấm thẻ để chọn / thả vào map này</span>`;
@@ -41,6 +41,6 @@ function renderMenuBody(){
 // ---- bấm thẻ map: đổi map đang xem ----
 document.getElementById('d-body').addEventListener('click', e=>{
   const c = e.target.closest('.mcard'); if(!c) return;
-  if(c.dataset.all){ setOverview(!VIEW.overview); renderDeco(); return; }
-  VIEW.overview = false; setActiveMap(c.dataset.map); renderDeco();
+  if(c.dataset.all){ setOverview(!VIEW.overview); renderMenu(); return; }
+  VIEW.overview = false; setActiveMap(c.dataset.map); renderMenu();
 });

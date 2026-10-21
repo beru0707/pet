@@ -3,12 +3,15 @@
    Nạp ảnh địch, sinh địch, tìm mục tiêu, trừ máu địch / pet, nổ lan của quả cầu lửa, AI của địch (chui đi -> trồi lên -> cắn -> lặn).
    ================================================================== */
 
+// Trả về Promise (chỉ nạp 1 lần, các lần sau dùng lại kết quả)
 function btLoadEnemies(){
+  if(BT.enemyLoad) return BT.enemyLoad;
+  const jobs = [];
   Object.entries(ENEMY_TYPES).forEach(([k,T])=>{
-    if(BT.frames[k] !== undefined) return;
     const set = BT.frames[k] = {};
-    Object.entries(T.sheets || {}).forEach(([name, spec]) => loadSheet(spec).then(fr => { set[name] = fr || false; if(!fr) console.warn('[BATTLE] không đọc được', spec.src, '– dùng hình tạm'); }));
+    Object.entries(T.sheets || {}).forEach(([name, spec]) => jobs.push(loadSheet(spec).then(fr => { set[name] = fr || false; if(!fr) console.warn('[BATTLE] không đọc được', spec.src, '– dùng hình tạm'); })));
   });
+  return BT.enemyLoad = Promise.all(jobs);
 }
 
 // ============ ĐỊCH ============

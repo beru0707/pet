@@ -65,7 +65,7 @@ function updatePet(p, t, dt){
 
   // Đang ngủ: đứng yên (ảnh ngủ), tự dậy khi hết giờ hoặc khi có lệnh đi (phím WASD / bấm điểm đến)
   if (t < (p.sleepUntil||0)) {
-    const kdw = (p.selected && (!DECOR.active || VIEW.overview)) ? keyDir() : {x:0,y:0};
+    const kdw = p.selected ? keyDir() : {x:0,y:0};
     if (!(kdw.x || kdw.y || p.target)) {
       p.vx = 0; p.vy = 0; if (p.tvx !== undefined) { p.tvx = 0; p.tvy = 0; }
       p.moving = false; p.animFrame = 0; p.animPhase = 0; p.sleeping = true;
@@ -76,7 +76,7 @@ function updatePet(p, t, dt){
   p.sleeping = false;
 
   // hướng đi: ưu tiên phím WASD/mũi tên; nếu không có thì đi tới điểm vừa bấm (p.target)
-  let kd = (p.selected && (!DECOR.active || VIEW.overview)) ? keyDir() : {x:0,y:0};
+  let kd = p.selected ? keyDir() : {x:0,y:0};
   if(kd.x || kd.y){ p.target = null; }
   else if(p.target){
     const dx = p.target.x - p.x, dy = p.target.y - p.y, dist = Math.hypot(dx, dy);

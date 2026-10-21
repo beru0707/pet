@@ -26,7 +26,7 @@ function loadBg(id){
     if(im){
       IMGS['bg_'+id] = im;
       if(id === (typeof ACTIVE_MAP !== 'undefined' ? ACTIVE_MAP : MAPS[0].id)) setBgVar(im.src);
-      if(typeof MENU !== 'undefined' && MENU.open && MENU.tab === 'map') renderDeco();
+      if(typeof MENU !== 'undefined' && MENU.open && MENU.tab === 'maps') renderMenu();
     }
     return im;
   }));

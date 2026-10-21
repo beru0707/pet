@@ -17,7 +17,7 @@ function walkable(x, y) {
     if (z.type==='rect') { if (x>=z.x && x<=z.x+z.w && y>=z.y && y<=z.y+z.h) return false; }
     else { if ((x-z.cx)**2+(y-z.cy)**2 < z.r*z.r) return false; }
   }
-  return !blockedByItem(x, y);
+  return true;
 }
 let PETS = [];
 function spawnPos(){
@@ -30,13 +30,11 @@ function spawnPos(){
 
 function initPets(){
   PETS = PET_DEF.map((def, idx) => {
-    const saved = state.petsData[idx] || {};
+    const saved = savedPet(def);
     // map của thú: dữ liệu cũ chưa có -> theo PETS_START_PLACED; null = đang nằm trong danh sách (chưa thả)
     let map = saved.map !== undefined ? saved.map : (PETS_START_PLACED ? MAPS[0].id : null);
-    if(map && !MAPDATA[map]) map = MAPS[0].id;
-    SIM_MAP = map;
+    if(map && !mapById(map)) map = MAPS[0].id;
     const sp = (saved.x && saved.y) ? {x:saved.x, y:saved.y} : spawnPos();
-    SIM_MAP = null;
     return {
       def, map, x:sp.x, y:sp.y, vx:0, vy:0, phase:Math.random()*7, nextTurn:0, idleUntil:0, facingLeft:false,
       hunger:saved.hunger??100, happy:saved.happy??100, energy:saved.energy??100, selected:false,

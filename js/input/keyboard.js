@@ -15,9 +15,8 @@ window.addEventListener('keydown', e => {
 
   if (e.code === 'Enter' || e.code === 'NumpadEnter') {
     const selectedPet = PETS.find(p => p.selected);
-    
-    //kich hoat
-    if (selectedPet && selectedPet.def.attackAnimFrames && (!DECOR.active || VIEW.overview)) {
+
+    if (selectedPet && selectedPet.def.attackAnimFrames) {
       e.preventDefault();
       triggerAttack(selectedPet);
     }
@@ -25,5 +24,5 @@ window.addEventListener('keydown', e => {
   }
 
   const k = MOVE_KEYS[e.code]; if(!k) return;
-  if(PETS.some(p=>p.selected) && (!DECOR.active || VIEW.overview)){ e.preventDefault(); KEYS[k]=true; }
+  if(PETS.some(p=>p.selected)){ e.preventDefault(); KEYS[k]=true; }
 });

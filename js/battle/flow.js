@@ -7,24 +7,32 @@
 function btOpen(){
   if(BT.phase !== 'off' || (typeof PETS === 'undefined') || !PETS.length) return;
   BT.phase = 'entering';
-  if(MENU.open) setDecor(false);
-  btFade(()=>{
-    BT.map = MAPDATA[BATTLE_CFG.map] ? BATTLE_CFG.map : MAPS[MAPS.length-1].id;
-    BT.lobby = ACTIVE_MAP;
-    BT.snap = PETS.map(p => ({p, map:p.map, x:p.x, y:p.y}));
-    if(VIEW.overview) setOverview(false);
-    PETS.forEach(p => { p.map = null; p.selected = false; p.target = null; p.isAttacking = false; p.hasFired = false; p.bdead = false; p._ready = null; });
-    closePetPanel();
-    PROJECTILES.length = 0; EXPLOSIONS.length = 0;
-    BT.enemies = []; BT.fx = [];
-    setActiveMap(BT.map);
-    BT.phase = 'prep';
-    btLoadEnemies();
-    $b('bt-open').style.display = 'none'; $b('bt-bar').style.display = 'flex';
-    // nạp ảnh đứng yên của mọi pet để có hình thẻ
-    runPool(PETS.map(p => () => loadPetLook(p.def.name).then(btRenderBar)), 2);
-    btRenderBar();
+  if(MENU.open) setMenuOpen(false);
+  // màn hình chờ (dùng lại makeLoader của phòng chờ): nạp xong map + địch + ảnh MỌI pet rồi mới vào trận
+  const L = makeLoader(), bar = L.querySelector('#ld-bar'), txt = L.querySelector('#ld-txt'), pct = L.querySelector('#ld-pct');
+  L.firstChild.textContent = '⚔️ Chuẩn bị vào trận';
+  btPreload((done, total, label) => {
+    const p = Math.round(done / total * 100); bar.style.width = p + '%'; pct.textContent = p + '%'; if(label) txt.textContent = label;
+  }).catch(e => console.error('[battle]', e)).then(() => {
+    try{ btEnterScene(); }catch(e){ console.error('[battle]', e); }
+    txt.textContent = 'Sẵn sàng!'; bar.style.width = '100%'; pct.textContent = '100%';
+    L.style.opacity = '0'; setTimeout(() => L.remove(), 450);
   });
+}
+// đổi sang map chiến đấu (chạy khi màn hình chờ đang che toàn màn hình)
+function btEnterScene(){
+  BT.map = btMapId();
+  BT.lobby = ACTIVE_MAP;
+  BT.snap = PETS.map(p => ({p, map:p.map, x:p.x, y:p.y}));
+  if(VIEW.overview) setOverview(false);
+  PETS.forEach(p => { p.map = null; p.selected = false; p.target = null; p.isAttacking = false; p.hasFired = false; p.bdead = false; });
+  closePetPanel();
+  PROJECTILES.length = 0; EXPLOSIONS.length = 0;
+  BT.enemies = []; BT.fx = [];
+  setActiveMap(BT.map);
+  BT.phase = 'prep';
+  $b('bt-open').style.display = 'none'; $b('bt-bar').style.display = 'flex';
+  btRenderBar();
 }
 
 // ============ BẮT ĐẦU ============

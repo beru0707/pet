@@ -24,18 +24,25 @@ function ovUp(e){
   const tl=e.type==='pointerup' ? tileAt(scaleXY(e)) : null;
   if(!tl){ Object.assign(p,d.orig); return; }   // thả ngoài ô: trả về chỗ cũ
   const m=toMapXY(scaleXY(e),tl); placePetAt(p,m.x,m.y,tl.id);
-  toast(p.def.name+' đã chuyển sang '+mapById(tl.id).name); if(MENU.open) renderDeco();
+  toast(p.def.name+' đã chuyển sang '+mapById(tl.id).name); if(MENU.open) renderMenu();
+}
+function petHit(p, x, y){
+  const sz = pSize(p.y), H = sz * (p.def.scale ?? 1) * (p.def.walkScale || 1);   // chiều cao nhân vật trên màn hình
+  const feet = Math.hypot(x - p.x, y - p.y) < sz * 0.6;
+  const dx = x - p.x, dy = y - (p.y - H * 0.45);
+  const body = (dx*dx) / ((H*0.3)**2) + (dy*dy) / ((H*0.55)**2) <= 1;
+  return feet || body;
 }
 cv.addEventListener('pointerdown', e => {
   e.preventDefault();
   const pos = scaleXY(e);
   if(VIEW.overview){   // xem toàn bộ map: kéo pet sang map khác, hoặc bấm ô để vào map đó
     const tl = tileAt(pos); if(!tl) return;
-    const mp = toMapXY(pos,tl); let hit=null, minD=999;
-    PETS.forEach(p=>{ if(p.map!==tl.id) return; const d=Math.hypot(mp.x-p.x,mp.y-p.y); if(d<pSize(p.y)*0.7 && d<minD){ minD=d; hit=p; } });
+    const mp = toMapXY(pos,tl); let hit=null;
+    PETS.forEach(p=>{ if(p.map!==tl.id) return; if(petHit(p,mp.x,mp.y) && (!hit || p.y > hit.y)) hit=p; });
     if(hit){ _ovDrag={pet:hit,tile:tl,p0:pos,moved:false,orig:{map:hit.map,x:hit.x,y:hit.y,vx:0,vy:0}};
       window.addEventListener('pointermove',ovMove); window.addEventListener('pointerup',ovUp); window.addEventListener('pointercancel',ovUp); }
-    else if(inLabel(pos,tl)){ VIEW.overview=false; setActiveMap(tl.id); if(MENU.open) renderDeco(); }   // bấm vào nhãn tên map: vào map đó
+    else if(inLabel(pos,tl)){ VIEW.overview=false; setActiveMap(tl.id); if(MENU.open) renderMenu(); }   // bấm vào nhãn tên map: vào map đó
     else{
       const cur = PETS.find(q=>q.selected);
       if(cur && cur.map===tl.id){   // đang chọn pet ở ô này: bấm chỗ trống -> pet đi tới đó
@@ -44,12 +51,10 @@ cv.addEventListener('pointerdown', e => {
     }
     return;
   }
-  if(DECOR.active){ decorDown(e); return; }
-  let hit=null, minD=999;
+  let hit=null;
   PETS.forEach(p=>{
     if(p.map!==ACTIVE_MAP) return;
-    const d=Math.hypot(pos.x-p.x,pos.y-p.y);
-    if(d < pSize(p.y)*0.6 && d < minD){ minD=d; hit=p; }
+    if(petHit(p,pos.x,pos.y) && (!hit || p.y > hit.y)) hit=p;   
   });
   const cur = PETS.find(p=>p.selected);
   if(hit){

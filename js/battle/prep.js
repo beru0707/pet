@@ -5,7 +5,19 @@
 
 // ============ VÀO TRẬN / CHUẨN BỊ ============
 const btPlaced = () => PETS.filter(p => p.map === BT.map);
-function btReady(p){ return p._ready || (p._ready = loadPetWalk(p.def.name).then(()=>loadPetLook(p.def.name)).then(()=>loadPetSkills(p.def.name))); }
+function btReady(p){ return p._ready || (p._ready = loadPetWalk(p.def.name).then(()=>loadPetLook(p.def.name)).then(()=>loadPetSkills(p.def.name)).then(()=>{ p._rdy = true; })); }
+const btMapId = () => mapById(BATTLE_CFG.map) ? BATTLE_CFG.map : MAPS[MAPS.length-1].id;
+// Nạp trước mọi thứ trận cần (ảnh nền map chiến đấu, ảnh địch, ảnh đi / đứng / kỹ năng của MỌI pet), 3 file cùng lúc.
+// onStep(done, total, nhãn) được gọi để cập nhật màn hình chờ. Trả về Promise khi nạp xong.
+function btPreload(onStep){
+  const jobs = [
+    {label:'Đang tải bản đồ…',  run:() => loadBg(btMapId())},
+    {label:'Đang tải kẻ địch…', run:() => btLoadEnemies()},
+    ...(PETS.length <= (BATTLE_CFG.preloadMax ?? 1e9) ? PETS : []).map(p => ({label:'Đang tải ' + p.def.name + '…', run:() => btReady(p)}))
+  ];
+  let done = 0; onStep && onStep(0, jobs.length, jobs[0].label);
+  return runPool(jobs.map(j => async () => { onStep && onStep(done, jobs.length, j.label); await j.run(); }), LOAD_PARALLEL, () => { done++; onStep && onStep(done, jobs.length); });
+}
 function btPlace(p, x, y){
   if(BT.phase !== 'prep') return;
   if(!p.map && btPlaced().length >= BATTLE_CFG.maxPets){ toast('Tối đa ' + BATTLE_CFG.maxPets + ' pet'); return; }
@@ -15,15 +27,16 @@ function btRenderBar(){
   if(BT.phase !== 'prep' || BT.drag) return;
   const list = $b('bt-list'); list.innerHTML = '';
   PETS.forEach((p,i)=>{
-    const c = document.createElement('div'); c.className = 'bt-card' + (p.map === BT.map ? ' on' : ''); c.dataset.i = i;
+    const c = document.createElement('div'); c.className = 'bt-card' + (p.map === BT.map ? ' on' : '') + ((p.map === BT.map && !p._rdy) ? ' wait' : ''); c.dataset.i = i;
     c.appendChild(thumbNode(p.def)); const b = document.createElement('b'); b.textContent = p.def.name; c.appendChild(b);
     list.appendChild(c);
   });
   const n = btPlaced().length;
   $b('bt-sub').textContent = 'Kéo thẻ pet vào map · bấm thẻ để thả / thu hồi (' + n + '/' + BATTLE_CFG.maxPets + ')';
-  $b('bt-go').disabled = n === 0;
+  const loading = btPlaced().some(p => !p._rdy);   // còn pet đang nạp ảnh thì chưa cho bắt đầu
+  $b('bt-go').disabled = n === 0 || loading; $b('bt-go').textContent = loading ? 'Đang tải ảnh…' : 'Bắt đầu';
 }
-setInterval(()=>{ if(BT.phase === 'prep') btRenderBar(); }, 1200);
+setInterval(()=>{ if(BT.phase === 'prep') btRenderBar(); }, 600);
 
 // kéo thẻ pet thả vào map (giống tab Pet của menu)
 $b('bt-list').addEventListener('pointerdown', e=>{
@@ -46,6 +59,5 @@ function btDragEnd(e){
     btRenderBar(); return;
   }
   if(p.map === BT.map){ p.map = null; btRenderBar(); }                       // bấm thẻ đã thả = thu hồi
-  else { const sp = spawnPosOn(BT.map); btPlace(p, sp.x, sp.y); }
+  else { const sp = spawnPos(); btPlace(p, sp.x, sp.y); }
 }
-function spawnPosOn(m){ const o = SIM_MAP; SIM_MAP = m; const s = spawnPos(); SIM_MAP = o; return s; }

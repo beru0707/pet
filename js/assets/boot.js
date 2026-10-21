@@ -16,9 +16,9 @@ async function bootAssets(){
   try{ loadGame(); }catch(e){}
   const first = MAPS[0].id;
   const names = PET_DEF.filter((d,i)=>{
-    const s = (state.petsData && state.petsData[i]) || {};
+    const s = (typeof savedPet === 'function' && savedPet(d)) || {};
     let m = s.map !== undefined ? s.map : (PETS_START_PLACED ? MAPS[0].id : null);
-    if(m && !MAPDATA[m]) m = MAPS[0].id;
+    if(m && !mapById(m)) m = MAPS[0].id;
     return m === first;
   }).map(d=>d.name);
   const L = makeLoader(), bar = L.querySelector('#ld-bar'), txt = L.querySelector('#ld-txt'), pct = L.querySelector('#ld-pct');
@@ -33,7 +33,6 @@ function startBackgroundLoad(){
   cur.forEach(n => T.push(() => loadPetLook(n)));
   cur.forEach(n => T.push(() => loadPetSkills(n)));
   MAPS.forEach(m => { if(m.id === ACTIVE_MAP) return; T.push(() => loadBg(m.id)); petsOnMap(m.id).forEach(n => T.push(() => loadPetWalk(n).then(()=>loadPetLook(n)))); });
-  PETS.filter(p=>!p.map).forEach(p => T.push(() => loadPetWalk(p.def.name).then(()=>loadPetLook(p.def.name))));
-  PETS.forEach(p => T.push(() => loadPetSkills(p.def.name)));
+  PETS.filter(p=>p.map).forEach(p => T.push(() => loadPetSkills(p.def.name)));
   return runPool(T, 2);
 }

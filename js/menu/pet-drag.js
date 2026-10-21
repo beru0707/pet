@@ -31,12 +31,12 @@ function dragEnd(e){
         const tl = tileAt(pos); if(!tl) return;
         pos = toMapXY(pos, tl); mid = tl.id;
       }
-      placePetAt(p, pos.x, pos.y, mid); toast(p.def.name + ' đã vào ' + mapById(mid).name); renderDeco();
+      placePetAt(p, pos.x, pos.y, mid); toast(p.def.name + ' đã vào ' + mapById(mid).name); renderMenu();
     }
     return;
   }
   // chỉ bấm (không kéo)
   if(VIEW.overview){ toast('Kéo thẻ pet thả vào một ô map'); return; }
   if(p.map === ACTIVE_MAP){ PETS.forEach(q=>q.selected=false); p.selected = true; p.target = null; openPetPanel(p); }
-  else { SIM_MAP = ACTIVE_MAP; const sp = spawnPos(); SIM_MAP = null; placePetAt(p, sp.x, sp.y); toast(p.def.name + ' đã vào ' + mapById(ACTIVE_MAP).name); renderDeco(); }
+  else { const sp = spawnPos(); placePetAt(p, sp.x, sp.y); toast(p.def.name + ' đã vào ' + mapById(ACTIVE_MAP).name); renderMenu(); }
 }

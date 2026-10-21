@@ -13,10 +13,8 @@ let lastT=0;
 function frame(ts){
   const t = ts * .001, dt = Math.min(.05, t - lastT); lastT = t;
   // MỌI map đều chạy liên tục: thú ở map không đang xem vẫn đi lại; thú chưa thả (map=null) thì đứng trong danh sách
-  PETS.forEach(p => { if(!p.map || p.dragging) return; SIM_MAP = p.map; updatePet(p, t, dt); });
-  SIM_MAP = null;
-  
- 
+  PETS.forEach(p => { if(p.map && !p.dragging) updatePet(p, t, dt); });
+
   if (typeof updateProjectiles === 'function') 
     updateProjectiles(dt);
   if (typeof updateBattle === 'function') 

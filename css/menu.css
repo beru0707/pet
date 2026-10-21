@@ -1,7 +1,7 @@
 /* ==================================================================
    MENU CHỨC NĂNG – thanh dưới, tab, nút, thẻ pet / map, ảnh kéo
    ================================================================== */
-/* DECOR */
+/* THANH CHỨC NĂNG */
 #deco{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#183010f2,#102208f7);border-top:3px solid #5aa332;z-index:15;padding:8px 14px 12px;color:#e6f7c8}
 #deco.hidden{display:none}
 .d-tabs,.m-tabs{display:flex;gap:8px;margin-bottom:8px}

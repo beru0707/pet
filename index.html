@@ -22,20 +22,12 @@
   </div>
   <div id="deco" class="hidden">
     <div class="m-tabs" id="m-tabs">
-      <button data-m="deco" class="on">🎨 Trang trí</button>
-      <button data-m="pets">🐾 Danh sách pet</button>
+      <button data-m="pets" class="on">🐾 Danh sách pet</button>
       <button data-m="maps">🗺️ Map</button>
       <button id="d-done">✔ Đóng</button>
     </div>
-    <div class="d-tabs" id="d-sub">
-      <button data-t="path" class="on">🛤️ Làm đường</button>
-      <button data-t="item">🪴 Đặt vật phẩm</button>
-      <button data-t="move">✋ Chỉnh sửa</button>
-    </div>
     <div class="d-body" id="d-body"></div>
   </div>
-  <input type="file" id="f-files" accept="image/*" multiple hidden>
-  <input type="file" id="f-dir" accept="image/*" multiple webkitdirectory hidden>
   <div id="pet-panel" class="hidden">
     <button id="pp-close" onclick="closePetPanel()">✕</button>
     <img id="pp-img" src="">
@@ -52,7 +44,6 @@
 </div>
 <script src="js/config/world.js"></script>
 <script src="js/config/pets.js"></script>
-<script src="js/config/decor.js"></script>
 <script src="js/config/battle.js"></script>
 <script src="js/core/canvas.js"></script>
 <script src="js/data/game-save.js"></script>
@@ -71,16 +62,9 @@
 <script src="js/ui/pet-panel.js"></script>
 <script src="js/ui/hud.js"></script>
 <script src="js/maps/maps.js"></script>
-<script src="js/decor/core.js"></script>
-<script src="js/decor/paths.js"></script>
-<script src="js/decor/items.js"></script>
-<script src="js/decor/edit.js"></script>
-<script src="js/decor/ui.js"></script>
-<script src="js/decor/import.js"></script>
 <script src="js/menu/menu.js"></script>
 <script src="js/menu/body.js"></script>
 <script src="js/menu/pet-drag.js"></script>
-<script src="js/data/decor-save.js"></script>
 <script src="js/battle/state.js"></script>
 <script src="js/battle/ui.js"></script>
 <script src="js/battle/prep.js"></script>
