@@ -27,8 +27,15 @@ function drawPet(p, t){
   const sz=pSize(p.y);
   const mv=Math.abs(p.vx)>3||Math.abs(p.vy)>3;
   const bob=mv?Math.abs(Math.sin(t*8+p.phase))*-6:Math.sin(t*2.5+p.phase)*-2;
-  const br=1+Math.sin(t*2.5+p.phase)*.015;
+  const br=1;   // không nhún kích thước
   
+  // Đổi trạng thái: nhớ giờ vào trạng thái mới để hoạt ảnh đứng/ngủ chạy từ khung 1
+  const stNow = p.isAttacking ? 'attack' : p.sleeping ? 'sleep' : p.moving ? 'walk' : 'idle';
+  if (p._stPrev !== stNow) {
+    p._stPrev = stNow; p._stT0 = t;
+  }
+  const lt = t - (p._stT0 || 0);   // thời gian kể từ khi vào trạng thái hiện tại
+
   const src = IMGS.pets;
   // Lấy ảnh đúng: animation frame hoặc ảnh đơn
   let customImg = null, fitImg = null, fitMode = null, userK = 1;
@@ -41,7 +48,7 @@ function drawPet(p, t){
     const walkKey = p.def.imgKey.replace('_anim','_');
     if (p.sleeping) {                                                                            // đang ngủ
       const SF = p.def.sleepFrames;
-      if (SF && SF.length > 1) { customImg = SF[Math.floor(t * (p.def.sleepFps || 6) + p.phase * 7) % SF.length]; fitImg = SF[0]; }
+      if (SF && SF.length > 1) { customImg = SF[Math.floor(lt * (p.def.sleepFps || 6)) % SF.length]; fitImg = SF[0]; }
       else customImg = p.def.sleepImg || p.def.idleImg || IMGS[walkKey + 1];
       if (customImg !== IMGS[walkKey + 1]) { fitMode = p.def.sleepFit || 'none'; userK = p.def.sleepScale || 1; }
     } else if (p.moving) {                                                                       // đang đi: khung đi bộ
@@ -49,7 +56,7 @@ function drawPet(p, t){
     } else {                                                                                     // đứng yên
       const IF = p.def.idleFrames;
       if (IF && IF.length > 1) {                                                                 // animation chớp mắt (thư mục idle)
-        customImg = IF[Math.floor(t * (p.def.idleFps || 12) + p.phase * 7) % IF.length]; fitImg = IF[0];
+        customImg = IF[Math.floor(lt * (p.def.idleFps || 12)) % IF.length]; fitImg = IF[0];
       } else customImg = p.def.idleImg || IMGS[walkKey + 1];
       if (customImg !== IMGS[walkKey + 1]) { fitMode = p.def.idleFit || 'none'; userK = p.def.idleScale || 1; }
     }
@@ -70,26 +77,12 @@ function drawPet(p, t){
   const dw = dh * ratio;
   const actualBob = bob * bobScale;
 
-  // Kích thước + vị trí thực khi vẽ: mặc định = ảnh đi bộ; riêng ảnh đứng yên/ngủ được cân theo vùng nhìn thấy của nhân vật
-  let drawH = dh, drawW = dw, offL = -dw/2, offT = -dh;
-  if (fitMode && customImg) {
-    const fi = fitImg || customImg;                                           // ảnh dùng để đo (ảnh đứng yên/ngủ: chính nó; tấn công: khung 1)
-    const ref = IMGS[p.def.imgKey.replace('_anim','_') + 1], bb = imgBox(fi), rb = imgBox(ref);
-    let kpx = dh * userK / (fi.naturalHeight || 1);                           // số pixel màn hình cho mỗi pixel ảnh gốc
-    if (bb && rb && fitMode !== 'none') {
-      const vis = fitMode === 'width' ? (rb.w/ref.naturalHeight)/(bb.w/fi.naturalHeight)
-                                      : (rb.h/ref.naturalHeight)/(bb.h/fi.naturalHeight);
-      kpx = dh * vis * userK / fi.naturalHeight;
-      const k0 = dh/ref.naturalHeight;
-      offT = -(ref.naturalHeight - rb.y1) * k0 - bb.y1 * kpx;                 // chân nhân vật cùng vạch với lúc đi
-      offL = ((rb.x0+rb.x1)/2 - ref.naturalWidth/2) * k0 - ((bb.x0+bb.x1)/2) * kpx;   // cùng tâm ngang với lúc đi
-    }
-    drawH = kpx * customImg.naturalHeight; drawW = kpx * customImg.naturalWidth;
-    if (!(bb && rb && fitMode !== 'none')) { offL = -drawW/2; offT = -drawH; }
-  }
+  // Kích thước CỐ ĐỊNH: chiều cao khung = dh * scale của sheet (không tự đo vùng nhìn thấy để phóng to / thu nhỏ). Chân đặt ở đáy khung, giữa theo chiều ngang.
+  let drawH = dh * userK, drawW = drawH * ratio;
+  let offL = -drawW/2, offT = -drawH;
 
   const st = p.isAttacking ? 'attack' : p.sleeping ? 'sleep' : !p.moving ? 'idle' : null;   // trạng thái đang vẽ
-  if (fitMode && customImg && st) { offL += (p.def[st+'DX'] || 0) * drawH; offT += (p.def[st+'DY'] || 0) * drawH; }
+  if (customImg && st) { offL += (p.def[st+'DX'] || 0) * drawH; offT += (p.def[st+'DY'] || 0) * drawH; }
 
   //Scale 
   const ws = (p.moving && !p.sleeping && !p.isAttacking && p.def.walkScale) || 1;

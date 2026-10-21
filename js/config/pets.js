@@ -94,25 +94,25 @@ const PET_ANIM = {
     idleSheet: {
       src: 'assets/shion/idle.webp',
       fps: 12,
-      scale: 1.48
+      scale: 1.4
     },
     walkSheet: {
       src: 'assets/shion/walk.webp',
       stride: 1,
       speed: 1,
-      scale: 1.52
+      scale: 1.45
     },
     sleepSheet: {
       src: 'assets/shion/sleep.webp',
       cols: 1,
       rows: 1,
-      scale: 1.48
+      scale: 1.4
     },
     attackSheet: {
       src: 'assets/shion/attack.webp',
       cols: 4,
       rows: 4,
-      scale: 2.45
+      scale: 2.3
     },
   },
   'Shuna': {
