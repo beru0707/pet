@@ -35,30 +35,34 @@ function updateWalker(p, t, dt){
   else { p.animPhase = 0; p.animFrame = 0; p.moving = false; }
 }
 function updatePet(p, t, dt){
+  if (p.skillCd > 0) p.skillCd -= dt;   // thời gian hồi skill
   // Xử lý khi Pet đang trong trạng thái tấn công (Attack Animation)
   if (p.isAttacking) {
     p.vx = 0; p.vy = 0; p.tvx = 0; p.tvy = 0; // Đứng yên khi bắn
     p.attackTime = (p.attackTime || 0) + dt;
-    const totalFrames = p.def.attackAnimFrames || 10;
-    const frameDur = 1/(p.def.attackFps || 12.5); // mỗi frame 80ms (attackFps: số khung/giây)
+    const kind = p.atkKind || 'attack';
+    const totalFrames = p.def[kind+'AnimFrames'] || 10;
+    const frameDur = 1/(p.def[kind+'Fps'] || 12.5); // mỗi frame 80ms (attackFps: số khung/giây)
     
     p.attackFrame = Math.floor(p.attackTime / frameDur);
 
     // Tụ lực: mặc định phát HẾT attackSheet rồi mới bắn (fireFrame = totalFrames).
     // Muốn thú nào bắn sớm hơn thì ghi fireFrame trong attackSheet của thú đó.
-    const fireFrame = Math.min(p.def.attackFireFrame ?? totalFrames, totalFrames);
-    if (p.def.fireball && p.attackFrame >= fireFrame && !p.hasFired) {
+    const fireFrame = Math.min((kind === 'attack' ? p.def.attackFireFrame : p.def[kind+'FireFrame']) ?? totalFrames, totalFrames);
+    const hasBall = kind === 'attack' ? p.def.fireball : !!p.def[kind+'BallFrames'];   // đòn có quả cầu bay
+    if (hasBall && p.attackFrame >= fireFrame && !p.hasFired) {
       p.hasFired = true;
       let tx = p.target ? p.target.x : (p.x + (p.facingLeft ? -300 : 300));
       let ty = p.target ? p.target.y : (p.y - 30);
-      spawnFireball(p, tx, ty);
+      spawnFireball(p, tx, ty, kind);
     }
 
     // Khi chạy hết chuỗi frame tấn công -> Trở lại trạng thái bình thường
     if (p.attackFrame >= totalFrames) {
       p.isAttacking = false;
       p.hasFired = false;
-      p.attackTime = 0;
+      p.attackTime = 0; p.atkKind = 'attack';
+      if (!p.manual) p.idleUntil = Math.max(p.idleUntil || 0, t + .25);   // đứng yên một nhịp rồi mới đi tiếp, không bật đi ngay
     }
     return; // Dừng logic di chuyển khi đang attack
   }

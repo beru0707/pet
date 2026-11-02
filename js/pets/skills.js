@@ -10,15 +10,24 @@ let PROJECTILES = [];
 let EXPLOSIONS = [];
 
 // Hàm kích hoạt tấn công (Chỉ cho Shibav3_1)
-function triggerAttack(pet) {
-  if (!pet || !pet.def.attackAnimFrames || pet.isAttacking) return;
+// kind: 'attack' (đòn thường, Enter) hoặc 'skill1' (phím 1, có thời gian hồi skill1Cd)
+function triggerAttack(pet, kind = 'attack') {
+  if (!pet || !pet.def[kind+'AnimFrames'] || pet.isAttacking) return;
+  if (kind !== 'attack') { if (pet.skillCd > 0) return; pet.skillCd = pet.def[kind+'Cd'] ?? 5; }
+  pet.atkKind = kind;
   pet.isAttacking = true; pet.sleepUntil = 0; pet.sleeping = false;
   pet.attackTime = 0;
   pet.hasFired = false;
 }
 
 // Hàm sinh quả cầu lửa bay tới điểm chỉ định
-function spawnFireball(pet, targetX, targetY) {
+// Khung quả cầu / vụ nổ theo loại đòn: 'attack' dùng fireball/explosion, 'skill1' dùng skill1Ball/skill1Blast
+const ballFrames  = (def, kind) => kind === 'attack' ? def.fireballFrames  : def[kind+'BallFrames'];
+const blastFrames = (def, kind) => kind === 'attack' ? def.explosionFrames : def[kind+'BlastFrames'];
+const ballFps  = (def, kind) => (kind === 'attack' ? def.fireballFps  : def[kind+'BallFps'])  || 6.67;
+const blastFps = (def, kind) => (kind === 'attack' ? def.explosionFps : def[kind+'BlastFps']) || 16.7;
+
+function spawnFireball(pet, targetX, targetY, kind = 'attack') {
   const fireX = pet.x + (pet.facingLeft ? -40 : 40);
   const fireY = pet.y - 45;
 
@@ -35,8 +44,9 @@ function spawnFireball(pet, targetX, targetY) {
     targetX: targetX,
     targetY: targetY,
     maxDistance: targetDist,
-    vx: Math.cos(angle) * FIREBALL_SPEED,
-    vy: Math.sin(angle) * FIREBALL_SPEED,
+    vx: Math.cos(angle) * (kind === 'attack' ? FIREBALL_SPEED : (pet.def[kind+'Speed'] ?? FIREBALL_SPEED)),
+    vy: Math.sin(angle) * (kind === 'attack' ? FIREBALL_SPEED : (pet.def[kind+'Speed'] ?? FIREBALL_SPEED)),
+    kind: kind,
     rotation: angle,
     map: pet.map,
     def: pet.def,
@@ -47,13 +57,14 @@ function spawnFireball(pet, targetX, targetY) {
 }
 
 // Hàm sinh vụ nổ
-function spawnExplosion(x, y, map, def) {
+function spawnExplosion(x, y, map, def, kind = 'attack') {
   if (typeof battleOnBlast === 'function') 
-    battleOnBlast(x, y, map, def);
-  if (!def || !def.explosionFrames) return;
+    battleOnBlast(x, y, map, def, kind);
+  if (!def || !blastFrames(def, kind)) return;
   EXPLOSIONS.push({
     map: map,
     def: def,
+    kind: kind,
     x: x,
     y: y,
     frame: 1,
@@ -70,16 +81,17 @@ function updateProjectiles(dt) {
     p.life -= dt;
 
     p.animTime += dt;
-    if (p.animTime >= 1/(p.def.fireballFps||6.67)) { 
+    if (p.animTime >= 1/ballFps(p.def, p.kind || 'attack')) { 
       p.animTime = 0;
-      p.animFrame = (p.animFrame + 1) % (p.def.fireballFrames ? p.def.fireballFrames.length : 1);
+      const bf = ballFrames(p.def, p.kind || 'attack');
+      p.animFrame = (p.animFrame + 1) % (bf ? bf.length : 1);
     }
 
     const travelled = Math.hypot(p.x - p.startX, p.y - p.startY);
 
     // Chạm vị trí đích -> Tạo vụ nổ và xóa quả cầu
     if (travelled >= p.maxDistance || p.life <= 0 || p.x < 0 || p.x > CW || p.y < 0 || p.y > CH) {
-      spawnExplosion(p.targetX || p.x, p.targetY || p.y, p.map, p.def);
+      spawnExplosion(p.targetX || p.x, p.targetY || p.y, p.map, p.def, p.kind || 'attack');
       PROJECTILES.splice(i, 1);
     }
   }
@@ -88,10 +100,10 @@ function updateProjectiles(dt) {
   for (let i = EXPLOSIONS.length - 1; i >= 0; i--) {
     const ex = EXPLOSIONS[i];
     ex.animTime += dt;
-    if (ex.animTime >= 1/(ex.def.explosionFps||16.7)) {
+    if (ex.animTime >= 1/blastFps(ex.def, ex.kind || 'attack')) {
       ex.animTime = 0;
       ex.frame++;
-      if (ex.frame > ex.def.explosionFrames.length) {
+      if (ex.frame > blastFrames(ex.def, ex.kind || 'attack').length) {
         EXPLOSIONS.splice(i, 1);
       }
     }

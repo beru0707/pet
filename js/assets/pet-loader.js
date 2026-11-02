@@ -40,7 +40,9 @@ function petOpts(c){
     idleScale: sv(c.idleSheet,'scale') ?? c.idleScale, sleepScale: sv(c.sleepSheet,'scale') ?? c.sleepScale, walkScale: sv(c.walkSheet,'scale') ?? 1, attackScale: sv(c.attackSheet,'scale') ?? c.attackScale, fireballScale: sv(c.fireballSheet,'scale') ?? 1, explosionScale: sv(c.explosionSheet,'scale') ?? 1,
     idleFps: sv(c.idleSheet,'fps') ?? c.idleFps ?? 12, sleepFps: sv(c.sleepSheet,'fps') ?? c.sleepFps ?? 6, attackFps: sv(c.attackSheet,'fps') ?? c.attackFps, fireballFps: sv(c.fireballSheet,'fps') ?? 6.67, explosionFps: sv(c.explosionSheet,'fps') ?? 16.7,
     attackFireFrame: sv(c.attackSheet,'fireFrame') ?? c.attackFireFrame,
-    idleDX: sv(c.idleSheet,'dx'), idleDY: sv(c.idleSheet,'dy'), sleepDX: sv(c.sleepSheet,'dx'), sleepDY: sv(c.sleepSheet,'dy'), attackDX: sv(c.attackSheet,'dx'), attackDY: sv(c.attackSheet,'dy')
+    idleDX: sv(c.idleSheet,'dx'), idleDY: sv(c.idleSheet,'dy'), sleepDX: sv(c.sleepSheet,'dx'), sleepDY: sv(c.sleepSheet,'dy'), attackDX: sv(c.attackSheet,'dx'), attackDY: sv(c.attackSheet,'dy'),
+    skill1Scale: sv(c.skill1Sheet,'scale'), skill1Fps: sv(c.skill1Sheet,'fps'), skill1DX: sv(c.skill1Sheet,'dx'), skill1DY: sv(c.skill1Sheet,'dy'), skill1Cd: sv(c.skill1Sheet,'cd'), skill1Dmg: sv(c.skill1Sheet,'dmg'), skill1Range: sv(c.skill1Sheet,'range'), skill1FireFrame: sv(c.skill1Sheet,'fireFrame'), skill1Speed: sv(c.skill1Sheet,'speed'), skill1Reach: sv(c.skill1Sheet,'reach'),
+    skill1BallScale: sv(c.skill1BallSheet,'scale') ?? 1, skill1BallFps: sv(c.skill1BallSheet,'fps') ?? 6.67, skill1BlastScale: sv(c.skill1BlastSheet,'scale') ?? 1, skill1BlastFps: sv(c.skill1BlastSheet,'fps') ?? 16.7
   };
 }
 const refreshPetMenu = () => { if(typeof MENU !== 'undefined' && MENU.open && MENU.tab === 'pets') renderMenu(); };
@@ -74,6 +76,13 @@ function loadPetSkills(n){
     const key = n.toLowerCase()+'_attack'; fr.forEach((im,i)=>IMGS[key+'_'+(i+1)] = im);
     def.attackAnimFrames = c.attackFrames || fr.length;
   }));
+  if(c.skill1Sheet) jobs.push(loadSheet(c.skill1Sheet).then(fr=>{   // skill 1 (phím 1)
+    if(!fr){ warnMissing(n,'skill1Sheet',c.skill1Sheet); return; }
+    const key = n.toLowerCase()+'_skill1'; fr.forEach((im,i)=>IMGS[key+'_'+(i+1)] = im);
+    def.skill1AnimFrames = fr.length;
+  }));
+  if(c.skill1BallSheet) jobs.push(loadSkills('skill1Ball', c.skill1BallSheet, def, n));    // quả cầu bay của skill 1
+  if(c.skill1BlastSheet) jobs.push(loadSkills('skill1Blast', c.skill1BlastSheet, def, n));  // vụ nổ của skill 1 (tuỳ chọn)
   if(c.fireballSheet){ def.fireball = true; jobs.push(loadSkills('fireball', c.fireballSheet, def, n)); }
   if(c.explosionSheet) jobs.push(loadSkills('explosion', c.explosionSheet, def, n));
   return j.skills = Promise.all(jobs);

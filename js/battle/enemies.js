@@ -45,10 +45,12 @@ function btHurtPet(p, dmg, t){
   if(p.bhp <= 0){ p.bhp = 0; p.bdead = true; p.map = null; p.isAttacking = false; p.selected = false; closePetPanel(); btFx(p.x, p.y - 60, '💀', '#fff'); }
 }
 // Móc vào spawnExplosion (pets.js): quả cầu lửa nổ -> gây sát thương lan cho địch trong bán kính
-function battleOnBlast(x, y, map, def){
+function battleOnBlast(x, y, map, def, kind = 'attack'){
   if(BT.phase !== 'fight' || map !== BT.map || !def) return;
   const s = btStat(def), pet = {def};
-  BT.enemies.forEach(e => { if(!e.die && Math.hypot(e.x-x, e.y-y) <= BATTLE_CFG.blastRadius) btHurtEnemy(e, s.dmg, pet); });
+  const R = kind === 'attack' ? BATTLE_CFG.blastRadius : (def[kind+'Range'] ?? BATTLE_CFG.blastRadius);   // skill: range = bán kính nổ
+  const D = s.dmg * (kind === 'attack' ? 1 : (def[kind+'Dmg'] ?? 2));                                   // skill: dmg = hệ số nhân
+  BT.enemies.forEach(e => { if(!e.die && Math.hypot(e.x-x, e.y-y) <= R) btHurtEnemy(e, D, pet); });
 }
 
 function btUpdateEnemy(e, t, dt){

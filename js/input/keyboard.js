@@ -23,6 +23,12 @@ window.addEventListener('keydown', e => {
     return;
   }
 
+  if (e.code === 'Digit1' || e.code === 'Numpad1') {   // skill 1 của pet đang chọn
+    const sp = PETS.find(p => p.selected);
+    if (sp && sp.def.skill1AnimFrames) { e.preventDefault(); triggerAttack(sp, 'skill1'); }
+    return;
+  }
+
   const k = MOVE_KEYS[e.code]; if(!k) return;
   if(PETS.some(p=>p.selected)){ e.preventDefault(); KEYS[k]=true; }
 });

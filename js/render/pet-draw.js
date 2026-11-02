@@ -41,9 +41,9 @@ function drawPet(p, t){
   let customImg = null, fitImg = null, fitMode = null, userK = 1;
   if (p.isAttacking) {
     // Ưu tiên lấy ảnh từ thư mục attack
-    const atkKey = p.def.name.toLowerCase() + '_attack_';
+    const kind = p.atkKind || 'attack', atkKey = p.def.name.toLowerCase() + '_' + kind + '_';
     customImg = IMGS[atkKey + (p.attackFrame + 1)];
-    fitImg = IMGS[atkKey + '1']; fitMode = p.def.attackFit || 'height'; userK = p.def.attackScale || 1;   // cân theo khung 1 để các khung không bị lúc to lúc nhỏ
+    fitImg = IMGS[atkKey + '1']; fitMode = p.def[kind+'Fit'] || 'height'; userK = p.def[kind+'Scale'] || 1;   // cân theo khung 1 để các khung không bị lúc to lúc nhỏ
   } else if (p.def.animFrames) {
     const walkKey = p.def.imgKey.replace('_anim','_');
     if (p.sleeping) {                                                                            // đang ngủ
@@ -81,7 +81,7 @@ function drawPet(p, t){
   let drawH = dh * userK, drawW = drawH * ratio;
   let offL = -drawW/2, offT = -drawH;
 
-  const st = p.isAttacking ? 'attack' : p.sleeping ? 'sleep' : !p.moving ? 'idle' : null;   // trạng thái đang vẽ
+  const st = p.isAttacking ? (p.atkKind || 'attack') : p.sleeping ? 'sleep' : !p.moving ? 'idle' : null;   // trạng thái đang vẽ
   if (customImg && st) { offL += (p.def[st+'DX'] || 0) * drawH; offT += (p.def[st+'DY'] || 0) * drawH; }
 
   //Scale 

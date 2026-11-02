@@ -27,6 +27,7 @@ function btRenderBar(){
   if(BT.phase !== 'prep' || BT.drag) return;
   const list = $b('bt-list'); list.innerHTML = '';
   PETS.forEach((p,i)=>{
+    if(BT.chosen && !BT.chosen.includes(p)) return;   // chỉ hiện pet đã chọn ở màn hình chọn
     const c = document.createElement('div'); c.className = 'bt-card' + (p.map === BT.map ? ' on' : '') + ((p.map === BT.map && !p._rdy) ? ' wait' : ''); c.dataset.i = i;
     c.appendChild(thumbNode(p.def)); const b = document.createElement('b'); b.textContent = p.def.name; c.appendChild(b);
     list.appendChild(c);

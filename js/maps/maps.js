@@ -23,7 +23,7 @@ function setActiveMap(id){
   PETS.forEach(p => { p.selected = false; p.target = null; });
   closePetPanel();
   for(const k in KEYS) KEYS[k] = false;
-  ACTIVE_MAP = id;
+  ACTIVE_MAP = id; state.activeMap = id; saveGame();   // nhớ map đang xem
   if(bgSrc(id)) setBgVar(bgSrc(id));
   ensureMap(id);
   toast('Map: ' + mapById(id).name);

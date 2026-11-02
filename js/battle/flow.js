@@ -30,9 +30,9 @@ function btEnterScene(){
   PROJECTILES.length = 0; EXPLOSIONS.length = 0;
   BT.enemies = []; BT.fx = [];
   setActiveMap(BT.map);
-  BT.phase = 'prep';
-  $b('bt-open').style.display = 'none'; $b('bt-bar').style.display = 'flex';
-  btRenderBar();
+  BT.phase = 'pick';   // chọn pet trước (pick.js), xong mới sang 'prep'
+  $b('bt-open').style.display = 'none';
+  btPickShow();
 }
 
 // ============ BẮT ĐẦU ============
@@ -56,7 +56,7 @@ function updateBattle(t, dt){
   BT.nowT = t;
   if(BT.phase === 'off'){ if(OV.style.display !== 'none') OV.style.display = 'none'; return; }
   if(BT.bannerT > 0){ BT.bannerT -= dt; if(BT.bannerT <= 0) $b('bt-banner').style.display = 'none'; }
-  if(BT.phase === 'prep' || BT.phase === 'fight'){
+  if(BT.phase === 'pick' || BT.phase === 'prep' || BT.phase === 'fight'){
     if(VIEW.overview) setOverview(false);
     if(ACTIVE_MAP !== BT.map) setActiveMap(BT.map);
   }
@@ -81,14 +81,36 @@ function btFight(t, dt){
     for(const p of PETS){
     if(p.map !== BT.map || p.bdead) continue;
     const s = btStat(p.def);
+    // tự động đánh: pet KHÔNG được chọn tự tìm địch gần nhất, đi tới trong tầm rồi tung đòn (nghỉ giữa 2 đòn = cd)
+    if((p.selected || !BT.auto) && p._autoGo){ p.target = null; p._autoGo = false; }   // người chơi chọn pet / tắt tự động: bỏ đường đi tự động
+    if(BT.auto && !p.selected && !p.isAttacking && p.def.attackAnimFrames){
+      const near = btNearestEnemy(p.x, p.y, 1e9);
+      if(near){
+        const d = Math.hypot(near.x - p.x, near.y - p.y);
+        if(d <= s.range){
+          if(p._autoGo){ p.target = null; p._autoGo = false; }
+          if(t >= (p.btNext || 0)){ triggerAttack(p); p.btNext = t + s.cd; }
+        } else {   // còn xa: đi tới điểm cách địch ~70% tầm đánh
+          const k = (d - s.range*.7) / d;
+          p.target = {x:p.x + (near.x - p.x)*k, y:p.y + (near.y - p.y)*k}; p._autoGo = true; p.idleUntil = 0; p.nextTurn = 0;
+        }
+      } else if(p._autoGo){ p.target = null; p._autoGo = false; }
+    }
     if(!p.manual && !p.isAttacking && !p.target) p.idleUntil = Math.max(p.idleUntil || 0, t + .3);   // đứng giữ chỗ
     if(p.isAttacking){
       if(!p.btAimed){   // vừa bắt đầu đòn do người chơi bấm: tự quay + ngắm vào địch gần nhất trong tầm
-        const e = btNearestEnemy(p.x, p.y, s.range);
+        const kd = p.atkKind || 'attack', e = btNearestEnemy(p.x, p.y, (kd !== 'attack' && p.def[kd+'BallFrames']) ? (p.def[kd+'Reach'] ?? 650) : s.range);
         if(e){ p.facingLeft = e.x < p.x; p.target = {x:e.x, y:e.y}; }
         p.btAimed = true;
       }
-      if(!p.def.fireball && !p.btHit && p.attackFrame >= Math.floor((p.def.attackAnimFrames || 10)*.5)){   // đòn cận chiến trúng ở giữa hoạt ảnh
+      const kind = p.atkKind || 'attack';
+      if(kind !== 'attack' && p.def[kind+'BallFrames']){ /* skill có quả cầu: sát thương tính lúc nổ (battleOnBlast) */ }
+      else if(kind !== 'attack'){   // skill: sát thương lan quanh pet ở giữa hoạt ảnh (skill1Dmg = hệ số nhân, skill1Range = tầm; mặc định x2 sát thương, tầm x1.3)
+        if(!p.btHit && p.attackFrame >= Math.floor((p.def[kind+'AnimFrames'] || 10)*.5)){
+          p.btHit = true; const R = p.def[kind+'Range'] ?? s.range*1.3, D = s.dmg * (p.def[kind+'Dmg'] ?? 2);
+          BT.enemies.forEach(e => { if(!e.die && Math.hypot(e.x-p.x, e.y-p.y) <= R) btHurtEnemy(e, D, p); });
+        }
+      } else if(!p.def.fireball && !p.btHit && p.attackFrame >= Math.floor((p.def.attackAnimFrames || 10)*.5)){   // đòn cận chiến trúng ở giữa hoạt ảnh
         p.btHit = true; BT.enemies.forEach(e => { if(!e.die && Math.hypot(e.x-p.x, e.y-p.y) <= s.range) btHurtEnemy(e, s.dmg, p); });
       }
       continue;
@@ -125,10 +147,10 @@ function btEnd(win){
   $b('bt-back').onclick = btExit;
 }
 function btExit(){
-  if(BT.phase !== 'result' && BT.phase !== 'prep') return;
-  BT.phase = 'leaving'; $b('bt-res').style.display = 'none'; $b('bt-bar').style.display = 'none'; $b('bt-hud').style.display = 'none';
+  if(BT.phase !== 'result' && BT.phase !== 'prep' && BT.phase !== 'pick') return;
+  BT.phase = 'leaving'; BT.chosen = null; $b('bt-pick').style.display = 'none'; $b('bt-sp').style.display = 'none'; BT.paused = false; $b('bt-res').style.display = 'none'; $b('bt-bar').style.display = 'none'; $b('bt-hud').style.display = 'none';
   btFade(()=>{
-    BT.snap.forEach(s => { const p = s.p; Object.assign(p, {map:s.map, x:s.x, y:s.y, vx:0, vy:0, target:null, isAttacking:false, hasFired:false, attackTime:0, bdead:false, btAimed:false, selected:false, idleUntil:0}); if(p.tvx !== undefined){ p.tvx = 0; p.tvy = 0; } });
+    BT.snap.forEach(s => { const p = s.p; Object.assign(p, {map:s.map, x:s.x, y:s.y, vx:0, vy:0, target:null, isAttacking:false, hasFired:false, attackTime:0, bdead:false, btAimed:false, selected:false, idleUntil:0, nextTurn:0, sleepUntil:0}); if(p.tvx !== undefined){ p.tvx = 0; p.tvy = 0; } });
     PROJECTILES.length = 0; EXPLOSIONS.length = 0; BT.enemies = []; BT.fx = [];
     setActiveMap(BT.lobby);
     BT.phase = 'off'; $b('bt-open').style.display = '';

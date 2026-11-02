@@ -14,7 +14,7 @@ function makeLoader(){
 }
 async function bootAssets(){
   try{ loadGame(); }catch(e){}
-  const first = MAPS[0].id;
+  const first = savedActiveMap(); ACTIVE_MAP = first;   // mở lại đúng map lần trước
   const names = PET_DEF.filter((d,i)=>{
     const s = (typeof savedPet === 'function' && savedPet(d)) || {};
     let m = s.map !== undefined ? s.map : (PETS_START_PLACED ? MAPS[0].id : null);

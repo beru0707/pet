@@ -7,7 +7,11 @@ function drawMapScene(mid,t){
   { const B=IMGS['bg_'+mid];
     if(B?.complete && B.naturalWidth){ const k=Math.max(CW/B.naturalWidth,CH/B.naturalHeight),w=B.naturalWidth*k,h=B.naturalHeight*k; cx.drawImage(B,(CW-w)/2,(CH-h)/2,w,h); }
     else { cx.fillStyle='#86bf3b'; cx.fillRect(0,0,CW,CH); } }
-  PETS.filter(p=>p.map===mid).sort((a,b)=>a.y-b.y).forEach(p => drawPet(p, t));
+  // thú và địch xếp chung theo trục y: ai đứng thấp hơn trên màn hình (gần người xem hơn) thì vẽ sau, nằm đè lên
+  const items = PETS.filter(p=>p.map===mid).map(p => ({y:p.y, pet:p}));
+  if(typeof BT !== 'undefined' && mid === BT.map && (BT.phase === 'fight' || BT.phase === 'result') && typeof btDrawEnemy === 'function')
+    BT.enemies.forEach(e => items.push({y:e.y, enemy:e}));
+  items.sort((a,b)=>a.y-b.y).forEach(it => it.pet ? drawPet(it.pet, t) : btDrawEnemy(it.enemy, t));
   drawTargetMarkers(mid, t);
   drawProjectiles(mid);
   drawExplosions(mid);

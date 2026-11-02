@@ -8,10 +8,12 @@
 // scale: hệ số nhân kích thước riêng cho từng con (1.0 = bình thường, 0.8 = nhỏ hơn 20%, 1.2 = lớn hơn 20%)
 //        MỘT scale này áp dụng chung cho mọi trạng thái: đi, đứng yên, ngủ, tấn công (game tự cân ảnh các trạng thái cho nhân vật to bằng nhau)
 const PET_DEF = [
-  {name:'Benimaru', scale:1, sw:780, sh:640, barDY: 170},
-  {name:'Souei', scale:1, sw:780, sh:640},
-  {name:'Shion', scale:1, sw:780, sh:640},
+  {name:'Benimaru', scale:1.48, sw:780, sh:640},
+  {name:'Souei', scale:1.48, sw:780, sh:640},
+  {name:'Shion', scale:1.4, sw:780, sh:640},
   {name:'Shuna', scale:1, sw:780, sh:640},
+  {name:'Diablo', scale: 1.45, sw:780, sh:640},
+  {name:'Veldora', scale: 1.45, sw:780, sh:640},
   {name:'Swiftfox', scale:1, sw:780, sh:640},
   {name:'Flowerbeetle', scale:0.8, sw:700, sh:650},
   {name:'Shiba', scale:0.8, sw:780, sh:680},
@@ -45,74 +47,100 @@ const SHEET_DEFAULT = {cols:6, rows:6, max:320};
 //   idleScale / sleepScale / attackScale : nhân thêm cỡ (1 = giữ nguyên; 1.2 = to hơn 20%)
 const PET_ANIM = {
   'Benimaru': {
-    idleSheet: {
-      src: 'assets/benimaru/idle.webp',
-      fps: 12,
-      scale: 1.43
-    },
     walkSheet: {
       src: 'assets/benimaru/walk.webp',
-      stride: 1,
-      speed: 1,
-      scale: 1.5
+      scale: 1.04,
+      dx: 0.006,
+      dy: 0.028
+    },
+    idleSheet: {
+      src: 'assets/benimaru/idle.webp',
+      scale: 1,
+      dx: 0.008,
+      dy: 0.017
     },
     sleepSheet: {
       src: 'assets/benimaru/sleep.webp',
       cols: 1,
       rows: 1,
-      scale: 1.43
+      scale: 1,
+      dx: 0.017,
+      dy: 0.017
     },
     attackSheet: {
       src: 'assets/benimaru/attack.webp',
       cols: 4,
       rows: 4,
-      scale: 2.1,
-      dx: 0.2,
-      dy: 0,
+      scale: 1.42,
+      dx: 0.274,
+      dy: 0.01
+    },
+    skill1Sheet: {
+      src: 'assets/benimaru/skill1.webp',
+      cols: 4,
+      rows: 4,
+      scale: 1,
+      ballX: 40,
+      ballY: 45
     },
   },
   'Souei': {
-    idleSheet: {
-      src: 'assets/souei/idle.webp',
-      fps: 12,
-      scale: 1.4
-    },
     walkSheet: {
       src: 'assets/souei/walk.webp',
-      stride: 1,
-      speed: 1,
-      scale: 1.42
+      scale: 1,
+      dy: 0.046
+    },
+    idleSheet: {
+      src: 'assets/souei/idle.webp',
+      scale: 1,
+      dx: -0.002,
+      dy: 0.031
     },
     sleepSheet: {
       src: 'assets/souei/sleep.webp',
       cols: 1,
       rows: 1,
-      scale: 1.4
+      scale: 1,
+      dx: -0.002,
+      dy: 0.031
+    },
+    attackSheet: {
+      src: 'assets/souei/attack.webp',
+      cols: 4,
+      rows: 4,
+      scale: 1,
+      dx: -0.147,
+      dy: 0.008
     },
   },
   'Shion': {
-    idleSheet: {
-      src: 'assets/shion/idle.webp',
-      fps: 12,
-      scale: 1.4
-    },
     walkSheet: {
       src: 'assets/shion/walk.webp',
-      stride: 1,
-      speed: 1,
-      scale: 1.45
+      scale: 1.07,
+      dx: 0.084,
+      dy: 0.034
+    },
+    idleSheet: {
+      src: 'assets/shion/idle.webp',
+      scale: 1,
+      dx: 0.086,
+      dy: 0.004
     },
     sleepSheet: {
       src: 'assets/shion/sleep.webp',
       cols: 1,
       rows: 1,
-      scale: 1.4
+      scale: 1,
+      dx: 0.093,
+      dy: 0.004
     },
     attackSheet: {
       src: 'assets/shion/attack.webp',
       cols: 4,
       rows: 4,
-      scale: 2.3
+      scale: 1.7,
+      dx: 0.051,
+      dy: 0.004
     },
   },
   'Shuna': {
@@ -132,6 +160,66 @@ const PET_ANIM = {
       cols: 1,
       rows: 1,
       scale: 1.4
+    },
+  },
+  'Diablo': {
+    walkSheet: {
+      src: 'assets/diablo/walk.webp',
+      scale: 1,
+      dx: -0.023,
+      dy: 0.034
+    },
+    idleSheet: {
+      src: 'assets/diablo/idle.webp',
+      cols: 4,
+      rows: 4,
+      scale: 1,
+      dx: -0.017,
+      dy: 0.026
+    },
+    sleepSheet: {
+      src: 'assets/diablo/sleep.webp',
+      cols: 1,
+      rows: 1,
+      scale: 1,
+      dx: -0.021,
+      dy: 0.026
+    },
+    attackSheet: {
+      src: 'assets/diablo/attack.webp',
+      cols: 4,
+      rows: 4,
+      scale: 0.95,
+      dx: -0.036,
+      dy: -0.001
+    },
+  },
+  'Veldora': {
+    walkSheet: {
+      src: 'assets/veldora/walk.webp',
+      scale: 1.03,
+      dx: -0.001,
+      dy: 0.039
+    },
+    idleSheet: {
+      src: 'assets/veldora/idle.webp',
+      scale: 1,
+      dx: -0.015,
+      dy: 0.023
+    },
+    sleepSheet: {
+      src: 'assets/veldora/sleep.webp',
+      cols: 1,
+      rows: 1,
+      scale: 1,
+      dx: -0.005,
+      dy: 0.023
+    },
+    attackSheet: {
+      src: 'assets/veldora/attack.webp',
+      scale: 1,
+      dx: 0.089,
+      dy: 0.015
     },
   },
   'Shiba': {
