@@ -17,6 +17,7 @@ const CAM = {x:0, y:0, fx:0, fy:0};        // x,y đã làm tròn (dùng để v
 // Quy tắc va chạm: KHÔNG dùng cờ "collider" của Sprite Fusion vì layer Rocks có cả phần ruột
 // (id 169) nằm dưới cỏ và layer Bridge cũng bị đánh dấu collider.
 const TM_CFG = {
+  petOnTop:  false,                                // true: pet luôn trên cùng. false: đứng SAU cây / nhà thì bị che, đứng TRƯỚC thì nằm trên cùng (xếp theo trục y)
   front:     ['Trees front', 'Buildings'],         // layer vẽ đè lên pet khi pet đứng sau (xếp theo y)
   ground:    ['Sand', 'Grass'],                    // có ô ở đây mới đi được (chỗ không có = nước)
   block:     ['Cliff'],                            // chặn hẳn
@@ -35,7 +36,7 @@ function tmBuild(T, j, img){
   const mk = () => { const c = document.createElement('canvas'); c.width = T.w; c.height = T.h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
   const [under, gu] = mk(), [over, go] = mk();
   const front = new Set(TM_CFG.front), ground = new Set(TM_CFG.ground), block = new Set(TM_CFG.block), pass = new Set(TM_CFG.walkOver);
-  const N = W*H, fg = new Uint8Array(N), gr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), rk = new Uint8Array(N), tg = new Uint8Array(N), fp = new Uint8Array(N), hi = new Uint8Array(N), cn = new Uint8Array(N);
+  const N = W*H, fg = new Uint8Array(N), gr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), rk = new Uint8Array(N), tg = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N);
   const topGrass = new Set(TM_CFG.topGrass), highL = new Set(TM_CFG.high), conn = new Set(TM_CFG.connector), foot = new Set(TM_CFG.footprint);
   let firstFront = j.layers.length;
   j.layers.forEach((L, i) => { if(front.has(L.name)) firstFront = Math.min(firstFront, i); });
@@ -54,11 +55,14 @@ function tmBuild(T, j, img){
       if(topGrass.has(L.name)) tg[k] = 1;
       if(highL.has(L.name)) hi[k] = 1;
       if(conn.has(L.name)) cn[k] = 1;
-      if(foot.has(L.name)) fp[k] = 1;
+      if(foot.has(L.name)){ fp[k] = 1; bid[k] = id; }
       if(pass.has(L.name)) ps[k] = 1;
     }
   }
-  for(let k = 0; k < N; k++) if(fp[k] && (k + W >= N || !fp[k + W])) so[k] = 1;   // chân công trình: ô dưới cùng của mỗi cột
+  // Hai ô công trình chồng dọc thuộc CÙNG 1 công trình khi id ô dưới lớn hơn id ô trên 2..8 (Sprite Fusion đánh id theo hàng, bước = bề ngang).
+  // Nhà xây sát ngay dưới lâu đài (id chỉ lệch 1) là công trình KHÁC -> có chân và khối xếp lớp riêng.
+  const same = (a, b) => { const d = bid[b] - bid[a]; return d >= 2 && d <= 8; };
+  for(let k = 0; k < N; k++) if(fp[k] && (k + W >= N || !fp[k + W] || !same(k, k + W))) so[k] = 1;   // chân công trình: ô dưới cùng của mỗi cột
   T.under = under; T.over = over;
   T.walk = new Uint8Array(N);
   for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (gr[k] && !so[k] && (!rk[k] || tg[k]))) ? 1 : 0;
@@ -80,7 +84,11 @@ function tmBuild(T, j, img){
   for(let x = 0; x < W; x++){
     let y = 0;
     while(y < H){
-      if(fg[y*W + x]){ const y0 = y; while(y < H && fg[y*W + x]) y++; T.runs.push({x, y0, y1:y - 1}); }
+      if(fg[y*W + x]){
+        const y0 = y; y++;
+        while(y < H && fg[y*W + x] && !(fp[(y-1)*W + x] !== fp[y*W + x] || (fp[y*W + x] && !same((y-1)*W + x, y*W + x)))) y++;   // tách khi đổi giữa cây và công trình, hoặc sang công trình khác
+        T.runs.push({x, y0, y1:y - 1, b:fp[y0*W + x]});
+      }
       else y++;
     }
   }
@@ -169,14 +177,17 @@ drawMapScene = function(mid, t){
   const T = tmGet(mid); if(!T) return _drawMapScene(mid, t);   // map thường / tilemap chưa nạp xong: vẽ ảnh nền như cũ
   const cam = VIEW.overview ? {x:0, y:0} : CAM;
   cx.save(); cx.fillStyle = '#10200a'; cx.fillRect(0, 0, CW, CH); cx.imageSmoothingEnabled = false;
-  cx.drawImage(T.under, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.restore();
+  cx.drawImage(T.under, cam.x, cam.y, CW, CH, 0, 0, CW, CH);
+  if(TM_CFG.petOnTop) cx.drawImage(T.over, cam.x, cam.y, CW, CH, 0, 0, CW, CH);   // cây, nhà vẽ liền vào nền; pet vẽ sau nên nằm trên
+  cx.restore();
   cx.save(); cx.translate(-cam.x, -cam.y);
   const items = PETS.filter(p => p.map === mid).map(p => ({y:p.y, pet:p}));
   if(typeof BT !== 'undefined' && mid === BT.map && (BT.phase === 'fight' || BT.phase === 'result') && typeof btDrawEnemy === 'function')
     BT.enemies.forEach(e => items.push({y:e.y, enemy:e}));
-  T.runs.forEach(r => {   // chỉ đưa vào các khối cây đang nằm trong khung nhìn
+  if(!TM_CFG.petOnTop) T.runs.forEach(r => {   // chỉ đưa vào các khối cây đang nằm trong khung nhìn
     if(r.x*T.ts + T.ts < cam.x || r.x*T.ts > cam.x + CW || (r.y1 + 1)*T.ts < cam.y || r.y0*T.ts > cam.y + CH) return;
-    items.push({y:(r.y1 + 1)*T.ts, run:r});
+    // đáy khối: pet có chân ở dưới mốc này (đứng trước) thì vẽ sau = trên cùng. Cây: giữa hàng gốc; công trình: sát mép dưới
+    items.push({y:r.b ? (r.y1 + 1)*T.ts - 16 : (r.y1 + .5)*T.ts, run:r});
   });
   cx.imageSmoothingEnabled = false;
   items.sort((a, b) => a.y - b.y).forEach(it => it.pet ? drawPet(it.pet, t) : it.enemy ? btDrawEnemy(it.enemy, t) : tmDrawRun(T, it.run));
