@@ -148,11 +148,88 @@ function tmSnap(T, p){   // pet đang đứng chỗ không đi được (vd. v�
 let TM_CUR = null;
 const _walkable = walkable;
 walkable = function(x, y){ const T = tmGet(TM_CUR || ACTIVE_MAP); return T ? tmWalkable(T, x, y) : _walkable(x, y); };
+
+// ---------- TÌM ĐƯỜNG: bấm điểm đến -> pet tự đi vòng vật cản tới điểm đi được gần nhất ----------
+function tmHeapPush(h, c, i){ h.push([c, i]); let k = h.length - 1; while(k > 0){ const q = (k - 1) >> 1; if(h[q][0] <= h[k][0]) break; [h[q], h[k]] = [h[k], h[q]]; k = q; } }
+function tmHeapPop(h){
+  const top = h[0], last = h.pop();
+  if(h.length){ h[0] = last; let k = 0; for(;;){ let a = 2*k + 1, b = a + 1, m = k; if(a < h.length && h[a][0] < h[m][0]) m = a; if(b < h.length && h[b][0] < h[m][0]) m = b; if(m === k) break; [h[m], h[k]] = [h[k], h[m]]; k = m; } }
+  return top;
+}
+// đoạn thẳng a -> b có đi được không (mẫu mỗi 8 px, kiểm cả hai bên thân pet như movement.js)
+function tmLOS(T, a, b){
+  const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(1, Math.ceil(d/8));
+  for(let i = 0; i <= n; i++){
+    const x = a.x + (b.x - a.x)*i/n, y = a.y + (b.y - a.y)*i/n;
+    if(!tmWalkable(T, x, y) || !tmWalkable(T, x - 15, y) || !tmWalkable(T, x + 15, y)) return false;
+  }
+  return true;
+}
+// trả về mảng điểm cần đi qua (có thể rỗng nếu đã ở sát đích), hoặc null nếu không có đường
+function tmFindPath(T, sx, sy, tx, ty){
+  const W = T.mw, H = T.mh, ts = T.ts, N = W*H;
+  const sgx = Math.floor(sx/ts), sgy = Math.floor(sy/ts);
+  if(sgx < 0 || sgy < 0 || sgx >= W || sgy >= H) return null;
+  const sk = sgy*W + sgx, dist = new Float64Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), heap = [];
+  dist[sk] = 0; tmHeapPush(heap, 0, sk);
+  const ok = (X, Y) => X >= 0 && Y >= 0 && X < W && Y < H && T.walk[Y*W + X] === 1;
+  while(heap.length){
+    const [c, k] = tmHeapPop(heap); if(c > dist[k]) continue;
+    const x = k % W, y = (k / W) | 0;
+    for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++){
+      if(!dx && !dy) continue;
+      const X = x + dx, Y = y + dy; if(!ok(X, Y)) continue;
+      if(dx && dy && (!ok(x + dx, y) || !ok(x, y + dy))) continue;   // không cắt góc vật cản
+      const nk = Y*W + X, nd = c + (dx && dy ? 1.414 : 1);
+      if(nd < dist[nk]){ dist[nk] = nd; prev[nk] = k; tmHeapPush(heap, nd, nk); }
+    }
+  }
+  // ô đích: chính ô được bấm nếu tới được, không thì ô tới được gần điểm bấm nhất
+  const tgx = Math.floor(tx/ts), tgy = Math.floor(ty/ts);
+  let goal = -1, exact = false;
+  if(tgx >= 0 && tgy >= 0 && tgx < W && tgy < H && dist[tgy*W + tgx] < Infinity){ goal = tgy*W + tgx; exact = true; }
+  else {
+    let best = Infinity;
+    for(let k = 0; k < N; k++){
+      if(dist[k] === Infinity) continue;
+      const d = Math.hypot(((k % W) + .5)*ts - tx, (((k / W) | 0) + .5)*ts - ty);
+      if(d < best - 1e-6 || (Math.abs(d - best) <= 1e-6 && dist[k] < dist[goal])){ best = d; goal = k; }
+    }
+  }
+  if(goal < 0) return null;
+  const cells = []; for(let k = goal; k !== sk && k >= 0; k = prev[k]) cells.push(k);
+  cells.reverse();
+  const pts = [{x:sx, y:sy}, ...cells.map(k => ({x:((k % W) + .5)*ts, y:(((k / W) | 0) + .5)*ts}))];
+  const out = []; let i = 0;   // rút gọn đường: bỏ các điểm giữa nếu đi thẳng được
+  while(i < pts.length - 1){ let j = pts.length - 1; while(j > i + 1 && !tmLOS(T, pts[i], pts[j])) j--; out.push(pts[j]); i = j; }
+  if(exact){
+    const prevP = out.length > 1 ? out[out.length - 2] : pts[0], tp = {x:tx, y:ty};
+    if(tmLOS(T, prevP, tp)){ if(out.length) out[out.length - 1] = tp; else out.push(tp); }
+  }
+  return out;
+}
+function tmSteerBefore(T, p){
+  if(p._autoGo || p.isAttacking){ p._path = null; p._wp = null; p._dest = null; return; }
+  const tg = p.target;
+  if(tg && tg !== p._wp){   // lệnh đi mới (bấm chuột): tìm đường
+    const path = tmFindPath(T, p.x, p.y, tg.x, tg.y);
+    p._dest = {x:tg.x, y:tg.y};
+    if(!path || !path.length){ p.target = null; p._path = null; p._wp = null; p._dest = null; return; }
+    p._path = path;
+  }
+  if(p._path && p._path.length){ p._wp = p._path[0]; p.target = p._wp; } else p._wp = null;
+}
+function tmSteerAfter(p){
+  if(!p._wp || p.target === p._wp) return;   // vẫn đang đi tới điểm trung gian
+  const near = Math.hypot(p._wp.x - p.x, p._wp.y - p.y) < 14;
+  if(p.target === null && near && p._path && p._path.length > 1){ p._path.shift(); return; }   // tới điểm trung gian: sang điểm kế
+  p._path = null; p._wp = null; p._dest = null;   // tới đích cuối, hoặc bị hủy (phím di chuyển, kẹt...)
+}
 const _updatePet = updatePet;
 updatePet = function(p, t, dt){
   const T = tmGet(p.map);
-  if(T){ if(!tmWalkable(T, p.x, p.y)) tmSnap(T, p); TM_CUR = p.map; }
-  try{ return _updatePet(p, t, dt); } finally { TM_CUR = null; }
+  if(T){ if(!tmWalkable(T, p.x, p.y)) tmSnap(T, p); TM_CUR = p.map; tmSteerBefore(T, p); }
+  try{ return _updatePet(p, t, dt); } finally { TM_CUR = null; if(T) tmSteerAfter(p); }
 };
 
 // ---------- tọa độ chuột: màn hình -> thế giới (trừ chế độ xem toàn bộ, ở đó giữ tọa độ màn hình) ----------
@@ -211,7 +288,12 @@ drawMapScene = function(mid, t){
   cx.imageSmoothingEnabled = false;
   items.sort((a, b) => a.y - b.y).forEach(it => it.pet ? drawPet(it.pet, t) : it.enemy ? btDrawEnemy(it.enemy, t) : tmDrawRun(T, it.run));
   cx.imageSmoothingEnabled = true;
-  drawTargetMarkers(mid, t); drawProjectiles(mid); drawExplosions(mid);
+  // vòng tròn đánh dấu hiện ở ĐÍCH cuối, không phải điểm trung gian của đường đi
+  const sw = PETS.filter(p => p._wp && p.target === p._wp && p._dest);
+  sw.forEach(p => { p._wpSave = p.target; p.target = p._dest; });
+  drawTargetMarkers(mid, t);
+  sw.forEach(p => { p.target = p._wpSave; });
+  drawProjectiles(mid); drawExplosions(mid);
   cx.restore();
 };
 
