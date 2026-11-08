@@ -14,7 +14,8 @@ const FORBIDDEN = [];
 // Thêm map: bỏ ảnh vào assets/background/ rồi thêm 1 dòng. id không trùng nhau, không dấu, không khoảng trắng.
 // Map ĐẦU TIÊN là map mở lên khi vào game.
 const MAPS = [
-  {id:'grass', name:'Đồng cỏ', bg:'assets/background/grass.webp'},
+     {id:'grass', name:'Đồng cỏ', bg:'assets/background/grass.webp',
+    tilemap:'assets/maps/grass.json', tileset:'assets/maps/spritesheet.png'}
   {id:'fire', name:'Lửa', bg:'assets/background/fire.webp'},
   {id:'beach',  name:'Bãi biển', bg:'assets/background/beach.webp'},
   {id:'jura',  name:'Jura Tempest', bg:'assets/background/jura.png'},
