@@ -61,7 +61,8 @@ cv.addEventListener('pointerdown', e => {
     PETS.forEach(p=>p.selected=false); hit.selected=true; hit.target=null; openPetPanel(hit);
   } else if(cur){
     // đang chọn 1 thú, bấm vào chỗ trống -> thú đi tới đó (giữ nguyên lựa chọn)
-    cur.target = {x: Math.max(100,Math.min(CW-100,pos.x)), y: Math.max(180,Math.min(950,pos.y))};
+    const wb = WB(ACTIVE_MAP);
+    cur.target = {x: Math.max(100,Math.min(wb.w-100,pos.x)), y: Math.max(180,Math.min(wb.h-74,pos.y))};
     cur.idleUntil = 0; cur.nextTurn = 0;
     clickMarker = {x:cur.target.x, y:cur.target.y, t:performance.now()};
   } else { closePetPanel(); }

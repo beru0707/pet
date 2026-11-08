@@ -53,7 +53,7 @@ function btDraw(t){
   if(OV.width !== w || OV.height !== h){ OV.width = w; OV.height = h; }
   Object.assign(OV.style, {display:'block', left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px'});
   const k = w / CW;
-  oc.setTransform(1,0,0,1,0,0); oc.clearRect(0,0,w,h); oc.setTransform(k,0,0,k,0,0);
+  oc.setTransform(1,0,0,1,0,0); oc.clearRect(0,0,w,h); oc.setTransform(k,0,0,k,-CAM.x*k,-CAM.y*k);
   if(BT.phase !== 'fight' && BT.phase !== 'result') return;
   // thanh máu địch (thân địch vẽ trên canvas game, xem btDrawEnemy, để xếp lớp đúng với pet)
   BT.enemies.forEach(e => { if(!e.die) btBar(e.x, e.y - (e.st === 'travel' ? 70 : e.T.h*.8), 90, e.hp/e.max, 'enemy'); });
