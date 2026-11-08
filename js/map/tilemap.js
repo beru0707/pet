@@ -17,6 +17,7 @@ const CAM = {x:0, y:0, fx:0, fy:0};        // x,y đã làm tròn (dùng để v
 // Quy tắc va chạm: KHÔNG dùng cờ "collider" của Sprite Fusion vì layer Rocks có cả phần ruột
 // (id 169) nằm dưới cỏ và layer Bridge cũng bị đánh dấu collider.
 const TM_CFG = {
+  petOnTop:  true,                                 // true: pet / địch luôn vẽ TRÊN CÙNG, không bị cây, nhà che. false: xếp lớp theo trục y
   front:     ['Trees front', 'Buildings'],         // layer vẽ đè lên pet khi pet đứng sau (xếp theo y)
   ground:    ['Sand', 'Grass'],                    // có ô ở đây mới đi được (chỗ không có = nước)
   block:     ['Cliff'],                            // chặn hẳn
@@ -176,12 +177,14 @@ drawMapScene = function(mid, t){
   const T = tmGet(mid); if(!T) return _drawMapScene(mid, t);   // map thường / tilemap chưa nạp xong: vẽ ảnh nền như cũ
   const cam = VIEW.overview ? {x:0, y:0} : CAM;
   cx.save(); cx.fillStyle = '#10200a'; cx.fillRect(0, 0, CW, CH); cx.imageSmoothingEnabled = false;
-  cx.drawImage(T.under, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.restore();
+  cx.drawImage(T.under, cam.x, cam.y, CW, CH, 0, 0, CW, CH);
+  if(TM_CFG.petOnTop) cx.drawImage(T.over, cam.x, cam.y, CW, CH, 0, 0, CW, CH);   // cây, nhà vẽ liền vào nền; pet vẽ sau nên nằm trên
+  cx.restore();
   cx.save(); cx.translate(-cam.x, -cam.y);
   const items = PETS.filter(p => p.map === mid).map(p => ({y:p.y, pet:p}));
   if(typeof BT !== 'undefined' && mid === BT.map && (BT.phase === 'fight' || BT.phase === 'result') && typeof btDrawEnemy === 'function')
     BT.enemies.forEach(e => items.push({y:e.y, enemy:e}));
-  T.runs.forEach(r => {   // chỉ đưa vào các khối cây đang nằm trong khung nhìn
+  if(!TM_CFG.petOnTop) T.runs.forEach(r => {   // chỉ đưa vào các khối cây đang nằm trong khung nhìn
     if(r.x*T.ts + T.ts < cam.x || r.x*T.ts > cam.x + CW || (r.y1 + 1)*T.ts < cam.y || r.y0*T.ts > cam.y + CH) return;
     items.push({y:(r.y1 + 1)*T.ts, run:r});
   });
