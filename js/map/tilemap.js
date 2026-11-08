@@ -38,6 +38,9 @@ function tmBuild(T, j, img){
   const front = new Set(TM_CFG.front), ground = new Set(TM_CFG.ground), block = new Set(TM_CFG.block), pass = new Set(TM_CFG.walkOver);
   const N = W*H, fg = new Uint8Array(N), gr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), rk = new Uint8Array(N), tg = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N);
   const topGrass = new Set(TM_CFG.topGrass), highL = new Set(TM_CFG.high), conn = new Set(TM_CFG.connector), foot = new Set(TM_CFG.footprint);
+  // ô có cây (quét trước vì Buildings được xử lý trước Trees front)
+  const trCell = new Uint8Array(N);
+  j.layers.forEach(L => { if(front.has(L.name) && !foot.has(L.name)) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) trCell[t.y*W + t.x] = 1; });
   let firstFront = j.layers.length;
   j.layers.forEach((L, i) => { if(front.has(L.name)) firstFront = Math.min(firstFront, i); });
   // JSON: layer đầu danh sách nằm TRÊN CÙNG -> vẽ từ cuối lên đầu
@@ -47,7 +50,8 @@ function tmBuild(T, j, img){
       const id = +t.id, k = t.y*W + t.x;
       if(t.x < 0 || t.y < 0 || t.x >= W || t.y >= H || !(id >= 0)) continue;
       // layer nằm trên cây (Miscs) chỉ đè lên cây / nhà ở đúng ô có cây / nhà
-      const g = isTree ? gT : isBld ? gB : (above && fg[k]) ? gT : (above && fp[k]) ? gB : gu;
+      const g = isTree ? gT : isBld ? (trCell[k] ? gu : gB) :   // ô vừa có cây vừa có nhà: nhà vẽ ở nền (dưới pet), cây ở lớp trên pet
+         (above && fg[k]) ? gT : (above && fp[k]) ? gB : gu;
       g.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts);
       if(isTree) fg[k] = 1;
       if(ground.has(L.name)) gr[k] = 1;
@@ -64,6 +68,18 @@ function tmBuild(T, j, img){
   // Nhà xây sát ngay dưới lâu đài (id chỉ lệch 1) là công trình KHÁC -> có chân và khối xếp lớp riêng.
   const same = (a, b) => { const d = bid[b] - bid[a]; return d >= 2 && d <= 8; };
   for(let k = 0; k < N; k++) if(fp[k] && (k + W >= N || !fp[k + W] || !same(k, k + W))) so[k] = 1;   // chân công trình: ô dưới cùng của mỗi cột
+  // Va chạm của cây: chỉ chặn gốc (hàng ô dưới cùng). Cây rộng 3 ô trở lên chỉ chặn ô giữa (thân), tán hai bên và phần trên vẫn đi vòng ra sau được.
+  for(let y = 0; y < H; y++){
+    let x = 0;
+    while(x < W){
+      const isB = (xx) => trCell[y*W + xx] && (y === H - 1 || !trCell[(y+1)*W + xx]);
+      if(!isB(x)){ x++; continue; }
+      let x1 = x; while(x1 + 1 < W && isB(x1 + 1)) x1++;
+      const n = x1 - x + 1, a = n <= 2 ? x : x + Math.floor((n - 1)/2), b = n <= 2 ? x1 : x + Math.floor(n/2);
+      for(let q = a; q <= b; q++) so[y*W + q] = 1;
+      x = x1 + 1;
+    }
+  }
   T.under = under; T.overT = overT; T.overB = overB;
   T.walk = new Uint8Array(N);
   for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (gr[k] && !so[k] && (!rk[k] || tg[k]))) ? 1 : 0;
