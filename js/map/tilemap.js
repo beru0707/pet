@@ -17,9 +17,10 @@ const CAM = {x:0, y:0, fx:0, fy:0};        // x,y đã làm tròn (dùng để v
 // Quy tắc va chạm: KHÔNG dùng cờ "collider" của Sprite Fusion vì layer Rocks có cả phần ruột
 // (id 169) nằm dưới cỏ và layer Bridge cũng bị đánh dấu collider.
 const TM_CFG = {
-  front:     ['Trees front'],                      // layer vẽ đè lên pet khi pet đứng sau (xếp theo y)
+  front:     ['Trees front', 'Buildings'],         // layer vẽ đè lên pet khi pet đứng sau (xếp theo y)
   ground:    ['Sand', 'Grass'],                    // có ô ở đây mới đi được (chỗ không có = nước)
-  block:     ['Buildings', 'Cliff'],               // chặn hẳn
+  block:     ['Cliff'],                            // chặn hẳn
+  footprint: ['Buildings'],                        // chỉ chặn hàng ô DƯỚI CÙNG của mỗi cột (chân nhà / tháp); phần trên đi vòng ra sau được
   rocksSolid: id => String(id) !== '169',          // Rocks: viền / vách (169 = ruột bờ đất, không chặn)
   topGrass:  ['Grass'],                            // ô viền Rocks mà có cỏ ở cùng ô thì vẫn đi được (phần cỏ nhìn thấy)
   high:      ['Grass', 'Bridge - horizontal', 'Bridge - vertical'],  // mặt bằng CAO (bậc cỏ, cầu): không đi thẳng xuống cát được
@@ -34,8 +35,8 @@ function tmBuild(T, j, img){
   const mk = () => { const c = document.createElement('canvas'); c.width = T.w; c.height = T.h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
   const [under, gu] = mk(), [over, go] = mk();
   const front = new Set(TM_CFG.front), ground = new Set(TM_CFG.ground), block = new Set(TM_CFG.block), pass = new Set(TM_CFG.walkOver);
-  const N = W*H, fg = new Uint8Array(N), gr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), rk = new Uint8Array(N), tg = new Uint8Array(N), hi = new Uint8Array(N), cn = new Uint8Array(N);
-  const topGrass = new Set(TM_CFG.topGrass), highL = new Set(TM_CFG.high), conn = new Set(TM_CFG.connector);
+  const N = W*H, fg = new Uint8Array(N), gr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), rk = new Uint8Array(N), tg = new Uint8Array(N), fp = new Uint8Array(N), hi = new Uint8Array(N), cn = new Uint8Array(N);
+  const topGrass = new Set(TM_CFG.topGrass), highL = new Set(TM_CFG.high), conn = new Set(TM_CFG.connector), foot = new Set(TM_CFG.footprint);
   let firstFront = j.layers.length;
   j.layers.forEach((L, i) => { if(front.has(L.name)) firstFront = Math.min(firstFront, i); });
   // JSON: layer đầu danh sách nằm TRÊN CÙNG -> vẽ từ cuối lên đầu
@@ -53,9 +54,11 @@ function tmBuild(T, j, img){
       if(topGrass.has(L.name)) tg[k] = 1;
       if(highL.has(L.name)) hi[k] = 1;
       if(conn.has(L.name)) cn[k] = 1;
+      if(foot.has(L.name)) fp[k] = 1;
       if(pass.has(L.name)) ps[k] = 1;
     }
   }
+  for(let k = 0; k < N; k++) if(fp[k] && (k + W >= N || !fp[k + W])) so[k] = 1;   // chân công trình: ô dưới cùng của mỗi cột
   T.under = under; T.over = over;
   T.walk = new Uint8Array(N);
   for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (gr[k] && !so[k] && (!rk[k] || tg[k]))) ? 1 : 0;
