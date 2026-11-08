@@ -20,7 +20,8 @@ const TM_CFG = {
   front:     ['Trees front'],                      // layer vẽ đè lên pet khi pet đứng sau (xếp theo y)
   ground:    ['Sand', 'Grass'],                    // có ô ở đây mới đi được (chỗ không có = nước)
   block:     ['Buildings', 'Cliff'],               // chặn hẳn
-  rocksSolid: id => String(id) !== '169',          // Rocks: chỉ chặn viền / vách, 169 = ruột bờ đất
+  rocksSolid: id => String(id) !== '169',          // Rocks: viền / vách (169 = ruột bờ đất, không chặn)
+  topGrass:  ['Grass'],                            // ô viền Rocks mà có cỏ ở cùng ô thì vẫn đi được (phần cỏ nhìn thấy)
   walkOver:  ['Stairs', 'Bridge - horizontal', 'Bridge - vertical'],  // luôn đi được, kể cả đè lên vách
 };
 
@@ -31,7 +32,8 @@ function tmBuild(T, j, img){
   const mk = () => { const c = document.createElement('canvas'); c.width = T.w; c.height = T.h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
   const [under, gu] = mk(), [over, go] = mk();
   const front = new Set(TM_CFG.front), ground = new Set(TM_CFG.ground), block = new Set(TM_CFG.block), pass = new Set(TM_CFG.walkOver);
-  const N = W*H, fg = new Uint8Array(N), gr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N);
+  const N = W*H, fg = new Uint8Array(N), gr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), rk = new Uint8Array(N), tg = new Uint8Array(N);
+  const topGrass = new Set(TM_CFG.topGrass);
   let firstFront = j.layers.length;
   j.layers.forEach((L, i) => { if(front.has(L.name)) firstFront = Math.min(firstFront, i); });
   // JSON: layer đầu danh sách nằm TRÊN CÙNG -> vẽ từ cuối lên đầu
@@ -44,13 +46,15 @@ function tmBuild(T, j, img){
       (onTop ? go : gu).drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts);
       if(isFront) fg[k] = 1;
       if(ground.has(L.name)) gr[k] = 1;
-      if(block.has(L.name) || (L.name === 'Rocks' && TM_CFG.rocksSolid(t.id))) so[k] = 1;
+      if(block.has(L.name)) so[k] = 1;
+      if(L.name === 'Rocks' && TM_CFG.rocksSolid(t.id)) rk[k] = 1;
+      if(topGrass.has(L.name)) tg[k] = 1;
       if(pass.has(L.name)) ps[k] = 1;
     }
   }
   T.under = under; T.over = over;
   T.walk = new Uint8Array(N);
-  for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (gr[k] && !so[k])) ? 1 : 0;
+  for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (gr[k] && !so[k] && (!rk[k] || tg[k]))) ? 1 : 0;
   // cây: gom các ô liền nhau theo cột thành 1 "khối"; khối được xếp theo đáy của nó
   T.runs = [];
   for(let x = 0; x < W; x++){
