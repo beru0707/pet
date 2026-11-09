@@ -26,7 +26,8 @@ const TM_CFG = {
   footprint: ['Buildings'],                        // chỉ chặn hàng ô DƯỚI CÙNG của mỗi cột (chân nhà / tháp); phần trên đi vòng ra sau được
   high:      ['Bridge - horizontal', 'Bridge - vertical'],  // layer luôn là mặt CAO (cầu)
   connector: ['Stairs'],                           // đường rocks / cầu thang: chỗ duy nhất đổi giữa mặt cao và cát
-  stairSides: 2,                                   // số ô cỏ bị chặn ở HAI BÊN cầu thang (0 = tắt). Thân pet rộng hơn 1 ô nên cần 2 ô, nếu không pet vẫn đứng đè lên cầu thang từ bên cạnh
+  stairSides: 1,                                   // số ô cỏ bị chặn hẳn ở HAI BÊN cầu thang (0 = tắt)
+  stairPad:  80,                                   // px: tâm pet phải cách mép cầu thang ít nhất chừng này (thân pet rộng hơn 1 ô) -> không đứng đè lên cầu thang, nhưng chỉ mất đúng phần cần thiết của ô cỏ kế bên
   walkOver:  ['Stairs', 'Bridge - horizontal', 'Bridge - vertical'],  // luôn đi được, kể cả đè lên vách
 };
 
@@ -90,6 +91,12 @@ function tmBuild(T, j, img){
       if(!ps[n]) so[n] = 1;
     }
   }
+  T.bands = [];   // dải chặn theo px ở hai bên cầu thang (kể cả phần vượt quá số ô đã chặn)
+  if(TM_CFG.stairPad) for(let k = 0; k < N; k++) if(cn[k]){
+    const x = k % W, y = (k / W) | 0;
+    if(x > 0 && !cn[k - 1]) T.bands.push([x*ts - TM_CFG.stairPad, y*ts, x*ts, (y + 1)*ts]);
+    if(x < W - 1 && !cn[k + 1]) T.bands.push([(x + 1)*ts, y*ts, (x + 1)*ts + TM_CFG.stairPad, (y + 1)*ts]);
+  }
   T.under = under; T.overT = overT; T.overB = overB;
   T.walk = new Uint8Array(N);
   for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (walkTop.has(top[k]) && !so[k])) ? 1 : 0;
@@ -140,7 +147,9 @@ const WB = id => { const T = tmGet(id); return T ? {w:T.w, h:T.h} : {w:CW, h:CH}
 function tmWalkable(T, x, y){
   const gx = Math.floor(x / T.ts), gy = Math.floor(y / T.ts);
   if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) return false;
-  return T.walk[gy*T.mw + gx] === 1;
+  if(T.walk[gy*T.mw + gx] !== 1) return false;
+  for(const b of T.bands) if(x >= b[0] && x < b[2] && y >= b[1] && y < b[3]) return false;   // sát cầu thang
+  return true;
 }
 function tmSnap(T, p){   // pet đang đứng chỗ không đi được (vd. vị trí lưu từ map cũ) -> đưa tới ô đi được gần nhất
   const gx = Math.floor(p.x / T.ts), gy = Math.floor(p.y / T.ts);
