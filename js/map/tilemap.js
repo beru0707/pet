@@ -27,7 +27,7 @@ const TM_CFG = {
   topGrass:  ['Grass'],                            // ô viền Rocks mà có cỏ ở cùng ô thì vẫn đi được (phần cỏ nhìn thấy)
   high:      ['Grass', 'Bridge - horizontal', 'Bridge - vertical'],  // mặt bằng CAO (bậc cỏ, cầu): không đi thẳng xuống cát được
   connector: ['Stairs'],                           // đường rocks / cầu thang: chỗ duy nhất đổi giữa mặt cao và cát
-  stairSides: true,                                // ô cỏ sát HAI BÊN cầu thang bị chặn: không đi ngang từ cỏ vào cầu thang, chỉ đi vào từ phía trên (cỏ) hoặc phía dưới (cát)
+  stairSides: 2,                                   // số ô cỏ bị chặn ở HAI BÊN cầu thang (0 = tắt). Thân pet rộng hơn 1 ô nên cần 2 ô, nếu không pet vẫn đứng đè lên cầu thang từ bên cạnh
   walkOver:  ['Stairs', 'Bridge - horizontal', 'Bridge - vertical'],  // luôn đi được, kể cả đè lên vách
 };
 
@@ -84,7 +84,11 @@ function tmBuild(T, j, img){
   }
   if(TM_CFG.stairSides) for(let k = 0; k < N; k++) if(cn[k]){
     const x = k % W;
-    for(const n of [x > 0 ? k - 1 : -1, x < W - 1 ? k + 1 : -1]) if(n >= 0 && !cn[n] && !ps[n]) so[n] = 1;
+    for(const dir of [-1, 1]) for(let d = 1; d <= TM_CFG.stairSides; d++){
+      const X = x + dir*d; if(X < 0 || X >= W) break;
+      const n = k + dir*d; if(cn[n]) break;            // gặp cầu thang khác: dừng
+      if(!ps[n]) so[n] = 1;
+    }
   }
   T.under = under; T.overT = overT; T.overB = overB;
   T.walk = new Uint8Array(N);
