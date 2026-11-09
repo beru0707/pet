@@ -487,4 +487,5 @@ const FIREBALL_LIFESPAN = 2.5; // Thời gian tồn tại của quả cầu lử
 // Đổi cỡ chung cho tất cả thú: sửa PET_BASE_SIZE. Cỡ riêng từng con: sửa scale trong PET_DEF.
 const PET_BASE_SIZE = 100;
 const KEY_SPEED_WALK = 46;    // thú có ảnh động: bằng tốc độ đi bình thường (34–58, trung bình ~46)
+const SELECTED_SPEED_MUL = 2;   // pet đang được chọn và di chuyển (phím / bấm điểm đến) đi nhanh gấp 2; pet không chọn đi lang thang như cũ
 const KEY_SPEED_OTHER = 70;   // thú còn lại: bằng tốc độ đi bình thường (45–95, trung bình ~70)
