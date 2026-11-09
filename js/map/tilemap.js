@@ -27,6 +27,7 @@ const TM_CFG = {
   high:      ['Bridge - horizontal', 'Bridge - vertical'],  // layer luôn là mặt CAO (cầu)
   connector: ['Stairs'],                           // đường rocks / cầu thang: chỗ duy nhất đổi giữa mặt cao và cát
   stairWall: true,                                // chỉ 1 ĐƯỜNG THẲNG chặn ở mép hai bên cầu thang (giữa cầu thang và cỏ): tâm pet không băng ngang qua đường này được; ô cỏ hai bên vẫn đi được bình thường
+  stairWallPad: 24,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng
   walkOver:  ['Stairs', 'Bridge - horizontal', 'Bridge - vertical'],  // luôn đi được, kể cả đè lên vách
 };
 
@@ -83,11 +84,12 @@ function tmBuild(T, j, img){
     }
   }
   // đường chặn thẳng đứng ở mép hai bên cầu thang: {x, y0, y1} (px)
-  T.cn = cn; T.walls = [];
+  T.cn = cn; T.walls = []; T.bands = [];
   if(TM_CFG.stairWall) for(let k = 0; k < N; k++) if(cn[k]){
     const x = k % W, y = (k / W) | 0;
-    if(x > 0 && !cn[k - 1]) T.walls.push({x:x*ts, y0:y*ts, y1:(y + 1)*ts});
-    if(x < W - 1 && !cn[k + 1]) T.walls.push({x:(x + 1)*ts, y0:y*ts, y1:(y + 1)*ts});
+    const pd = TM_CFG.stairWallPad || 0;
+    if(x > 0 && !cn[k - 1]){ T.walls.push({x:x*ts, y0:y*ts, y1:(y + 1)*ts}); if(pd) T.bands.push([x*ts - pd, y*ts, x*ts, (y + 1)*ts]); }
+    if(x < W - 1 && !cn[k + 1]){ T.walls.push({x:(x + 1)*ts, y0:y*ts, y1:(y + 1)*ts}); if(pd) T.bands.push([(x + 1)*ts, y*ts, (x + 1)*ts + pd, (y + 1)*ts]); }
   }
   T.under = under; T.overT = overT; T.overB = overB;
   T.walk = new Uint8Array(N);
@@ -140,6 +142,7 @@ function tmWalkable(T, x, y){
   const gx = Math.floor(x / T.ts), gy = Math.floor(y / T.ts);
   if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) return false;
   if(T.walk[gy*T.mw + gx] !== 1) return false;
+  if(T.bands) for(const b of T.bands) if(x >= b[0] && x < b[2] && y >= b[1] && y < b[3]) return false;   // dải sát cầu thang
   return true;
 }
 function tmSnap(T, p){   // pet đang đứng chỗ không đi được (vd. vị trí lưu từ map cũ) -> đưa tới ô đi được gần nhất
