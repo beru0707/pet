@@ -26,8 +26,8 @@ const TM_CFG = {
   footprint: ['Buildings'],                        // chỉ chặn hàng ô DƯỚI CÙNG của mỗi cột (chân nhà / tháp); phần trên đi vòng ra sau được
   high:      ['Bridge - horizontal', 'Bridge - vertical'],  // layer luôn là mặt CAO (cầu)
   connector: ['Stairs'],                           // đường rocks / cầu thang: chỗ duy nhất đổi giữa mặt cao và cát
-  stairSides: 1,                                   // số ô cỏ bị chặn hẳn ở HAI BÊN cầu thang (0 = tắt)
-  stairPad:  80,                                   // px: tâm pet phải cách mép cầu thang ít nhất chừng này (thân pet rộng hơn 1 ô) -> không đứng đè lên cầu thang, nhưng chỉ mất đúng phần cần thiết của ô cỏ kế bên
+  stairWall: true,                                // chỉ 1 ĐƯỜNG THẲNG chặn ở mép hai bên cầu thang (giữa cầu thang và cỏ): tâm pet không băng ngang qua đường này được; ô cỏ hai bên vẫn đi được bình thường
+  stairWallPad: 24,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng
   walkOver:  ['Stairs', 'Bridge - horizontal', 'Bridge - vertical'],  // luôn đi được, kể cả đè lên vách
 };
 
@@ -83,19 +83,13 @@ function tmBuild(T, j, img){
       x = x1 + 1;
     }
   }
-  if(TM_CFG.stairSides) for(let k = 0; k < N; k++) if(cn[k]){
-    const x = k % W;
-    for(const dir of [-1, 1]) for(let d = 1; d <= TM_CFG.stairSides; d++){
-      const X = x + dir*d; if(X < 0 || X >= W) break;
-      const n = k + dir*d; if(cn[n]) break;            // gặp cầu thang khác: dừng
-      if(!ps[n]) so[n] = 1;
-    }
-  }
-  T.bands = [];   // dải chặn theo px ở hai bên cầu thang (kể cả phần vượt quá số ô đã chặn)
-  if(TM_CFG.stairPad) for(let k = 0; k < N; k++) if(cn[k]){
+  // đường chặn thẳng đứng ở mép hai bên cầu thang: {x, y0, y1} (px)
+  T.cn = cn; T.walls = []; T.bands = [];
+  if(TM_CFG.stairWall) for(let k = 0; k < N; k++) if(cn[k]){
     const x = k % W, y = (k / W) | 0;
-    if(x > 0 && !cn[k - 1]) T.bands.push([x*ts - TM_CFG.stairPad, y*ts, x*ts, (y + 1)*ts]);
-    if(x < W - 1 && !cn[k + 1]) T.bands.push([(x + 1)*ts, y*ts, (x + 1)*ts + TM_CFG.stairPad, (y + 1)*ts]);
+    const pd = TM_CFG.stairWallPad || 0;
+    if(x > 0 && !cn[k - 1]){ T.walls.push({x:x*ts, y0:y*ts, y1:(y + 1)*ts}); if(pd) T.bands.push([x*ts - pd, y*ts, x*ts, (y + 1)*ts]); }
+    if(x < W - 1 && !cn[k + 1]){ T.walls.push({x:(x + 1)*ts, y0:y*ts, y1:(y + 1)*ts}); if(pd) T.bands.push([(x + 1)*ts, y*ts, (x + 1)*ts + pd, (y + 1)*ts]); }
   }
   T.under = under; T.overT = overT; T.overB = overB;
   T.walk = new Uint8Array(N);
@@ -148,7 +142,7 @@ function tmWalkable(T, x, y){
   const gx = Math.floor(x / T.ts), gy = Math.floor(y / T.ts);
   if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) return false;
   if(T.walk[gy*T.mw + gx] !== 1) return false;
-  for(const b of T.bands) if(x >= b[0] && x < b[2] && y >= b[1] && y < b[3]) return false;   // sát cầu thang
+  if(T.bands) for(const b of T.bands) if(x >= b[0] && x < b[2] && y >= b[1] && y < b[3]) return false;   // dải sát cầu thang
   return true;
 }
 function tmSnap(T, p){   // pet đang đứng chỗ không đi được (vd. vị trí lưu từ map cũ) -> đưa tới ô đi được gần nhất
@@ -174,9 +168,20 @@ function tmHeapPop(h){
   if(h.length){ h[0] = last; let k = 0; for(;;){ let a = 2*k + 1, b = a + 1, m = k; if(a < h.length && h[a][0] < h[m][0]) m = a; if(b < h.length && h[b][0] < h[m][0]) m = b; if(m === k) break; [h[m], h[k]] = [h[k], h[m]]; k = m; } }
   return top;
 }
+// đoạn a -> b có băng ngang đường chặn cầu thang không (đầu mút y0, y1 không tính, để đi chéo qua góc ô vẫn được)
+function tmCrosses(T, ax, ay, bx, by){
+  if(!T.walls || ax === bx) return false;
+  for(const w of T.walls){
+    if((ax < w.x) === (bx < w.x)) continue;
+    const y = ay + (by - ay)*(w.x - ax)/(bx - ax);
+    if(y > w.y0 && y < w.y1) return true;
+  }
+  return false;
+}
 // đoạn thẳng a -> b có đi được không (mẫu mỗi 8 px, kiểm cả hai bên thân pet như movement.js)
 function tmLOS(T, a, b){
   const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(1, Math.ceil(d/8));
+  if(tmCrosses(T, a.x, a.y, b.x, b.y)) return false;
   for(let i = 0; i <= n; i++){
     const x = a.x + (b.x - a.x)*i/n, y = a.y + (b.y - a.y)*i/n;
     if(!tmWalkable(T, x, y) || !tmWalkable(T, x - 15, y) || !tmWalkable(T, x + 15, y)) return false;
@@ -198,6 +203,7 @@ function tmFindPath(T, sx, sy, tx, ty){
       if(!dx && !dy) continue;
       const X = x + dx, Y = y + dy; if(!ok(X, Y)) continue;
       if(dx && dy && (!ok(x + dx, y) || !ok(x, y + dy))) continue;   // không cắt góc vật cản
+      if(!dy && T.cn && T.cn[Y*W + X] !== T.cn[k]) continue;         // không đi ngang từ cỏ vào cầu thang (hoặc ngược lại)
       const nk = Y*W + X, nd = c + (dx && dy ? 1.414 : 1);
       if(nd < dist[nk]){ dist[nk] = nd; prev[nk] = k; tmHeapPush(heap, nd, nk); }
     }
@@ -246,8 +252,18 @@ function tmSteerAfter(p){
 const _updatePet = updatePet;
 updatePet = function(p, t, dt){
   const T = tmGet(p.map);
-  if(T){ if(!tmWalkable(T, p.x, p.y)) tmSnap(T, p); TM_CUR = p.map; tmSteerBefore(T, p); }
-  try{ return _updatePet(p, t, dt); } finally { TM_CUR = null; if(T) tmSteerAfter(p); }
+  let ox = p.x, oy = p.y;
+  if(T){ if(!tmWalkable(T, p.x, p.y)) tmSnap(T, p); ox = p.x; oy = p.y; TM_CUR = p.map; tmSteerBefore(T, p); }
+  try{ return _updatePet(p, t, dt); } finally {
+    TM_CUR = null;
+    if(T){
+      if(tmCrosses(T, ox, oy, p.x, p.y)){   // định băng qua đường chặn cầu thang: giữ nguyên x, vẫn cho trượt theo trục y
+        p.x = ox;
+        if(!p.manual){ if(p.tvx !== undefined) p.tvx = -p.tvx; p.vx = -(p.vx || 0)*.3; p.nextTurn = t + 1.5; }
+      }
+      tmSteerAfter(p);
+    }
+  }
 };
 
 // ---------- tọa độ chuột: màn hình -> thế giới (trừ chế độ xem toàn bộ, ở đó giữ tọa độ màn hình) ----------
