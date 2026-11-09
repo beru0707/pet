@@ -24,11 +24,11 @@ const TM_CFG = {
   raise:     ['Rocks', 'Cliff'],                   // Grass chồng lên các lớp này = MẶT CAO: không đi qua lại với cát được (chỉ qua cầu thang). Grass chỉ nằm trên Sand = đi qua lại tự do
   flat:      ['Miscs', 'Small rocks', 'Shadows'],   // vật nhỏ (bụi cỏ, đá, nấm, xương...): luôn vẽ ở nền, dưới pet, kể cả khi nằm chung ô với cây / nhà
   footprint: ['Buildings'],                        // chỉ chặn hàng ô DƯỚI CÙNG của mỗi cột (chân nhà / tháp); phần trên đi vòng ra sau được
-  high:      ['Bridge - horizontal', 'Bridge - vertical'],  // layer luôn là mặt CAO (cầu)
+  bridge:    ['Bridge - horizontal', 'Bridge - vertical'],  // cầu: pet đi TRÊN cầu (bước lên từ đầu cầu, mặt cao) hoặc đi DƯỚI cầu trên cát; cầu vẽ đè lên pet đang đi dưới
   connector: ['Stairs'],                           // đường rocks / cầu thang: chỗ duy nhất đổi giữa mặt cao và cát
   stairWall: true,                                // chỉ 1 ĐƯỜNG THẲNG chặn ở mép hai bên cầu thang (giữa cầu thang và cỏ): tâm pet không băng ngang qua đường này được; ô cỏ hai bên vẫn đi được bình thường
   stairWallPad: 24,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng
-  walkOver:  ['Stairs', 'Bridge - horizontal', 'Bridge - vertical'],  // luôn đi được, kể cả đè lên vách
+  walkOver:  ['Stairs'],                           // luôn đi được, kể cả đè lên vách
 };
 
 // ---------- dựng map ----------
@@ -36,12 +36,12 @@ function tmBuild(T, j, img){
   const ts = j.tileSize, W = j.mapWidth, H = j.mapHeight, cols = Math.floor(img.naturalWidth / ts);
   T.ts = ts; T.mw = W; T.mh = H; T.w = W*ts; T.h = H*ts;
   const mk = () => { const c = document.createElement('canvas'); c.width = T.w; c.height = T.h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
-  const [under, gu] = mk(), [overT, gT] = mk(), [overB, gB] = mk();   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
+  const [under, gu] = mk(), [overT, gT] = mk(), [overB, gB] = mk(), [overBr, gBr] = mk();   // overBr: riêng các ô cầu   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
   const front = new Set(TM_CFG.front), pass = new Set(TM_CFG.walkOver);
-  const N = W*H, fg = new Uint8Array(N), top = new Int8Array(N).fill(-1), pr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N);
+  const N = W*H, fg = new Uint8Array(N), top = new Int8Array(N).fill(-1), pr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N), br = new Uint8Array(N);
   const ord = new Map(TM_CFG.order.map((n, i) => [n, i])), walkTop = new Set(TM_CFG.walkTop.map(n => ord.get(n)));
   const raiseMask = TM_CFG.raise.reduce((a, n) => a | (ord.has(n) ? 1 << ord.get(n) : 0), 0), grassIdx = ord.get('Grass');
-  const highL = new Set(TM_CFG.high), conn = new Set(TM_CFG.connector), flat = new Set(TM_CFG.flat), foot = new Set(TM_CFG.footprint);
+  const bridgeL = new Set(TM_CFG.bridge), conn = new Set(TM_CFG.connector), flat = new Set(TM_CFG.flat), foot = new Set(TM_CFG.footprint);
   // ô có cây (quét trước vì Buildings được xử lý trước Trees front)
   const trCell = new Uint8Array(N);
   j.layers.forEach(L => { if(front.has(L.name) && !foot.has(L.name)) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) trCell[t.y*W + t.x] = 1; });
@@ -59,7 +59,7 @@ function tmBuild(T, j, img){
       g.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts);
       if(isTree) fg[k] = 1;
       const oi = ord.get(L.name); if(oi !== undefined){ if(oi > top[k]) top[k] = oi; pr[k] |= 1 << oi; }
-      if(highL.has(L.name)) hi[k] = 1;
+      if(bridgeL.has(L.name)){ br[k] = 1; gBr.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts); }
       if(conn.has(L.name)) cn[k] = 1;
       if(foot.has(L.name)){ fp[k] = 1; bid[k] = id; }
       if(pass.has(L.name)) ps[k] = 1;
@@ -94,21 +94,10 @@ function tmBuild(T, j, img){
   T.under = under; T.overT = overT; T.overB = overB;
   T.walk = new Uint8Array(N);
   for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (walkTop.has(top[k]) && !so[k])) ? 1 : 0;
-  // Phân tầng: ô CAO (có cỏ / cầu) và ô cát thấp. Ô cát nằm sát (8 hướng) ô cao thì chặn -> không đi thẳng lên / xuống được.
-  // Ngoại lệ: ô cát sát cầu thang (connector) vẫn đi được, nên chỉ lên / xuống bằng đường rocks.
-  const w0 = T.walk.slice();
-  for(let y = 0; y < H; y++) for(let x = 0; x < W; x++){
-    const k = y*W + x;
-    if(!w0[k] || hi[k] || cn[k] || ps[k]) continue;
-    let nearHigh = false, nearConn = false;
-    for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++){
-      const X = x + dx, Y = y + dy; if(X < 0 || Y < 0 || X >= W || Y >= H) continue;
-      const n = Y*W + X; if(hi[n]) nearHigh = true; if(cn[n]) nearConn = true;
-    }
-    if(nearHigh && !nearConn) T.walk[k] = 0;
-  }
+  // Phân tầng mặt cao / thấp: không còn vùng đệm. Ô cát sát mặt cao vẫn đi được; chỉ chặn bước CHUYỂN giữa hai tầng (tmLevelBlocked) trừ cầu thang.
   // gom các ô liền nhau theo cột thành 1 "khối"; khối được xếp theo đáy của nó. Cây và công trình có khối riêng,
   // nên cây đứng trước lâu đài vẫn che pet đứng sau cây và không che pet đứng trước lâu đài.
+  T.br = br; T.hi = hi; T.overBr = overBr;
   T.runs = [];
   for(let x = 0; x < W; x++){
     for(const b of [0, 1]){
@@ -138,28 +127,44 @@ const tmGet = id => { const T = id && TILEMAPS[id]; return (T && T.ready) ? T : 
 const WB = id => { const T = tmGet(id); return T ? {w:T.w, h:T.h} : {w:CW, h:CH}; };
 
 // ---------- va chạm ----------
-function tmWalkable(T, x, y){
+// deck = pet đang đi TRÊN cầu. Trên cầu: chỉ ô cầu, hoặc ô mặt cao (đầu cầu). Dưới cầu / bình thường: lưới T.walk (ô cầu có cát bên dưới vẫn đi được)
+function tmCellOK(T, k, deck){ return deck ? (T.br[k] === 1 || (T.hi[k] === 1 && T.walk[k] === 1)) : T.walk[k] === 1; }
+function tmWalkable(T, x, y, deck){
   const gx = Math.floor(x / T.ts), gy = Math.floor(y / T.ts);
   if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) return false;
-  if(T.walk[gy*T.mw + gx] !== 1) return false;
+  if(!tmCellOK(T, gy*T.mw + gx, deck)) return false;
   if(T.bands) for(const b of T.bands) if(x >= b[0] && x < b[2] && y >= b[1] && y < b[3]) return false;   // dải sát cầu thang
   return true;
 }
+// trạng thái "trên cầu" sau khi pet nằm ở ô k: đầu cầu (mặt cao + ô cầu) -> lên cầu; ô cầu khác -> giữ nguyên; ngoài cầu -> xuống
+function tmDeckAt(T, k, deck){ return T.br[k] ? (T.hi[k] ? true : !!deck) : false; }
 function tmSnap(T, p){   // pet đang đứng chỗ không đi được (vd. vị trí lưu từ map cũ) -> đưa tới ô đi được gần nhất
   const gx = Math.floor(p.x / T.ts), gy = Math.floor(p.y / T.ts);
+  p.deck = false;
   for(let r = 1; r < 60; r++) for(let dy = -r; dy <= r; dy++) for(let dx = -r; dx <= r; dx++){
     if(Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
     const X = gx + dx, Y = gy + dy;
     if(X < 0 || Y < 0 || X >= T.mw || Y >= T.mh || !T.walk[Y*T.mw + X]) continue;
     p.x = (X + .5)*T.ts; p.y = (Y + .5)*T.ts; p.vx = p.vy = 0; p.target = null;
     if(p.tvx !== undefined){ p.tvx = 0; p.tvy = 0; }
+    p.deck = tmDeckAt(T, Y*T.mw + X, false);
     return;
   }
 }
-// bọc walkable: movement.js gọi walkable(x,y) không kèm map -> biết map nào nhờ bọc updatePet
-let TM_CUR = null;
+// bước từ ô ka sang ô kb có đổi tầng (mặt cao <-> thấp) mà không qua cầu thang không
+function tmLevelBlocked(T, ka, kb){ return ka !== kb && T.hi[ka] !== T.hi[kb] && !T.cn[ka] && !T.cn[kb]; }
+function tmCellAt(T, x, y){ const gx = Math.floor(x / T.ts), gy = Math.floor(y / T.ts); return (gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) ? -1 : gy*T.mw + gx; }
+// đoạn a -> b không được: băng qua đường chặn cầu thang, hoặc đổi tầng không qua cầu thang (pet đang đi trên cầu thì không xét đổi tầng)
+function tmBadMove(T, ax, ay, bx, by, deck){
+  if(tmCrosses(T, ax, ay, bx, by)) return true;
+  if(deck) return false;
+  const ka = tmCellAt(T, ax, ay), kb = tmCellAt(T, bx, by);
+  return ka >= 0 && kb >= 0 && tmLevelBlocked(T, ka, kb);
+}
+// bọc walkable: movement.js gọi walkable(x,y) không kèm map / pet -> biết nhờ bọc updatePet
+let TM_CUR = null, TM_DECK = false;
 const _walkable = walkable;
-walkable = function(x, y){ const T = tmGet(TM_CUR || ACTIVE_MAP); return T ? tmWalkable(T, x, y) : _walkable(x, y); };
+walkable = function(x, y){ const T = tmGet(TM_CUR || ACTIVE_MAP); return T ? tmWalkable(T, x, y, TM_DECK) : _walkable(x, y); };
 
 // ---------- TÌM ĐƯỜNG: bấm điểm đến -> pet tự đi vòng vật cản tới điểm đi được gần nhất ----------
 function tmHeapPush(h, c, i){ h.push([c, i]); let k = h.length - 1; while(k > 0){ const q = (k - 1) >> 1; if(h[q][0] <= h[k][0]) break; [h[q], h[k]] = [h[k], h[q]]; k = q; } }
@@ -179,56 +184,64 @@ function tmCrosses(T, ax, ay, bx, by){
   return false;
 }
 // đoạn thẳng a -> b có đi được không (mẫu mỗi 8 px, kiểm cả hai bên thân pet như movement.js)
-function tmLOS(T, a, b){
+function tmLOS(T, a, b, deck){
   const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(1, Math.ceil(d/8));
   if(tmCrosses(T, a.x, a.y, b.x, b.y)) return false;
+  let pk = -1;
   for(let i = 0; i <= n; i++){
     const x = a.x + (b.x - a.x)*i/n, y = a.y + (b.y - a.y)*i/n;
-    if(!tmWalkable(T, x, y) || !tmWalkable(T, x - 15, y) || !tmWalkable(T, x + 15, y)) return false;
+    const ck = tmCellAt(T, x, y); if(!deck && pk >= 0 && ck >= 0 && tmLevelBlocked(T, pk, ck)) return false; pk = ck;
+    if(!tmWalkable(T, x, y, deck) || !tmWalkable(T, x - 15, y, deck) || !tmWalkable(T, x + 15, y, deck)) return false;
   }
   return true;
 }
 // trả về mảng điểm cần đi qua (có thể rỗng nếu đã ở sát đích), hoặc null nếu không có đường
-function tmFindPath(T, sx, sy, tx, ty){
+// Tìm đường trên đồ thị (ô, trạng thái trên cầu / dưới cầu). Trả về mảng điểm cần đi qua, hoặc null nếu không có đường
+function tmFindPath(T, sx, sy, tx, ty, deck0){
   const W = T.mw, H = T.mh, ts = T.ts, N = W*H;
   const sgx = Math.floor(sx/ts), sgy = Math.floor(sy/ts);
   if(sgx < 0 || sgy < 0 || sgx >= W || sgy >= H) return null;
-  const sk = sgy*W + sgx, dist = new Float64Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), heap = [];
-  dist[sk] = 0; tmHeapPush(heap, 0, sk);
-  const ok = (X, Y) => X >= 0 && Y >= 0 && X < W && Y < H && T.walk[Y*W + X] === 1;
+  const s0 = (sgy*W + sgx)*2 + (deck0 ? 1 : 0), dist = new Float64Array(2*N).fill(Infinity), prev = new Int32Array(2*N).fill(-1), heap = [];
+  dist[s0] = 0; tmHeapPush(heap, 0, s0);
+  // trạng thái mới khi bước từ trạng thái d vào ô n; -1 nếu không bước được
+  const step = (d, X, Y) => X < 0 || Y < 0 || X >= W || Y >= H || !tmCellOK(T, Y*W + X, d) ? -1 : (tmDeckAt(T, Y*W + X, d) ? 1 : 0);
   while(heap.length){
-    const [c, k] = tmHeapPop(heap); if(c > dist[k]) continue;
-    const x = k % W, y = (k / W) | 0;
+    const [c, st] = tmHeapPop(heap); if(c > dist[st]) continue;
+    const k = st >> 1, d = st & 1, x = k % W, y = (k / W) | 0;
     for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++){
       if(!dx && !dy) continue;
-      const X = x + dx, Y = y + dy; if(!ok(X, Y)) continue;
-      if(dx && dy && (!ok(x + dx, y) || !ok(x, y + dy))) continue;   // không cắt góc vật cản
-      if(!dy && T.cn && T.cn[Y*W + X] !== T.cn[k]) continue;         // không đi ngang từ cỏ vào cầu thang (hoặc ngược lại)
-      const nk = Y*W + X, nd = c + (dx && dy ? 1.414 : 1);
-      if(nd < dist[nk]){ dist[nk] = nd; prev[nk] = k; tmHeapPush(heap, nd, nk); }
+      const X = x + dx, Y = y + dy, nd2 = step(d, X, Y); if(nd2 < 0) continue;
+      if(dx && dy && (step(d, x + dx, y) < 0 || step(d, x, y + dy) < 0)) continue;   // không cắt góc vật cản
+      if(!d && tmLevelBlocked(T, k, Y*W + X)) continue;                                // không đổi tầng cao <-> thấp, trừ qua cầu thang
+      if(!dy && T.cn && T.cn[Y*W + X] !== T.cn[k]) continue;                          // không đi ngang từ cỏ vào cầu thang (hoặc ngược lại)
+      const ns = (Y*W + X)*2 + nd2, nd = c + (dx && dy ? 1.414 : 1);
+      if(nd < dist[ns]){ dist[ns] = nd; prev[ns] = st; tmHeapPush(heap, nd, ns); }
     }
   }
+  const cd = k => Math.min(dist[k*2], dist[k*2 + 1]);
   // ô đích: chính ô được bấm nếu tới được, không thì ô tới được gần điểm bấm nhất
   const tgx = Math.floor(tx/ts), tgy = Math.floor(ty/ts);
   let goal = -1, exact = false;
-  if(tgx >= 0 && tgy >= 0 && tgx < W && tgy < H && dist[tgy*W + tgx] < Infinity){ goal = tgy*W + tgx; exact = true; }
+  if(tgx >= 0 && tgy >= 0 && tgx < W && tgy < H && cd(tgy*W + tgx) < Infinity){ goal = tgy*W + tgx; exact = true; }
   else {
     let best = Infinity;
     for(let k = 0; k < N; k++){
-      if(dist[k] === Infinity) continue;
+      if(cd(k) === Infinity) continue;
       const d = Math.hypot(((k % W) + .5)*ts - tx, (((k / W) | 0) + .5)*ts - ty);
-      if(d < best - 1e-6 || (Math.abs(d - best) <= 1e-6 && dist[k] < dist[goal])){ best = d; goal = k; }
+      if(d < best - 1e-6 || (Math.abs(d - best) <= 1e-6 && cd(k) < cd(goal))){ best = d; goal = k; }
     }
   }
   if(goal < 0) return null;
-  const cells = []; for(let k = goal; k !== sk && k >= 0; k = prev[k]) cells.push(k);
-  cells.reverse();
-  const pts = [{x:sx, y:sy}, ...cells.map(k => ({x:((k % W) + .5)*ts, y:(((k / W) | 0) + .5)*ts}))];
-  const out = []; let i = 0;   // rút gọn đường: bỏ các điểm giữa nếu đi thẳng được
-  while(i < pts.length - 1){ let j = pts.length - 1; while(j > i + 1 && !tmLOS(T, pts[i], pts[j])) j--; out.push(pts[j]); i = j; }
+  let gs = dist[goal*2] <= dist[goal*2 + 1] ? goal*2 : goal*2 + 1;
+  const sts = []; for(let st = gs; st !== s0 && st >= 0; st = prev[st]) sts.push(st);
+  sts.reverse();
+  const pts = [{x:sx, y:sy, d:!!deck0}, ...sts.map(st => { const k = st >> 1; return {x:((k % W) + .5)*ts, y:(((k / W) | 0) + .5)*ts, d:(st & 1) === 1}; })];
+  const out = []; let i = 0;   // rút gọn đường: chỉ nối tắt trong cùng 1 trạng thái trên / dưới cầu
+  const sameState = (a, b) => { for(let q = a; q <= b; q++) if(pts[q].d !== pts[a].d) return false; return true; };
+  while(i < pts.length - 1){ let j = pts.length - 1; while(j > i + 1 && !(sameState(i, j) && tmLOS(T, pts[i], pts[j], pts[i].d))) j--; out.push(pts[j]); i = j; }
   if(exact){
-    const prevP = out.length > 1 ? out[out.length - 2] : pts[0], tp = {x:tx, y:ty};
-    if(tmLOS(T, prevP, tp)){ if(out.length) out[out.length - 1] = tp; else out.push(tp); }
+    const prevP = out.length > 1 ? out[out.length - 2] : pts[0], tp = {x:tx, y:ty, d:out.length ? out[out.length - 1].d : pts[0].d};
+    if(prevP.d === tp.d && tmLOS(T, prevP, tp, tp.d)){ if(out.length) out[out.length - 1] = tp; else out.push(tp); }
   }
   return out;
 }
@@ -236,7 +249,7 @@ function tmSteerBefore(T, p){
   if(p._autoGo || p.isAttacking){ p._path = null; p._wp = null; p._dest = null; return; }
   const tg = p.target;
   if(tg && tg !== p._wp){   // lệnh đi mới (bấm chuột): tìm đường
-    const path = tmFindPath(T, p.x, p.y, tg.x, tg.y);
+    const path = tmFindPath(T, p.x, p.y, tg.x, tg.y, p.deck);
     p._dest = {x:tg.x, y:tg.y};
     if(!path || !path.length){ p.target = null; p._path = null; p._wp = null; p._dest = null; return; }
     p._path = path;
@@ -253,14 +266,20 @@ const _updatePet = updatePet;
 updatePet = function(p, t, dt){
   const T = tmGet(p.map);
   let ox = p.x, oy = p.y;
-  if(T){ if(!tmWalkable(T, p.x, p.y)) tmSnap(T, p); ox = p.x; oy = p.y; TM_CUR = p.map; tmSteerBefore(T, p); }
+  if(T){ if(!tmWalkable(T, p.x, p.y, !!p.deck)) tmSnap(T, p); ox = p.x; oy = p.y; TM_CUR = p.map; TM_DECK = !!p.deck; tmSteerBefore(T, p); }
   try{ return _updatePet(p, t, dt); } finally {
     TM_CUR = null;
     if(T){
-      if(tmCrosses(T, ox, oy, p.x, p.y)){   // định băng qua đường chặn cầu thang: giữ nguyên x, vẫn cho trượt theo trục y
-        p.x = ox;
-        if(!p.manual){ if(p.tvx !== undefined) p.tvx = -p.tvx; p.vx = -(p.vx || 0)*.3; p.nextTurn = t + 1.5; }
+      const dk = !!p.deck, nx = p.x, ny = p.y;
+      if(tmBadMove(T, ox, oy, nx, ny, dk)){   // định băng qua đường chặn cầu thang / đổi tầng: thử trượt theo từng trục, không được thì đứng lại
+        const okAt = (x, y) => [tmWalkable(T, x, y, dk), tmWalkable(T, x - 15, y, dk), tmWalkable(T, x + 15, y, dk)].filter(Boolean).length >= 2;
+        if(!tmBadMove(T, ox, oy, ox, ny, dk) && okAt(ox, ny)){ p.x = ox; }
+        else if(!tmBadMove(T, ox, oy, nx, oy, dk) && okAt(nx, oy)){ p.y = oy; }
+        else { p.x = ox; p.y = oy; }
+        if(!p.manual){ if(p.tvx !== undefined){ p.tvx = -p.tvx; p.tvy = -p.tvy; } p.vx = -(p.vx || 0)*.3; p.vy = -(p.vy || 0)*.3; p.nextTurn = t + 1.5; }
       }
+      const gx = Math.floor(p.x / T.ts), gy = Math.floor(p.y / T.ts);
+      if(gx >= 0 && gy >= 0 && gx < T.mw && gy < T.mh) p.deck = tmDeckAt(T, gy*T.mw + gx, p.deck);
       tmSteerAfter(p);
     }
   }
@@ -322,6 +341,15 @@ drawMapScene = function(mid, t){
   cx.imageSmoothingEnabled = false;
   items.sort((a, b) => a.y - b.y).forEach(it => it.pet ? drawPet(it.pet, t) : it.enemy ? btDrawEnemy(it.enemy, t) : tmDrawRun(T, it.run));
   cx.imageSmoothingEnabled = true;
+  // pet đang đi DƯỚI cầu: vẽ lại cầu đè lên pet (chỉ phần ô cầu)
+  const wb = WB(mid);
+  PETS.forEach(p => {
+    if(p.map !== mid || p.deck) return;
+    const gx = Math.floor(p.x / T.ts), gy = Math.floor(p.y / T.ts);
+    if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh || !T.br[gy*T.mw + gx]) return;
+    const x0 = Math.max(0, Math.floor(p.x - 90)), y0 = Math.max(0, Math.floor(p.y - 150)), x1 = Math.min(wb.w, Math.ceil(p.x + 90)), y1 = Math.min(wb.h, Math.ceil(p.y + 40));
+    cx.imageSmoothingEnabled = false; cx.drawImage(T.overBr, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0); cx.imageSmoothingEnabled = true;
+  });
   // vòng tròn đánh dấu hiện ở ĐÍCH cuối, không phải điểm trung gian của đường đi
   const sw = PETS.filter(p => p._wp && p.target === p._wp && p._dest);
   sw.forEach(p => { p._wpSave = p.target; p.target = p._dest; });
