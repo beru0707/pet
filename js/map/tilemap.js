@@ -19,13 +19,12 @@ const CAM = {x:0, y:0, fx:0, fy:0};        // x,y đã làm tròn (dùng để v
 const TM_CFG = {
   petOnTop:  false,                                // true: pet luôn trên cùng. false: đứng SAU cây / nhà thì bị che, đứng TRƯỚC thì nằm trên cùng (xếp theo trục y)
   front:     ['Trees front', 'Buildings'],         // layer vẽ đè lên pet khi pet đứng sau (xếp theo y)
-  ground:    ['Sand', 'Grass'],                    // có ô ở đây mới đi được (chỗ không có = nước)
-  block:     ['Cliff'],                            // chặn hẳn
+  order:     ['Sand', 'Cliff', 'Rocks', 'Grass', 'Stairs'],   // thứ tự lớp, dưới -> trên. Lớp CAO NHẤT có mặt trong ô quyết định ô đó là gì
+  walkTop:   ['Sand', 'Grass', 'Stairs'],          // lớp trên cùng thuộc nhóm này thì đi được (Cliff / Rocks hoặc không có lớp nào = chặn)
+  raise:     ['Rocks', 'Cliff'],                   // Grass chồng lên các lớp này = MẶT CAO: không đi qua lại với cát được (chỉ qua cầu thang). Grass chỉ nằm trên Sand = đi qua lại tự do
   flat:      ['Miscs', 'Small rocks', 'Shadows'],   // vật nhỏ (bụi cỏ, đá, nấm, xương...): luôn vẽ ở nền, dưới pet, kể cả khi nằm chung ô với cây / nhà
   footprint: ['Buildings'],                        // chỉ chặn hàng ô DƯỚI CÙNG của mỗi cột (chân nhà / tháp); phần trên đi vòng ra sau được
-  rocksSolid: id => String(id) !== '169',          // Rocks: viền / vách (169 = ruột bờ đất, không chặn)
-  topGrass:  ['Grass'],                            // ô viền Rocks mà có cỏ ở cùng ô thì vẫn đi được (phần cỏ nhìn thấy)
-  high:      ['Grass', 'Bridge - horizontal', 'Bridge - vertical'],  // mặt bằng CAO (bậc cỏ, cầu): không đi thẳng xuống cát được
+  high:      ['Bridge - horizontal', 'Bridge - vertical'],  // layer luôn là mặt CAO (cầu)
   connector: ['Stairs'],                           // đường rocks / cầu thang: chỗ duy nhất đổi giữa mặt cao và cát
   stairSides: 2,                                   // số ô cỏ bị chặn ở HAI BÊN cầu thang (0 = tắt). Thân pet rộng hơn 1 ô nên cần 2 ô, nếu không pet vẫn đứng đè lên cầu thang từ bên cạnh
   walkOver:  ['Stairs', 'Bridge - horizontal', 'Bridge - vertical'],  // luôn đi được, kể cả đè lên vách
@@ -37,9 +36,11 @@ function tmBuild(T, j, img){
   T.ts = ts; T.mw = W; T.mh = H; T.w = W*ts; T.h = H*ts;
   const mk = () => { const c = document.createElement('canvas'); c.width = T.w; c.height = T.h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
   const [under, gu] = mk(), [overT, gT] = mk(), [overB, gB] = mk();   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
-  const front = new Set(TM_CFG.front), ground = new Set(TM_CFG.ground), block = new Set(TM_CFG.block), pass = new Set(TM_CFG.walkOver);
-  const N = W*H, fg = new Uint8Array(N), gr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), rk = new Uint8Array(N), tg = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N);
-  const topGrass = new Set(TM_CFG.topGrass), highL = new Set(TM_CFG.high), conn = new Set(TM_CFG.connector), flat = new Set(TM_CFG.flat), foot = new Set(TM_CFG.footprint);
+  const front = new Set(TM_CFG.front), pass = new Set(TM_CFG.walkOver);
+  const N = W*H, fg = new Uint8Array(N), top = new Int8Array(N).fill(-1), pr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N);
+  const ord = new Map(TM_CFG.order.map((n, i) => [n, i])), walkTop = new Set(TM_CFG.walkTop.map(n => ord.get(n)));
+  const raiseMask = TM_CFG.raise.reduce((a, n) => a | (ord.has(n) ? 1 << ord.get(n) : 0), 0), grassIdx = ord.get('Grass');
+  const highL = new Set(TM_CFG.high), conn = new Set(TM_CFG.connector), flat = new Set(TM_CFG.flat), foot = new Set(TM_CFG.footprint);
   // ô có cây (quét trước vì Buildings được xử lý trước Trees front)
   const trCell = new Uint8Array(N);
   j.layers.forEach(L => { if(front.has(L.name) && !foot.has(L.name)) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) trCell[t.y*W + t.x] = 1; });
@@ -56,16 +57,15 @@ function tmBuild(T, j, img){
          (above && fg[k]) ? gT : (above && fp[k]) ? gB : gu;
       g.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts);
       if(isTree) fg[k] = 1;
-      if(ground.has(L.name)) gr[k] = 1;
-      if(block.has(L.name)) so[k] = 1;
-      if(L.name === 'Rocks' && TM_CFG.rocksSolid(t.id)) rk[k] = 1;
-      if(topGrass.has(L.name)) tg[k] = 1;
+      const oi = ord.get(L.name); if(oi !== undefined){ if(oi > top[k]) top[k] = oi; pr[k] |= 1 << oi; }
       if(highL.has(L.name)) hi[k] = 1;
       if(conn.has(L.name)) cn[k] = 1;
       if(foot.has(L.name)){ fp[k] = 1; bid[k] = id; }
       if(pass.has(L.name)) ps[k] = 1;
     }
   }
+  // mặt CAO: lớp Grass trên cùng và chồng lên Rocks / Cliff
+  for(let k = 0; k < N; k++) if(grassIdx !== undefined && top[k] === grassIdx && (pr[k] & raiseMask)) hi[k] = 1;
   // Hai ô công trình chồng dọc thuộc CÙNG 1 công trình khi id ô dưới lớn hơn id ô trên 2..8 (Sprite Fusion đánh id theo hàng, bước = bề ngang).
   // Nhà xây sát ngay dưới lâu đài (id chỉ lệch 1) là công trình KHÁC -> có chân và khối xếp lớp riêng.
   const same = (a, b) => { const d = bid[b] - bid[a]; return d >= 2 && d <= 8; };
@@ -92,7 +92,7 @@ function tmBuild(T, j, img){
   }
   T.under = under; T.overT = overT; T.overB = overB;
   T.walk = new Uint8Array(N);
-  for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (gr[k] && !so[k] && (!rk[k] || tg[k]))) ? 1 : 0;
+  for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (walkTop.has(top[k]) && !so[k])) ? 1 : 0;
   // Phân tầng: ô CAO (có cỏ / cầu) và ô cát thấp. Ô cát nằm sát (8 hướng) ô cao thì chặn -> không đi thẳng lên / xuống được.
   // Ngoại lệ: ô cát sát cầu thang (connector) vẫn đi được, nên chỉ lên / xuống bằng đường rocks.
   const w0 = T.walk.slice();
