@@ -84,12 +84,12 @@ function updatePet(p, t, dt){
   if(kd.x || kd.y){ p.target = null; }
   else if(p.target){
     const dx = p.target.x - p.x, dy = p.target.y - p.y, dist = Math.hypot(dx, dy);
-    const spd = (p.def.walker ? KEY_SPEED_WALK : KEY_SPEED_OTHER) * (p.def.speedMul||1);
+    const spd = (p.def.walker ? KEY_SPEED_WALK : KEY_SPEED_OTHER) * (p.def.speedMul||1) * (p.selected ? SELECTED_SPEED_MUL : 1);
     if(dist <= Math.max(4, spd*dt)){ p.target = null; }                       // đã tới nơi
     else { kd = {x:dx/dist, y:dy/dist}; }
   }
   if(kd.x || kd.y){
-    const L = Math.hypot(kd.x, kd.y), sp = (p.def.walker ? KEY_SPEED_WALK : KEY_SPEED_OTHER) * (p.def.speedMul||1);
+    const L = Math.hypot(kd.x, kd.y), sp = (p.def.walker ? KEY_SPEED_WALK : KEY_SPEED_OTHER) * (p.def.speedMul||1) * (p.selected ? SELECTED_SPEED_MUL : 1);
     p.manual = true; p.idleUntil = 0; p.nextTurn = t + .5;
     if(p.def.walker){ p.tvx = kd.x/L*sp; p.tvy = kd.y/L*sp; }
     else { p.vx = kd.x/L*sp; p.vy = kd.y/L*sp; if(kd.x) p.facingLeft = kd.x < 0; }
