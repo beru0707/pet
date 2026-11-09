@@ -98,6 +98,8 @@ function tmBuild(T, j, img){
   // gom các ô liền nhau theo cột thành 1 "khối"; khối được xếp theo đáy của nó. Cây và công trình có khối riêng,
   // nên cây đứng trước lâu đài vẫn che pet đứng sau cây và không che pet đứng trước lâu đài.
   T.br = br; T.hi = hi; T.overBr = overBr;
+  T.bc = new Uint8Array(N);   // ô giao với dải chặn cầu thang -> bước vào / ra ô này phải kiểm bằng tmLOS
+  for(const b of T.bands) for(let y = Math.floor(b[1]/ts); y <= Math.floor((b[3] - 1)/ts); y++) for(let x = Math.floor(b[0]/ts); x <= Math.floor((b[2] - 1)/ts); x++) if(x >= 0 && y >= 0 && x < W && y < H) T.bc[y*W + x] = 1;
   T.runs = [];
   for(let x = 0; x < W; x++){
     for(const b of [0, 1]){
@@ -173,25 +175,25 @@ function tmHeapPop(h){
   if(h.length){ h[0] = last; let k = 0; for(;;){ let a = 2*k + 1, b = a + 1, m = k; if(a < h.length && h[a][0] < h[m][0]) m = a; if(b < h.length && h[b][0] < h[m][0]) m = b; if(m === k) break; [h[m], h[k]] = [h[k], h[m]]; k = m; } }
   return top;
 }
-// đoạn a -> b có băng ngang đường chặn cầu thang không (đầu mút y0, y1 không tính, để đi chéo qua góc ô vẫn được)
+// đoạn a -> b có băng ngang đường chặn cầu thang không
 function tmCrosses(T, ax, ay, bx, by){
   if(!T.walls || ax === bx) return false;
   for(const w of T.walls){
     if((ax < w.x) === (bx < w.x)) continue;
     const y = ay + (by - ay)*(w.x - ax)/(bx - ax);
-    if(y > w.y0 && y < w.y1) return true;
+    if(y > w.y0 - 20 && y < w.y1 + 20) return true;   // nới 20px ở hai đầu: đi chéo sượt qua góc cầu thang cũng tính là băng qua
   }
   return false;
 }
 // đoạn thẳng a -> b có đi được không (mẫu mỗi 8 px, kiểm cả hai bên thân pet như movement.js)
 function tmLOS(T, a, b, deck){
-  const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(1, Math.ceil(d/8));
+  const d = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(1, Math.ceil(d));   // mẫu mỗi 1px: đi sượt qua góc vách (vệt hẹp ~1-2px) cũng bị bắt
   if(tmCrosses(T, a.x, a.y, b.x, b.y)) return false;
   let pk = -1;
   for(let i = 0; i <= n; i++){
     const x = a.x + (b.x - a.x)*i/n, y = a.y + (b.y - a.y)*i/n;
     const ck = tmCellAt(T, x, y); if(!deck && pk >= 0 && ck >= 0 && tmLevelBlocked(T, pk, ck)) return false; pk = ck;
-    if(!tmWalkable(T, x, y, deck) || !tmWalkable(T, x - 15, y, deck) || !tmWalkable(T, x + 15, y, deck)) return false;
+    if([tmWalkable(T, x, y, deck), tmWalkable(T, x - 15, y, deck), tmWalkable(T, x + 15, y, deck)].filter(Boolean).length < 2) return false;   // cùng quy tắc 2/3 điểm với movement.js
   }
   return true;
 }
@@ -212,8 +214,10 @@ function tmFindPath(T, sx, sy, tx, ty, deck0){
       if(!dx && !dy) continue;
       const X = x + dx, Y = y + dy, nd2 = step(d, X, Y); if(nd2 < 0) continue;
       if(dx && dy && (step(d, x + dx, y) < 0 || step(d, x, y + dy) < 0)) continue;   // không cắt góc vật cản
+      if(dx && dy && T.cn && (T.cn[y*W + x + dx] || T.cn[(y + dy)*W + x] || T.cn[Y*W + X] !== T.cn[k])) continue;   // gần cầu thang: chỉ đi thẳng, không đi chéo sượt qua góc
+      if(T.bc && (T.bc[k] || T.bc[Y*W + X]) && !tmLOS(T, {x:(x + .5)*ts, y:(y + .5)*ts}, {x:(X + .5)*ts, y:(Y + .5)*ts}, !!d)) continue;   // gần dải chặn: kiểm đúng bằng tmLOS
       if(!d && tmLevelBlocked(T, k, Y*W + X)) continue;                                // không đổi tầng cao <-> thấp, trừ qua cầu thang
-      if(!dy && T.cn && T.cn[Y*W + X] !== T.cn[k]) continue;                          // không đi ngang từ cỏ vào cầu thang (hoặc ngược lại)
+      if(dx && T.cn && T.cn[Y*W + X] !== T.cn[k]) continue;                           // vào / ra cầu thang chỉ đi THẲNG ĐỨNG (không ngang, không chéo): chéo sẽ chạm dải chặn ở mép cầu thang
       const ns = (Y*W + X)*2 + nd2, nd = c + (dx && dy ? 1.414 : 1);
       if(nd < dist[ns]){ dist[ns] = nd; prev[ns] = st; tmHeapPush(heap, nd, ns); }
     }
@@ -236,9 +240,13 @@ function tmFindPath(T, sx, sy, tx, ty, deck0){
   const sts = []; for(let st = gs; st !== s0 && st >= 0; st = prev[st]) sts.push(st);
   sts.reverse();
   const pts = [{x:sx, y:sy, d:!!deck0}, ...sts.map(st => { const k = st >> 1; return {x:((k % W) + .5)*ts, y:(((k / W) | 0) + .5)*ts, d:(st & 1) === 1}; })];
+  if(pts.length > 1 && !tmLOS(T, pts[0], pts[1], pts[0].d)){   // xuất phát lệch tâm ô và đường thẳng tới điểm đầu bị chặn: về tâm ô trước
+    const c0 = {x:(sgx + .5)*ts, y:(sgy + .5)*ts, d:pts[0].d};
+    if(Math.hypot(c0.x - pts[0].x, c0.y - pts[0].y) > 4) pts.splice(1, 0, c0);
+  }
   const out = []; let i = 0;   // rút gọn đường: chỉ nối tắt trong cùng 1 trạng thái trên / dưới cầu
   const sameState = (a, b) => { for(let q = a; q <= b; q++) if(pts[q].d !== pts[a].d) return false; return true; };
-  while(i < pts.length - 1){ let j = pts.length - 1; while(j > i + 1 && !(sameState(i, j) && tmLOS(T, pts[i], pts[j], pts[i].d))) j--; out.push(pts[j]); i = j; }
+  while(i < pts.length - 1){ let j = Math.min(pts.length - 1, i + 40); while(j > i + 1 && !(sameState(i, j) && tmLOS(T, pts[i], pts[j], pts[i].d))) j--; out.push(pts[j]); i = j; }
   if(exact){
     const prevP = out.length > 1 ? out[out.length - 2] : pts[0], tp = {x:tx, y:ty, d:out.length ? out[out.length - 1].d : pts[0].d};
     if(prevP.d === tp.d && tmLOS(T, prevP, tp, tp.d)){ if(out.length) out[out.length - 1] = tp; else out.push(tp); }
