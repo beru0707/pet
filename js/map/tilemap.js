@@ -28,7 +28,7 @@ const TM_CFG = {
   connector: ['Stairs'],                           // đường rocks / cầu thang: chỗ duy nhất đổi giữa mặt cao và cát
   stairWall: true,                                // chỉ 1 ĐƯỜNG THẲNG chặn ở mép hai bên cầu thang (giữa cầu thang và cỏ): tâm pet không băng ngang qua đường này được; ô cỏ hai bên vẫn đi được bình thường
   stairWallPad: 0,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng dài bằng mép viền của 1 ô (64px), không có dải
-  stairWallY: [0, 1],                              // đoạn của đường chặn theo chiều dọc ô cầu thang: [đầu, cuối] tính theo tỉ lệ chiều cao ô. [0,1] = đủ 1 mép ô (64px); [0,.5] = nửa trên; [.5,1] = nửa dưới; [.25,.75] = đoạn giữa
+  stairWallY: [0, .1],                              // đoạn của đường chặn theo chiều dọc ô cầu thang: [đầu, cuối] tính theo tỉ lệ chiều cao ô. [0,1] = đủ 1 mép ô (64px); [0,.5] = nửa trên; [.5,1] = nửa dưới; [.25,.75] = đoạn giữa
   walkOver:  ['Stairs'],                           // luôn đi được, kể cả đè lên vách
 };
 
