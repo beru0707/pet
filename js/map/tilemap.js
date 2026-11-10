@@ -22,6 +22,8 @@ const TM_CFG = {
   order:     ['Sand', 'Cliff', 'Rocks', 'Grass', 'Stairs'],   // thứ tự lớp, dưới -> trên. Lớp CAO NHẤT có mặt trong ô quyết định ô đó là gì
   walkTop:   ['Sand', 'Grass', 'Stairs'],          // lớp trên cùng thuộc nhóm này thì đi được (Cliff / Rocks hoặc không có lớp nào = chặn)
   raise:     ['Rocks', 'Cliff'],                   // Grass chồng lên các lớp này = MẶT CAO: không đi qua lại với cát được (chỉ qua cầu thang). Grass chỉ nằm trên Sand = đi qua lại tự do
+  trees:     ['Trees front', 'Trees back'],        // các layer chứa cây. Layer ĐẦU = cây phía trước (vẽ đè công trình); layer sau = cây phía sau (công trình đè lên cây)
+  treeIds:   [30, 57],                             // dải id ô cây trong tileset. Mỗi cây là khối 3x3: ô góc trái trên có id = số đầu dải (30) và ô bên phải có id cây khác 30. Mọi cây (cả 2 layer) đều xếp lớp theo trục y như nhau
   flat:      ['Miscs', 'Small rocks', 'Shadows'],   // vật nhỏ (bụi cỏ, đá, nấm, xương...): luôn vẽ ở nền, dưới pet, kể cả khi nằm chung ô với cây / nhà
   footprint: ['Buildings'],                        // chỉ chặn hàng ô DƯỚI CÙNG của mỗi cột (chân nhà / tháp); phần trên đi vòng ra sau được
   bridge:    ['Bridge - horizontal', 'Bridge - vertical'],  // cầu: pet đi TRÊN cầu (bước lên từ đầu cầu, mặt cao) hoặc đi DƯỚI cầu trên cát; cầu vẽ đè lên pet đang đi dưới
@@ -37,7 +39,7 @@ function tmBuild(T, j, img){
   const ts = j.tileSize, W = j.mapWidth, H = j.mapHeight, cols = Math.floor(img.naturalWidth / ts);
   T.ts = ts; T.mw = W; T.mh = H; T.w = W*ts; T.h = H*ts;
   const mk = () => { const c = document.createElement('canvas'); c.width = T.w; c.height = T.h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
-  const [under, gu] = mk(), [overT, gT] = mk(), [overB, gB] = mk(), [overBr, gBr] = mk();   // overBr: riêng các ô cầu   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
+  const [under, gu] = mk(), [overT, gT] = mk(), [overTB, gTB] = mk(), [overB, gB] = mk(), [overBr, gBr] = mk();   // overBr: riêng các ô cầu   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
   const front = new Set(TM_CFG.front), pass = new Set(TM_CFG.walkOver);
   const N = W*H, fg = new Uint8Array(N), top = new Int8Array(N).fill(-1), pr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N), br = new Uint8Array(N);
   const ord = new Map(TM_CFG.order.map((n, i) => [n, i])), walkTop = new Set(TM_CFG.walkTop.map(n => ord.get(n)));
@@ -45,20 +47,38 @@ function tmBuild(T, j, img){
   const bridgeL = new Set(TM_CFG.bridge), conn = new Set(TM_CFG.connector), flat = new Set(TM_CFG.flat), foot = new Set(TM_CFG.footprint);
   // ô có cây (quét trước vì Buildings được xử lý trước Trees front)
   const trCell = new Uint8Array(N);
-  j.layers.forEach(L => { if(front.has(L.name) && !foot.has(L.name)) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) trCell[t.y*W + t.x] = 1; });
+  j.layers.forEach(L => { if(L.name === TM_CFG.trees[0]) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) trCell[t.y*W + t.x] = 1; });
+  // nhận diện từng cái cây (khối 3x3) theo id ô, riêng cho từng layer cây
+  const treeLayers = new Set(TM_CFG.trees), tFront = TM_CFG.trees[0], tLo = TM_CFG.treeIds[0], tHi = TM_CFG.treeIds[1];
+  const bldCell = new Uint8Array(N), inst = {}; T.trees = [];
+  j.layers.forEach(L => { if(foot.has(L.name)) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) bldCell[t.y*W + t.x] = 1; });
+  j.layers.forEach(L => {
+    if(!treeLayers.has(L.name)) return;
+    const gm = new Map(); for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) gm.set(t.y*W + t.x, +t.id);
+    const ins = new Int16Array(N).fill(-1);
+    for(const [k, i] of gm){
+      const x = k % W, y = (k / W) | 0, rt = gm.get(k + 1);
+      if(i !== tLo || x >= W - 1 || rt === undefined || rt < tLo || rt > tHi || rt === tLo) continue;
+      const n = T.trees.length; T.trees.push({ox:x, oy:y, layer:L.name});
+      for(let dy = 0; dy < 3; dy++) for(let dx = 0; dx < 3; dx++){ const X = x + dx, Y = y + dy; if(X < W && Y < H && gm.has(Y*W + X) && ins[Y*W + X] < 0) ins[Y*W + X] = n; }
+    }
+    inst[L.name] = ins;
+  });
+  T.trees.sort((a, b) => (a.layer === tFront) - (b.layer === tFront));   // cây phía sau vẽ trước
   let firstFront = j.layers.length;
   j.layers.forEach((L, i) => { if(front.has(L.name)) firstFront = Math.min(firstFront, i); });
   // JSON: layer đầu danh sách nằm TRÊN CÙNG -> vẽ từ cuối lên đầu
   for(let li = j.layers.length - 1; li >= 0; li--){
-    const L = j.layers[li], isBld = foot.has(L.name), isTree = front.has(L.name) && !isBld, above = li < firstFront;   // above: layer nằm trên Trees front (vd. Miscs)
+    const L = j.layers[li], isBld = foot.has(L.name), isTree = treeLayers.has(L.name), isFrontTree = L.name === tFront, above = li < firstFront;   // above: layer nằm trên Trees front (vd. Miscs)
     for(const t of L.tiles){
       const id = +t.id, k = t.y*W + t.x;
       if(t.x < 0 || t.y < 0 || t.x >= W || t.y >= H || !(id >= 0)) continue;
       // layer nằm trên cây (Miscs) chỉ đè lên cây / nhà ở đúng ô có cây / nhà
-      const g = flat.has(L.name) ? gu : isTree ? gT : isBld ? (trCell[k] ? gu : gB) :   // ô vừa có cây vừa có nhà: nhà vẽ ở nền (dưới pet), cây ở lớp trên pet
+      const ti = isTree && inst[L.name] ? inst[L.name][k] : -1;   // thuộc cây nào (-1: ô lẻ, vd. phần lều / lâu đài nằm trong layer cây)
+      const g = flat.has(L.name) ? gu : isTree ? (ti >= 0 ? (isFrontTree ? gT : (bldCell[k] ? gu : gTB)) : (isFrontTree ? gT : gu)) : isBld ? (trCell[k] ? gu : gB) :   // ô vừa có cây vừa có nhà: nhà vẽ ở nền (dưới pet), cây ở lớp trên pet
          (above && fg[k]) ? gT : (above && fp[k]) ? gB : gu;
       g.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts);
-      if(isTree) fg[k] = 1;
+      if(isTree && ti >= 0 && g !== gu) fg[k] = 1;
       const oi = ord.get(L.name); if(oi !== undefined){ if(oi > top[k]) top[k] = oi; pr[k] |= 1 << oi; }
       if(bridgeL.has(L.name)){ br[k] = 1; gBr.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts); }
       if(conn.has(L.name)) cn[k] = 1;
@@ -72,18 +92,8 @@ function tmBuild(T, j, img){
   // Nhà xây sát ngay dưới lâu đài (id chỉ lệch 1) là công trình KHÁC -> có chân và khối xếp lớp riêng.
   const same = (a, b) => { const d = bid[b] - bid[a]; return d >= 2 && d <= 8; };
   for(let k = 0; k < N; k++) if(fp[k] && (k + W >= N || !fp[k + W] || !same(k, k + W))) so[k] = 1;   // chân công trình: ô dưới cùng của mỗi cột
-  // Va chạm của cây: chỉ chặn gốc (hàng ô dưới cùng). Cây rộng 3 ô trở lên chỉ chặn ô giữa (thân), tán hai bên và phần trên vẫn đi vòng ra sau được.
-  for(let y = 0; y < H; y++){
-    let x = 0;
-    while(x < W){
-      const isB = (xx) => trCell[y*W + xx] && (y === H - 1 || !trCell[(y+1)*W + xx]);
-      if(!isB(x)){ x++; continue; }
-      let x1 = x; while(x1 + 1 < W && isB(x1 + 1)) x1++;
-      const n = x1 - x + 1, a = n <= 2 ? x : x + Math.floor((n - 1)/2), b = n <= 2 ? x1 : x + Math.floor(n/2);
-      for(let q = a; q <= b; q++) so[y*W + q] = 1;
-      x = x1 + 1;
-    }
-  }
+  // Va chạm của cây: mỗi cây chỉ chặn đúng ô GỐC (giữa hàng dưới cùng của khối 3x3); tán hai bên và phần trên đi vòng ra sau được
+  for(const tr of T.trees){ const X = tr.ox + 1, Y = tr.oy + 2; if(X < W && Y < H) so[Y*W + X] = 1; }
   // đường chặn thẳng đứng ở mép hai bên cầu thang: {x, y0, y1} (px)
   T.cn = cn; T.walls = []; T.bands = [];
   if(TM_CFG.stairWall) for(let k = 0; k < N; k++) if(cn[k]){
@@ -92,7 +102,7 @@ function tmBuild(T, j, img){
     if(x > 0 && !cn[k - 1]){ T.walls.push({x:x*ts, y0:y*ts + wy[0]*ts, y1:y*ts + wy[1]*ts}); if(pd) T.bands.push([x*ts - pd, y*ts, x*ts, (y + 1)*ts, x*ts - pd]); }
     if(x < W - 1 && !cn[k + 1]){ T.walls.push({x:(x + 1)*ts, y0:y*ts + wy[0]*ts, y1:y*ts + wy[1]*ts}); if(pd) T.bands.push([(x + 1)*ts, y*ts, (x + 1)*ts + pd, (y + 1)*ts, (x + 1)*ts + pd]); }
   }
-  T.under = under; T.overT = overT; T.overB = overB;
+  T.under = under; T.overT = overT; T.overTB = overTB; T.overB = overB;
   T.walk = new Uint8Array(N);
   for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (walkTop.has(top[k]) && !so[k])) ? 1 : 0;
   // Phân tầng mặt cao / thấp: không còn vùng đệm. Ô cát sát mặt cao vẫn đi được; chỉ chặn bước CHUYỂN giữa hai tầng (tmLevelBlocked) trừ cầu thang.
@@ -103,8 +113,8 @@ function tmBuild(T, j, img){
   for(const b of T.bands) for(let y = Math.floor(b[1]/ts); y <= Math.floor((b[3] - 1)/ts); y++) for(let x = Math.floor(b[0]/ts); x <= Math.floor((b[2] - 1)/ts); x++) if(x >= 0 && y >= 0 && x < W && y < H) T.bc[y*W + x] = 1;
   T.runs = [];
   for(let x = 0; x < W; x++){
-    for(const b of [0, 1]){
-      const A = b ? fp : fg; let y = 0;
+    for(const b of [1]){
+      const A = fp; let y = 0;
       while(y < H){
         if(!A[y*W + x]){ y++; continue; }
         const y0 = y; y++;
@@ -335,6 +345,7 @@ setActiveMap = function(id){ const r = _setActiveMap(id); camSnap(); return r; }
 
 // ---------- vẽ ----------
 function tmDrawRun(T, r){
+  if(r.tree){ const ts = T.ts, tr = r.tree; cx.drawImage(tr.layer === TM_CFG.trees[0] ? T.overT : T.overTB, tr.ox*ts, tr.oy*ts, 3*ts, 3*ts, tr.ox*ts, tr.oy*ts, 3*ts, 3*ts); return; }
   const ts = T.ts, h = (r.y1 - r.y0 + 1)*ts;
   cx.drawImage(r.b ? T.overB : T.overT, r.x*ts, r.y0*ts, ts, h, r.x*ts, r.y0*ts, ts, h);
 }
@@ -344,16 +355,20 @@ drawMapScene = function(mid, t){
   const cam = VIEW.overview ? {x:0, y:0} : CAM;
   cx.save(); cx.fillStyle = '#10200a'; cx.fillRect(0, 0, CW, CH); cx.imageSmoothingEnabled = false;
   cx.drawImage(T.under, cam.x, cam.y, CW, CH, 0, 0, CW, CH);
-  if(TM_CFG.petOnTop){ cx.drawImage(T.overB, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overT, cam.x, cam.y, CW, CH, 0, 0, CW, CH); }   // cây, nhà vẽ liền vào nền; pet vẽ sau nên nằm trên
+  if(TM_CFG.petOnTop){ cx.drawImage(T.overB, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overTB, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overT, cam.x, cam.y, CW, CH, 0, 0, CW, CH); }   // cây, nhà vẽ liền vào nền; pet vẽ sau nên nằm trên
   cx.restore();
   cx.save(); cx.translate(-cam.x, -cam.y);
   const items = PETS.filter(p => p.map === mid).map(p => ({y:p.y, pet:p}));
   if(typeof BT !== 'undefined' && mid === BT.map && (BT.phase === 'fight' || BT.phase === 'result') && typeof btDrawEnemy === 'function')
     BT.enemies.forEach(e => items.push({y:e.y, enemy:e}));
-  if(!TM_CFG.petOnTop) T.runs.forEach(r => {   // chỉ đưa vào các khối cây đang nằm trong khung nhìn
+  if(!TM_CFG.petOnTop) T.runs.forEach(r => {   // khối công trình đang nằm trong khung nhìn
     if(r.x*T.ts + T.ts < cam.x || r.x*T.ts > cam.x + CW || (r.y1 + 1)*T.ts < cam.y || r.y0*T.ts > cam.y + CH) return;
-    // đáy khối: pet có chân ở dưới mốc này (đứng trước) thì vẽ sau = trên cùng. Cây: giữa hàng gốc; công trình: sát mép dưới
-    items.push({y:r.b ? (r.y1 + 1)*T.ts - 16 : (r.y1 + .5)*T.ts, run:r});
+    // đáy khối: pet có chân ở dưới mốc này (đứng trước) thì vẽ sau = trên cùng; công trình: sát mép dưới
+    items.push({y:(r.y1 + 1)*T.ts - 16, run:r});
+  });
+  if(!TM_CFG.petOnTop) T.trees.forEach(tr => {   // mỗi cây là 1 khối 3x3 xếp lớp theo ĐÁY của chính nó (giữa hàng gốc) -> mọi cột của cây cùng thứ tự với pet
+    if((tr.ox + 3)*T.ts < cam.x || tr.ox*T.ts > cam.x + CW || (tr.oy + 3)*T.ts < cam.y || tr.oy*T.ts > cam.y + CH) return;
+    items.push({y:(tr.oy + 2.5)*T.ts, run:{tree:tr}});
   });
   cx.imageSmoothingEnabled = false;
   items.sort((a, b) => a.y - b.y).forEach(it => it.pet ? drawPet(it.pet, t) : it.enemy ? btDrawEnemy(it.enemy, t) : tmDrawRun(T, it.run));
