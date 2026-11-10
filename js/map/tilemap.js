@@ -23,7 +23,7 @@ const TM_CFG = {
   walkTop:   ['Sand', 'Grass', 'Stairs'],          // lớp trên cùng thuộc nhóm này thì đi được (Cliff / Rocks hoặc không có lớp nào = chặn)
   raise:     ['Rocks', 'Cliff'],                   // Grass chồng lên các lớp này = MẶT CAO: không đi qua lại với cát được (chỉ qua cầu thang). Grass chỉ nằm trên Sand = đi qua lại tự do
   trees:     ['Trees front', 'Trees back'],        // các layer chứa cây. Layer ĐẦU = cây phía trước (vẽ đè công trình); layer sau = cây phía sau (công trình đè lên cây)
-  treeIds:   [30, 57],                             // dải id ô cây trong tileset. Mỗi cây là khối 3x3: ô góc trái trên có id = số đầu dải (30) và ô bên phải có id cây khác 30. Mọi cây (cả 2 layer) đều xếp lớp theo trục y như nhau
+  treeIds:   [[30, 57], [106, 120]],              // các dải id ô cây trong tileset (mỗi loại cây 1 dải). Mỗi cây là khối 3x3: ô góc trái trên có id 30 (ô đệm) và ô bên phải là ô cây khác 30. Mọi loại cây, ở mọi layer cây, đều xếp lớp theo trục y như nhau
   flat:      ['Miscs', 'Small rocks', 'Shadows'],   // vật nhỏ (bụi cỏ, đá, nấm, xương...): luôn vẽ ở nền, dưới pet, kể cả khi nằm chung ô với cây / nhà
   footprint: ['Buildings'],                        // chỉ chặn hàng ô DƯỚI CÙNG của mỗi cột (chân nhà / tháp); phần trên đi vòng ra sau được
   bridge:    ['Bridge - horizontal', 'Bridge - vertical'],  // cầu: pet đi TRÊN cầu (bước lên từ đầu cầu, mặt cao) hoặc đi DƯỚI cầu trên cát; cầu vẽ đè lên pet đang đi dưới
@@ -49,7 +49,7 @@ function tmBuild(T, j, img){
   const trCell = new Uint8Array(N);
   j.layers.forEach(L => { if(L.name === TM_CFG.trees[0]) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) trCell[t.y*W + t.x] = 1; });
   // nhận diện từng cái cây (khối 3x3) theo id ô, riêng cho từng layer cây
-  const treeLayers = new Set(TM_CFG.trees), tFront = TM_CFG.trees[0], tLo = TM_CFG.treeIds[0], tHi = TM_CFG.treeIds[1];
+  const treeLayers = new Set(TM_CFG.trees), tFront = TM_CFG.trees[0], tCorner = TM_CFG.treeIds[0][0], isTreeId = v => TM_CFG.treeIds.some(q => v >= q[0] && v <= q[1]);
   const bldCell = new Uint8Array(N), inst = {}; T.trees = []; const tbu = [];   // tbu: ô cây phía sau nằm dưới công trình
   j.layers.forEach(L => { if(foot.has(L.name)) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) bldCell[t.y*W + t.x] = 1; });
   j.layers.forEach(L => {
@@ -58,7 +58,7 @@ function tmBuild(T, j, img){
     const ins = new Int16Array(N).fill(-1);
     for(const [k, i] of gm){
       const x = k % W, y = (k / W) | 0, rt = gm.get(k + 1);
-      if(i !== tLo || x >= W - 1 || rt === undefined || rt < tLo || rt > tHi || rt === tLo) continue;
+      if(i !== tCorner || x >= W - 1 || rt === undefined || rt === tCorner || !isTreeId(rt)) continue;
       const n = T.trees.length; T.trees.push({ox:x, oy:y, layer:L.name});
       for(let dy = 0; dy < 3; dy++) for(let dx = 0; dx < 3; dx++){ const X = x + dx, Y = y + dy; if(X < W && Y < H && gm.has(Y*W + X) && ins[Y*W + X] < 0) ins[Y*W + X] = n; }
     }
