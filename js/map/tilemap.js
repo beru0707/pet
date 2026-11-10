@@ -88,8 +88,8 @@ function tmBuild(T, j, img){
   if(TM_CFG.stairWall) for(let k = 0; k < N; k++) if(cn[k]){
     const x = k % W, y = (k / W) | 0;
     const pd = TM_CFG.stairWallPad || 0;
-    if(x > 0 && !cn[k - 1]){ T.walls.push({x:x*ts, y0:y*ts, y1:(y + 1)*ts}); if(pd) T.bands.push([x*ts - pd, y*ts, x*ts, (y + 1)*ts]); }
-    if(x < W - 1 && !cn[k + 1]){ T.walls.push({x:(x + 1)*ts, y0:y*ts, y1:(y + 1)*ts}); if(pd) T.bands.push([(x + 1)*ts, y*ts, (x + 1)*ts + pd, (y + 1)*ts]); }
+    if(x > 0 && !cn[k - 1]){ T.walls.push({x:x*ts, y0:y*ts, y1:(y + 1)*ts}); if(pd) T.bands.push([x*ts - pd, y*ts, x*ts, (y + 1)*ts, x*ts - pd]); }
+    if(x < W - 1 && !cn[k + 1]){ T.walls.push({x:(x + 1)*ts, y0:y*ts, y1:(y + 1)*ts}); if(pd) T.bands.push([(x + 1)*ts, y*ts, (x + 1)*ts + pd, (y + 1)*ts, (x + 1)*ts + pd]); }
   }
   T.under = under; T.overT = overT; T.overB = overB;
   T.walk = new Uint8Array(N);
@@ -135,18 +135,19 @@ function tmWalkable(T, x, y, deck){
   const gx = Math.floor(x / T.ts), gy = Math.floor(y / T.ts);
   if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) return false;
   if(!tmCellOK(T, gy*T.mw + gx, deck)) return false;
-  if(T.bands) for(const b of T.bands) if(x >= b[0] && x < b[2] && y >= b[1] && y < b[3]) return false;   // dải sát cầu thang
   return true;
 }
 // trạng thái "trên cầu" sau khi pet nằm ở ô k: đầu cầu (mặt cao + ô cầu) -> lên cầu; ô cầu khác -> giữ nguyên; ngoài cầu -> xuống
 function tmDeckAt(T, k, deck){ return T.br[k] ? (T.hi[k] ? true : !!deck) : false; }
+// pet đứng được tại (x, y) theo đúng luật di chuyển của game: ít nhất 2 / 3 điểm (giữa, trái 15px, phải 15px) đi được
+function tmStandOK(T, x, y, deck){ return (tmWalkable(T, x, y, deck) ? 1 : 0) + (tmWalkable(T, x - 15, y, deck) ? 1 : 0) + (tmWalkable(T, x + 15, y, deck) ? 1 : 0) >= 2; }
 function tmSnap(T, p){   // pet đang đứng chỗ không đi được (vd. vị trí lưu từ map cũ) -> đưa tới ô đi được gần nhất
   const gx = Math.floor(p.x / T.ts), gy = Math.floor(p.y / T.ts);
   p.deck = false;
   for(let r = 1; r < 60; r++) for(let dy = -r; dy <= r; dy++) for(let dx = -r; dx <= r; dx++){
     if(Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
     const X = gx + dx, Y = gy + dy;
-    if(X < 0 || Y < 0 || X >= T.mw || Y >= T.mh || !T.walk[Y*T.mw + X]) continue;
+    if(X < 0 || Y < 0 || X >= T.mw || Y >= T.mh || !T.walk[Y*T.mw + X] || !tmStandOK(T, (X + .5)*T.ts, (Y + .5)*T.ts, false)) continue;
     p.x = (X + .5)*T.ts; p.y = (Y + .5)*T.ts; p.vx = p.vy = 0; p.target = null;
     if(p.tvx !== undefined){ p.tvx = 0; p.tvy = 0; }
     p.deck = tmDeckAt(T, Y*T.mw + X, false);
@@ -274,12 +275,13 @@ const _updatePet = updatePet;
 updatePet = function(p, t, dt){
   const T = tmGet(p.map);
   let ox = p.x, oy = p.y;
-  if(T){ if(!tmWalkable(T, p.x, p.y, !!p.deck)) tmSnap(T, p); ox = p.x; oy = p.y; TM_CUR = p.map; TM_DECK = !!p.deck; tmSteerBefore(T, p); }
+  if(T){ if(!tmStandOK(T, p.x, p.y, !!p.deck)) tmSnap(T, p); ox = p.x; oy = p.y; TM_CUR = p.map; TM_DECK = !!p.deck; tmSteerBefore(T, p); }
   try{ return _updatePet(p, t, dt); } finally {
     TM_CUR = null;
     if(T){
       const dk = !!p.deck, nx = p.x, ny = p.y;
-      if(tmBadMove(T, ox, oy, nx, ny, dk)){   // định băng qua đường chặn cầu thang / đổi tầng: thử trượt theo từng trục, không được thì đứng lại
+      // game cho phép đi tiếp khi tâm pet đang ở ô không đi được (để thoát ra): không cho pet đang đứng hợp lệ bước vào chỗ không đứng được
+      if(tmBadMove(T, ox, oy, nx, ny, dk) || (tmStandOK(T, ox, oy, dk) && !tmStandOK(T, nx, ny, dk))){   // định băng qua đường chặn cầu thang / đổi tầng: thử trượt theo từng trục, không được thì đứng lại
         const okAt = (x, y) => [tmWalkable(T, x, y, dk), tmWalkable(T, x - 15, y, dk), tmWalkable(T, x + 15, y, dk)].filter(Boolean).length >= 2;
         if(!tmBadMove(T, ox, oy, ox, ny, dk) && okAt(ox, ny)){ p.x = ox; }
         else if(!tmBadMove(T, ox, oy, nx, oy, dk) && okAt(nx, oy)){ p.y = oy; }
@@ -288,6 +290,12 @@ updatePet = function(p, t, dt){
       }
       const gx = Math.floor(p.x / T.ts), gy = Math.floor(p.y / T.ts);
       if(gx >= 0 && gy >= 0 && gx < T.mw && gy < T.mh) p.deck = tmDeckAt(T, gy*T.mw + gx, p.deck);
+      // dải sát cầu thang KHÔNG chặn cứng (chặn cứng làm pet đứng khựng khi đi dọc mép cầu thang): pet bị đẩy nhẹ ra ngoài dải, nên trượt dọc theo mép
+      if(!p.deck && T.bands.length) for(const b of T.bands) if(p.x >= b[0] && p.x < b[2] && p.y >= b[1] && p.y < b[3]){
+        const d = b[4] - p.x, nx2 = p.x + Math.sign(d)*Math.min(Math.abs(d), Math.max(dt*180, .5));
+        if([tmWalkable(T, nx2, p.y, false), tmWalkable(T, nx2 - 15, p.y, false), tmWalkable(T, nx2 + 15, p.y, false)].filter(Boolean).length >= 2) p.x = nx2;
+        break;
+      }
       tmSteerAfter(p);
     }
   }
