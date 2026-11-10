@@ -27,7 +27,7 @@ const TM_CFG = {
   bridge:    ['Bridge - horizontal', 'Bridge - vertical'],  // cầu: pet đi TRÊN cầu (bước lên từ đầu cầu, mặt cao) hoặc đi DƯỚI cầu trên cát; cầu vẽ đè lên pet đang đi dưới
   connector: ['Stairs'],                           // đường rocks / cầu thang: chỗ duy nhất đổi giữa mặt cao và cát
   stairWall: true,                                // chỉ 1 ĐƯỜNG THẲNG chặn ở mép hai bên cầu thang (giữa cầu thang và cỏ): tâm pet không băng ngang qua đường này được; ô cỏ hai bên vẫn đi được bình thường
-  stairWallPad: 24,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng
+  stairWallPad: 0,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng dài bằng mép viền của 1 ô (64px), không có dải
   walkOver:  ['Stairs'],                           // luôn đi được, kể cả đè lên vách
 };
 
