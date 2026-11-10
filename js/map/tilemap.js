@@ -50,7 +50,7 @@ function tmBuild(T, j, img){
   j.layers.forEach(L => { if(L.name === TM_CFG.trees[0]) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) trCell[t.y*W + t.x] = 1; });
   // nhận diện từng cái cây (khối 3x3) theo id ô, riêng cho từng layer cây
   const treeLayers = new Set(TM_CFG.trees), tFront = TM_CFG.trees[0], tLo = TM_CFG.treeIds[0], tHi = TM_CFG.treeIds[1];
-  const bldCell = new Uint8Array(N), inst = {}; T.trees = [];
+  const bldCell = new Uint8Array(N), inst = {}; T.trees = []; const tbu = [];   // tbu: ô cây phía sau nằm dưới công trình
   j.layers.forEach(L => { if(foot.has(L.name)) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) bldCell[t.y*W + t.x] = 1; });
   j.layers.forEach(L => {
     if(!treeLayers.has(L.name)) return;
@@ -64,6 +64,7 @@ function tmBuild(T, j, img){
     }
     inst[L.name] = ins;
   });
+  const tr0 = T.trees.slice();   // thứ tự gốc (ti là chỉ số trong mảng này)
   T.trees.sort((a, b) => (a.layer === tFront) - (b.layer === tFront));   // cây phía sau vẽ trước
   let firstFront = j.layers.length;
   j.layers.forEach((L, i) => { if(front.has(L.name)) firstFront = Math.min(firstFront, i); });
@@ -75,7 +76,7 @@ function tmBuild(T, j, img){
       if(t.x < 0 || t.y < 0 || t.x >= W || t.y >= H || !(id >= 0)) continue;
       // layer nằm trên cây (Miscs) chỉ đè lên cây / nhà ở đúng ô có cây / nhà
       const ti = isTree && inst[L.name] ? inst[L.name][k] : -1;   // thuộc cây nào (-1: ô lẻ, vd. phần lều / lâu đài nằm trong layer cây)
-      const g = flat.has(L.name) ? gu : isTree ? (ti >= 0 ? (isFrontTree ? gT : (bldCell[k] ? gTBu : gTB)) : (isFrontTree ? gT : gu)) : isBld ? (trCell[k] ? gu : gB) :   // ô vừa có cây vừa có nhà: nhà vẽ ở nền (dưới pet), cây ở lớp trên pet
+      const g = flat.has(L.name) ? gu : isTree ? (ti >= 0 ? (isFrontTree ? gT : (bldCell[k] ? (tbu.push([k, ti]), gTBu) : gTB)) : (isFrontTree ? gT : gu)) : isBld ? (trCell[k] ? gu : gB) :   // ô vừa có cây vừa có nhà: nhà vẽ ở nền (dưới pet), cây ở lớp trên pet
          (above && fg[k]) ? gT : (above && fp[k]) ? gB : gu;
       g.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts);
       if(isTree && ti >= 0 && g !== gu) fg[k] = 1;
@@ -119,9 +120,14 @@ function tmBuild(T, j, img){
         if(!A[y*W + x]){ y++; continue; }
         const y0 = y; y++;
         while(y < H && A[y*W + x] && !(b && !same((y-1)*W + x, y*W + x))) y++;   // công trình: tách khi sang công trình khác
-        T.runs.push({x, y0, y1:y - 1, b});
+        T.runs.push({x, y0, y1:y - 1, b, mark:y*ts - 16});
       }
     }
+  }
+  // Cây phía sau + công trình đè lên nó: vẽ CẢ cây (kể cả phần nằm dưới nhà) tại mốc của cây, rồi mới tới công trình -> pet thấy cây liền khối, không bị tách 2 nửa
+  for(const [k, ti] of tbu){
+    const tr = tr0[ti], x = k % W, y = (k / W) | 0, tm = (tr.oy + 2.5)*ts + 1;
+    for(const r of T.runs) if(r.x === x && y >= r.y0 && y <= r.y1 && r.mark < tm) r.mark = tm;
   }
 }
 function loadTilemap(id){
@@ -345,9 +351,13 @@ setActiveMap = function(id){ const r = _setActiveMap(id); camSnap(); return r; }
 
 // ---------- vẽ ----------
 function tmDrawRun(T, r){
-  if(r.tree){ const ts = T.ts, tr = r.tree; cx.drawImage(tr.layer === TM_CFG.trees[0] ? T.overT : T.overTB, tr.ox*ts, tr.oy*ts, 3*ts, 3*ts, tr.ox*ts, tr.oy*ts, 3*ts, 3*ts); return; }
+  if(r.tree){
+    const ts = T.ts, tr = r.tree, front = tr.layer === TM_CFG.trees[0];
+    if(!front) cx.drawImage(T.overTBu, tr.ox*ts, tr.oy*ts, 3*ts, 3*ts, tr.ox*ts, tr.oy*ts, 3*ts, 3*ts);   // phần cây nằm dưới nhà
+    cx.drawImage(front ? T.overT : T.overTB, tr.ox*ts, tr.oy*ts, 3*ts, 3*ts, tr.ox*ts, tr.oy*ts, 3*ts, 3*ts);
+    return;
+  }
   const ts = T.ts, h = (r.y1 - r.y0 + 1)*ts;
-  cx.drawImage(T.overTBu, r.x*ts, r.y0*ts, ts, h, r.x*ts, r.y0*ts, ts, h);   // phần cây phía sau nằm dưới công trình: vẽ ngay trước công trình, cùng thứ tự với pet
   cx.drawImage(r.b ? T.overB : T.overT, r.x*ts, r.y0*ts, ts, h, r.x*ts, r.y0*ts, ts, h);
 }
 const _drawMapScene = drawMapScene;
@@ -365,7 +375,7 @@ drawMapScene = function(mid, t){
   if(!TM_CFG.petOnTop) T.runs.forEach(r => {   // khối công trình đang nằm trong khung nhìn
     if(r.x*T.ts + T.ts < cam.x || r.x*T.ts > cam.x + CW || (r.y1 + 1)*T.ts < cam.y || r.y0*T.ts > cam.y + CH) return;
     // đáy khối: pet có chân ở dưới mốc này (đứng trước) thì vẽ sau = trên cùng; công trình: sát mép dưới
-    items.push({y:(r.y1 + 1)*T.ts - 16, run:r});
+    items.push({y:r.mark, run:r});
   });
   if(!TM_CFG.petOnTop) T.trees.forEach(tr => {   // mỗi cây là 1 khối 3x3 xếp lớp theo ĐÁY của chính nó (giữa hàng gốc) -> mọi cột của cây cùng thứ tự với pet
     if((tr.ox + 3)*T.ts < cam.x || tr.ox*T.ts > cam.x + CW || (tr.oy + 3)*T.ts < cam.y || tr.oy*T.ts > cam.y + CH) return;
