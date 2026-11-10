@@ -39,7 +39,7 @@ function tmBuild(T, j, img){
   const ts = j.tileSize, W = j.mapWidth, H = j.mapHeight, cols = Math.floor(img.naturalWidth / ts);
   T.ts = ts; T.mw = W; T.mh = H; T.w = W*ts; T.h = H*ts;
   const mk = () => { const c = document.createElement('canvas'); c.width = T.w; c.height = T.h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
-  const [under, gu] = mk(), [overT, gT] = mk(), [overTB, gTB] = mk(), [overTBu, gTBu] = mk(), [overB, gB] = mk(), [overBr, gBr] = mk();   // overBr: riêng các ô cầu   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
+  const [under, gu] = mk(), [overT, gT] = mk(), [overTB, gTB] = mk(), [overTBu, gTBu] = mk(), [overTBs, gTBs] = mk(), [overB, gB] = mk(), [overBr, gBr] = mk();   // overBr: riêng các ô cầu   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
   const front = new Set(TM_CFG.front), pass = new Set(TM_CFG.walkOver);
   const N = W*H, fg = new Uint8Array(N), top = new Int8Array(N).fill(-1), pr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N), br = new Uint8Array(N);
   const ord = new Map(TM_CFG.order.map((n, i) => [n, i])), walkTop = new Set(TM_CFG.walkTop.map(n => ord.get(n)));
@@ -103,7 +103,7 @@ function tmBuild(T, j, img){
     if(x > 0 && !cn[k - 1]){ T.walls.push({x:x*ts, y0:y*ts + wy[0]*ts, y1:y*ts + wy[1]*ts}); if(pd) T.bands.push([x*ts - pd, y*ts, x*ts, (y + 1)*ts, x*ts - pd]); }
     if(x < W - 1 && !cn[k + 1]){ T.walls.push({x:(x + 1)*ts, y0:y*ts + wy[0]*ts, y1:y*ts + wy[1]*ts}); if(pd) T.bands.push([(x + 1)*ts, y*ts, (x + 1)*ts + pd, (y + 1)*ts, (x + 1)*ts + pd]); }
   }
-  T.under = under; T.overT = overT; T.overTB = overTB; T.overTBu = overTBu; T.overB = overB;
+  T.under = under; T.overT = overT; T.overTB = overTB; T.overTBu = overTBu; T.overTBs = overTBs; T.overB = overB;
   T.walk = new Uint8Array(N);
   for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (walkTop.has(top[k]) && !so[k])) ? 1 : 0;
   // Phân tầng mặt cao / thấp: không còn vùng đệm. Ô cát sát mặt cao vẫn đi được; chỉ chặn bước CHUYỂN giữa hai tầng (tmLevelBlocked) trừ cầu thang.
@@ -124,10 +124,17 @@ function tmBuild(T, j, img){
       }
     }
   }
-  // Cây phía sau + công trình đè lên nó: vẽ CẢ cây (kể cả phần nằm dưới nhà) tại mốc của cây, rồi mới tới công trình -> pet thấy cây liền khối, không bị tách 2 nửa
+  // Cây phía sau + công trình đè lên nó. Mốc của công trình = chân công trình. Hai trường hợp:
+  //  - chân công trình THẤP hơn chân cây (nhà đứng trước cây): vẽ CẢ cây (kể cả phần dưới nhà) tại mốc cây, rồi tới nhà -> cây liền khối
+  //  - chân công trình CAO hơn chân cây (lâu đài đứng sau cây): phần cây nằm dưới công trình vẽ cùng công trình (overTBs), để công trình không bị đẩy xuống thấp
+  const moved = new Set();
   for(const [k, ti] of tbu){
-    const tr = tr0[ti], x = k % W, y = (k / W) | 0, tm = (tr.oy + 2.5)*ts + 1;
-    for(const r of T.runs) if(r.x === x && y >= r.y0 && y <= r.y1 && r.mark < tm) r.mark = tm;
+    const tr = tr0[ti], x = k % W, y = (k / W) | 0, tm = (tr.oy + 2.5)*ts;
+    const run = T.runs.find(q => q.x === x && y >= q.y0 && y <= q.y1); if(!run) continue;
+    if(run.mark > tm){ run.mark = Math.max(run.mark, tm + 1); continue; }
+    if(moved.has(k)) continue; moved.add(k);
+    gTBs.drawImage(overTBu, x*ts, y*ts, ts, ts, x*ts, y*ts, ts, ts);
+    gTBu.clearRect(x*ts, y*ts, ts, ts);
   }
 }
 function loadTilemap(id){
@@ -358,6 +365,7 @@ function tmDrawRun(T, r){
     return;
   }
   const ts = T.ts, h = (r.y1 - r.y0 + 1)*ts;
+  cx.drawImage(T.overTBs, r.x*ts, r.y0*ts, ts, h, r.x*ts, r.y0*ts, ts, h);   // phần cây phía sau nằm dưới công trình (công trình đứng sau cây): vẽ ngay trước công trình
   cx.drawImage(r.b ? T.overB : T.overT, r.x*ts, r.y0*ts, ts, h, r.x*ts, r.y0*ts, ts, h);
 }
 const _drawMapScene = drawMapScene;
@@ -366,7 +374,7 @@ drawMapScene = function(mid, t){
   const cam = VIEW.overview ? {x:0, y:0} : CAM;
   cx.save(); cx.fillStyle = '#10200a'; cx.fillRect(0, 0, CW, CH); cx.imageSmoothingEnabled = false;
   cx.drawImage(T.under, cam.x, cam.y, CW, CH, 0, 0, CW, CH);
-  if(TM_CFG.petOnTop){ cx.drawImage(T.overTBu, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overB, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overTB, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overT, cam.x, cam.y, CW, CH, 0, 0, CW, CH); }   // cây, nhà vẽ liền vào nền; pet vẽ sau nên nằm trên
+  if(TM_CFG.petOnTop){ cx.drawImage(T.overTBu, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overTBs, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overB, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overTB, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overT, cam.x, cam.y, CW, CH, 0, 0, CW, CH); }   // cây, nhà vẽ liền vào nền; pet vẽ sau nên nằm trên
   cx.restore();
   cx.save(); cx.translate(-cam.x, -cam.y);
   const items = PETS.filter(p => p.map === mid).map(p => ({y:p.y, pet:p}));
