@@ -1,13 +1,12 @@
 /* ==================================================================
    MOBILE – ĐIỀU KHIỂN CẢM ỨNG
-   Nút ⚔️ tấn công + cần di chuyển ảo (joystick) trong trận. Chỉ tạo trên máy cảm ứng (pointer:coarse).
+   Nút ⚔️ tấn công + cần di chuyển ảo (joystick) trong trận. Hiện ở MỌI thiết bị (cảm ứng và máy tính, chuột cũng kéo / bấm được); phím WASD / Enter vẫn dùng song song.
    ================================================================== */
 
 (function(){
-  const touch = matchMedia('(pointer:coarse)').matches;
   const mk = (tag, id, html) => { const d = document.createElement(tag); d.id = id; if(html) d.innerHTML = html; document.body.appendChild(d); return d; };
 
-  if(touch){
+  {
     // nút tấn công: thay phím Enter. Có pet đang chọn -> pet đó đánh; chưa chọn ai -> mọi pet có attackSheet trong trận đánh
     const a = mk('button', 'bt-atk', '⚔️');
     a.addEventListener('pointerdown', e => {

@@ -18,12 +18,14 @@
 #rot button.sec{background:#ffffff26;font-size:14px;padding:8px 18px}
 @media (orientation:portrait) and (pointer:coarse){ body:not(.rot-skip) #rot{display:flex} }
 
-/* ---------- nút toàn màn hình + nút tấn công (chỉ trên cảm ứng) ---------- */
+/* ---------- nút toàn màn hình (chỉ cảm ứng) + nút tấn công (mọi thiết bị) ---------- */
 #fs-btn,#bt-atk{display:none;position:fixed;z-index:30;border:2px solid #fff6;color:#fff;font-family:Fredoka,sans-serif;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.45)}
 #fs-btn{left:max(8px,env(safe-area-inset-left));bottom:8px;width:40px;height:40px;border-radius:12px;background:#0009;font-size:20px}
 #bt-atk{right:max(16px,env(safe-area-inset-right));bottom:16px;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9a5a,#d9361b);font-size:30px;line-height:1}
 #bt-atk:active{transform:scale(.92)}
-@media (pointer:coarse){ #fs-btn.can{display:block} body.bt-fight #bt-atk{display:block} }
+#bt-atk,#joy{user-select:none;-webkit-user-select:none}
+@media (pointer:coarse){ #fs-btn.can{display:block} }
+body.bt-fight #bt-atk{display:block}
 body.is-fs #fs-btn{opacity:.6}
 
 /* ---------- đang trong trận: bỏ nút Chức năng, bảng thú, nút toàn màn hình ---------- */
@@ -32,7 +34,7 @@ body.bt-on #btn-deco,body.bt-on #pet-panel,body.bt-on #fs-btn{display:none !impo
 /* ---------- cần di chuyển ảo (trái) ---------- */
 #joy{display:none;position:fixed;z-index:30;left:max(24px,env(safe-area-inset-left));bottom:22px;width:128px;height:128px;border-radius:50%;background:radial-gradient(circle,#ffffff26,#ffffff10);border:2px solid #fff5;touch-action:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 #joy-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#c3ccd6);border:2px solid #fff;opacity:.88;pointer-events:none;box-shadow:0 3px 8px rgba(0,0,0,.4)}
-@media (pointer:coarse){ body.bt-fight #joy{display:block} }
+body.bt-fight #joy{display:block}
 #wrap.menu-open ~ #fs-btn{display:none !important}
 
 /* ---------- điện thoại nằm ngang (màn hình thấp) ---------- */
