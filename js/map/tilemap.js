@@ -39,7 +39,7 @@ function tmBuild(T, j, img){
   const ts = j.tileSize, W = j.mapWidth, H = j.mapHeight, cols = Math.floor(img.naturalWidth / ts);
   T.ts = ts; T.mw = W; T.mh = H; T.w = W*ts; T.h = H*ts;
   const mk = () => { const c = document.createElement('canvas'); c.width = T.w; c.height = T.h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
-  const [under, gu] = mk(), [overT, gT] = mk(), [overTB, gTB] = mk(), [overTBu, gTBu] = mk(), [overTBs, gTBs] = mk(), [overTFa, gTFa] = mk(), [overB, gB] = mk(), [overBr, gBr] = mk();   // overBr: riêng các ô cầu   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
+  const [under, gu] = mk(), [overT, gT] = mk(), [overTB, gTB] = mk(), [overTBu, gTBu] = mk(), [overTBs, gTBs] = mk(), [overB, gB] = mk(), [overBr, gBr] = mk();   // overBr: riêng các ô cầu   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
   const front = new Set(TM_CFG.front), pass = new Set(TM_CFG.walkOver);
   const N = W*H, fg = new Uint8Array(N), top = new Int8Array(N).fill(-1), pr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N), br = new Uint8Array(N);
   const ord = new Map(TM_CFG.order.map((n, i) => [n, i])), walkTop = new Set(TM_CFG.walkTop.map(n => ord.get(n)));
@@ -50,7 +50,7 @@ function tmBuild(T, j, img){
   j.layers.forEach(L => { if(L.name === TM_CFG.trees[0]) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) trCell[t.y*W + t.x] = 1; });
   // nhận diện từng cái cây (khối 3x3) theo id ô, riêng cho từng layer cây
   const treeLayers = new Set(TM_CFG.trees), tFront = TM_CFG.trees[0], tCorner = TM_CFG.treeIds[0][0], isTreeId = v => TM_CFG.treeIds.some(q => v >= q[0] && v <= q[1]);
-  const bldCell = new Uint8Array(N), inst = {}; T.trees = []; const tbu = [], tfb = [];   // tbu: ô cây phía sau nằm dưới công trình
+  const bldCell = new Uint8Array(N), inst = {}; T.trees = []; const tbu = [];   // tbu: ô cây phía sau nằm dưới công trình
   j.layers.forEach(L => { if(foot.has(L.name)) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) bldCell[t.y*W + t.x] = 1; });
   j.layers.forEach(L => {
     if(!treeLayers.has(L.name)) return;
@@ -76,7 +76,7 @@ function tmBuild(T, j, img){
       if(t.x < 0 || t.y < 0 || t.x >= W || t.y >= H || !(id >= 0)) continue;
       // layer nằm trên cây (Miscs) chỉ đè lên cây / nhà ở đúng ô có cây / nhà
       const ti = isTree && inst[L.name] ? inst[L.name][k] : -1;   // thuộc cây nào (-1: ô lẻ, vd. phần lều / lâu đài nằm trong layer cây)
-      const g = flat.has(L.name) ? gu : isTree ? (ti >= 0 ? (isFrontTree ? (bldCell[k] ? (tfb.push([k, ti]), gT) : gT) : (bldCell[k] ? (tbu.push([k, ti]), gTBu) : gTB)) : (isFrontTree ? gT : gu)) : isBld ? gB :   // ô vừa có cây vừa có nhà: nhà vẽ ở nền (dưới pet), cây ở lớp trên pet
+      const g = flat.has(L.name) ? gu : isTree ? (ti >= 0 ? (isFrontTree ? gT : (bldCell[k] ? (tbu.push([k, ti]), gTBu) : gTB)) : (isFrontTree ? gT : gu)) : isBld ? (trCell[k] ? gu : gB) :   // ô vừa có cây vừa có nhà: nhà vẽ ở nền (dưới pet), cây ở lớp trên pet
          (above && fg[k]) ? gT : (above && fp[k]) ? gB : gu;
       g.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts);
       if(isTree && ti >= 0 && g !== gu) fg[k] = 1;
@@ -103,7 +103,7 @@ function tmBuild(T, j, img){
     if(x > 0 && !cn[k - 1]){ T.walls.push({x:x*ts, y0:y*ts + wy[0]*ts, y1:y*ts + wy[1]*ts}); if(pd) T.bands.push([x*ts - pd, y*ts, x*ts, (y + 1)*ts, x*ts - pd]); }
     if(x < W - 1 && !cn[k + 1]){ T.walls.push({x:(x + 1)*ts, y0:y*ts + wy[0]*ts, y1:y*ts + wy[1]*ts}); if(pd) T.bands.push([(x + 1)*ts, y*ts, (x + 1)*ts + pd, (y + 1)*ts, (x + 1)*ts + pd]); }
   }
-  T.under = under; T.overT = overT; T.overTB = overTB; T.overTBu = overTBu; T.overTBs = overTBs; T.overTFa = overTFa; T.overB = overB;
+  T.under = under; T.overT = overT; T.overTB = overTB; T.overTBu = overTBu; T.overTBs = overTBs; T.overB = overB;
   T.walk = new Uint8Array(N);
   for(let k = 0; k < N; k++) T.walk[k] = (ps[k] || (walkTop.has(top[k]) && !so[k])) ? 1 : 0;
   // Phân tầng mặt cao / thấp: không còn vùng đệm. Ô cát sát mặt cao vẫn đi được; chỉ chặn bước CHUYỂN giữa hai tầng (tmLevelBlocked) trừ cầu thang.
@@ -135,13 +135,6 @@ function tmBuild(T, j, img){
     if(moved.has(k)) continue; moved.add(k);
     gTBs.drawImage(overTBu, x*ts, y*ts, ts, ts, x*ts, y*ts, ts, ts);
     gTBu.clearRect(x*ts, y*ts, ts, ts);
-  }
-  // Cây phía TRƯỚC + công trình đè lên nhau (vd. gốc cây đè lên mái nhà): nếu chân công trình THẤP hơn chân cây thì cây (vẽ sau) đè lên nhà là đúng; ngược lại phần cây nằm trên công trình được vẽ NGAY SAU công trình (overTFa) để công trình không bị vẽ xuống nền và pet đứng sau nhà không đè lên mái
-  for(const [k, ti] of tfb){
-    const tr = tr0[ti], x = k % W, y = (k / W) | 0;
-    const run = T.runs.find(q => q.x === x && y >= q.y0 && y <= q.y1); if(!run || run.mark < (tr.oy + 2.5)*ts) continue;
-    gTFa.drawImage(overT, x*ts, y*ts, ts, ts, x*ts, y*ts, ts, ts);
-    gT.clearRect(x*ts, y*ts, ts, ts);
   }
 }
 function loadTilemap(id){
@@ -374,7 +367,6 @@ function tmDrawRun(T, r){
   const ts = T.ts, h = (r.y1 - r.y0 + 1)*ts;
   cx.drawImage(T.overTBs, r.x*ts, r.y0*ts, ts, h, r.x*ts, r.y0*ts, ts, h);   // phần cây phía sau nằm dưới công trình (công trình đứng sau cây): vẽ ngay trước công trình
   cx.drawImage(r.b ? T.overB : T.overT, r.x*ts, r.y0*ts, ts, h, r.x*ts, r.y0*ts, ts, h);
-  if(r.b) cx.drawImage(T.overTFa, r.x*ts, r.y0*ts, ts, h, r.x*ts, r.y0*ts, ts, h);   // phần cây trước nằm đè lên công trình
 }
 const _drawMapScene = drawMapScene;
 drawMapScene = function(mid, t){
