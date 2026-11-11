@@ -89,9 +89,26 @@ function tmBuild(T, j, img){
   }
   // mặt CAO: lớp Grass trên cùng và chồng lên Rocks / Cliff
   for(let k = 0; k < N; k++) if(grassIdx !== undefined && top[k] === grassIdx && (pr[k] & raiseMask)) hi[k] = 1;
+  // Dải cỏ nằm trên cát (không có Rocks / Cliff) mà dính liền ô mặt cao là CÙNG MỘT mặt bằng với ô mặt cao đó (vd. dải cỏ ngay chân cầu thang
+  // sát sân lâu đài). Nếu để là "tầng thấp" thì pet đi từ cầu thang ra dải cỏ không bước tiếp vào sân được (tmLevelBlocked chặn) -> kẹt ở chân cầu thang.
+  if(grassIdx !== undefined){
+    const grow = [];
+    for(let k = 0; k < N; k++){
+      if(hi[k] || top[k] !== grassIdx || br[k]) continue;
+      const x = k % W, y = (k / W) | 0;
+      if((x > 0 && hi[k - 1]) || (x < W - 1 && hi[k + 1]) || (y > 0 && hi[k - W]) || (y < H - 1 && hi[k + W])) grow.push(k);
+    }
+    grow.forEach(k => { hi[k] = 1; });
+  }
   // Hai ô công trình chồng dọc thuộc CÙNG 1 công trình khi id ô dưới lớn hơn id ô trên 2..8 (Sprite Fusion đánh id theo hàng, bước = bề ngang).
   // Nhà xây sát ngay dưới lâu đài (id chỉ lệch 1) là công trình KHÁC -> có chân và khối xếp lớp riêng.
-  const same = (a, b) => { const d = bid[b] - bid[a]; return d >= 2 && d <= 8; };
+  // Chính xác hơn: id ô dưới - id ô trên phải đúng bằng BỀ NGANG của hàng ô đó (các ô liền nhau cùng hàng có id tăng dần 1). Nhờ vậy cái thùng gỗ (2 ô rộng)
+  // xếp ngay trên hang lửa (3 ô rộng) không bị gộp thành 1 công trình, dù id lệch nhau 3 như trong nội bộ hang. Hàng chỉ có 1 ô (phần đầu tháp bị cây che) thì lấy bề ngang hàng dưới.
+  const segW = k => { let l = 0, r = 0;
+    while((k - l) % W > 0 && bid[k - l - 1] >= 0 && bid[k - l - 1] === bid[k - l] - 1) l++;
+    while((k + r + 1) % W !== 0 && bid[k + r + 1] >= 0 && bid[k + r + 1] === bid[k + r] + 1) r++;
+    return l + r + 1; };
+  const same = (a, b) => { const d = bid[b] - bid[a], wa = segW(a), w = wa > 1 ? wa : segW(b); return w > 1 ? d === w : (d >= 2 && d <= 8); };
   for(let k = 0; k < N; k++) if(fp[k] && (k + W >= N || !fp[k + W] || !same(k, k + W))) so[k] = 1;   // chân công trình: ô dưới cùng của mỗi cột
   // Va chạm của cây: mỗi cây chỉ chặn đúng ô GỐC (giữa hàng dưới cùng của khối 3x3); tán hai bên và phần trên đi vòng ra sau được
   for(const tr of T.trees){ const X = tr.ox + 1, Y = tr.oy + 2; if(X < W && Y < H) so[Y*W + X] = 1; }
