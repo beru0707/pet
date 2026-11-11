@@ -32,7 +32,7 @@ body.is-fs #fs-btn{opacity:.6}
 body.bt-on #btn-deco,body.bt-on #pet-panel,body.bt-on #fs-btn{display:none !important}
 
 /* ---------- cần di chuyển ảo (trái) ---------- */
-#joy{display:none;position:fixed;z-index:30;left:max(24px,env(safe-area-inset-left));bottom:22px;width:128px;height:128px;border-radius:50%;background:radial-gradient(circle,#ffffff26,#ffffff10);border:2px solid #fff5;touch-action:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+#joy{display:none;position:fixed;z-index:30;left:max(48px,calc(env(safe-area-inset-left) + 28px));bottom:56px;width:128px;height:128px;border-radius:50%;background:radial-gradient(circle,#ffffff26,#ffffff10);border:2px solid #fff5;touch-action:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 #joy-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#c3ccd6);border:2px solid #fff;opacity:.88;pointer-events:none;box-shadow:0 3px 8px rgba(0,0,0,.4)}
 /* cần di chuyển: hiện ở phòng chờ và trong trận; ẩn khi xem toàn bộ map, chọn / chuẩn bị trận và khi mở thanh Chức năng */
 #joy{display:block}
@@ -84,7 +84,7 @@ body.bt-on:not(.bt-fight) #joy,body.ov-on #joy,#wrap.menu-open ~ #joy{display:no
   body #bt-res h2{font-size:22px;margin-bottom:6px}
   body #bt-res table{margin:6px 0 10px;font-size:12px}
   body #bt-atk{width:68px;height:68px;font-size:26px;bottom:10px}
-  #joy{width:104px;height:104px;bottom:12px}
+  #joy{width:104px;height:104px;left:max(36px,calc(env(safe-area-inset-left) + 20px));bottom:32px}
   #joy-knob{width:46px;height:46px;margin:-23px 0 0 -23px}
 }
 @media (pointer:coarse){ body .bt-card{touch-action:pan-x} }

@@ -42,5 +42,18 @@
     });
     joy.addEventListener('pointermove', e => { if(e.pointerId === pid) drive(e); });
     joy.addEventListener('pointerup', stop); joy.addEventListener('pointercancel', stop);
+    // đi bằng phím WASD / mũi tên: núm cần ảo tự nghiêng theo hướng đang đi (khi không đang kéo bằng tay)
+    let kx = 0, ky = 0;
+    const syncKnob = () => {
+      if(pid === null){
+        const d = keyDir0(), L = Math.hypot(d.x, d.y), R = joy.clientWidth/2*.7;
+        const tx = L ? d.x/L : 0, ty = L ? d.y/L : 0;
+        kx += (tx - kx)*.35; ky += (ty - ky)*.35;                      // núm trượt êm tới vị trí mới
+        if(Math.abs(kx) < .01 && !tx) kx = 0; if(Math.abs(ky) < .01 && !ty) ky = 0;
+        knob.style.transform = (kx || ky) ? 'translate(' + kx*R + 'px,' + ky*R + 'px)' : '';
+      }
+      requestAnimationFrame(syncKnob);
+    };
+    requestAnimationFrame(syncKnob);
   }
 })();
