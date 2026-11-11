@@ -1,6 +1,6 @@
 /* ==================================================================
    MOBILE – ĐIỀU KHIỂN CẢM ỨNG
-   Nút ⚔️ tấn công + cần di chuyển ảo (joystick) trong trận. Hiện ở MỌI thiết bị (cảm ứng và máy tính, chuột cũng kéo / bấm được); phím WASD / Enter vẫn dùng song song.
+   Nút ⚔️ tấn công (chỉ trong trận) + cần di chuyển ảo (joystick, cả ngoài trận lẫn trong trận). Hiện ở MỌI thiết bị (cảm ứng và máy tính, chuột cũng kéo / bấm được); phím WASD / Enter vẫn dùng song song.
    ================================================================== */
 
 (function(){
@@ -34,10 +34,10 @@
     const stop = () => { pid = null; JOY.active = false; JOY.x = JOY.y = 0; knob.style.transform = ''; };
     joy.addEventListener('pointerdown', e => {
       e.preventDefault(); pid = e.pointerId; joy.setPointerCapture(pid);
-      if(typeof BT !== 'undefined' && BT.phase === 'fight'){
-        const mine = PETS.filter(p => p.map === BT.map && !p.bdead);
-        if(mine.length && !mine.some(p => p.selected)) mine[0].selected = true;
-      }
+      // chưa chọn pet nào: tự chọn pet đầu tiên (trong trận: pet còn sống; ngoài trận: pet ở map đang xem, mở luôn bảng thông tin)
+      const fight = typeof BT !== 'undefined' && BT.phase === 'fight';
+      const mine = PETS.filter(p => p.map === (fight ? BT.map : ACTIVE_MAP) && !p.bdead);
+      if(mine.length && !PETS.some(p => p.selected)){ mine[0].selected = true; if(!fight) openPetPanel(mine[0]); }
       drive(e);
     });
     joy.addEventListener('pointermove', e => { if(e.pointerId === pid) drive(e); });

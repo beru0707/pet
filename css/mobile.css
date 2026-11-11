@@ -34,7 +34,9 @@ body.bt-on #btn-deco,body.bt-on #pet-panel,body.bt-on #fs-btn{display:none !impo
 /* ---------- cần di chuyển ảo (trái) ---------- */
 #joy{display:none;position:fixed;z-index:30;left:max(24px,env(safe-area-inset-left));bottom:22px;width:128px;height:128px;border-radius:50%;background:radial-gradient(circle,#ffffff26,#ffffff10);border:2px solid #fff5;touch-action:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 #joy-knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#c3ccd6);border:2px solid #fff;opacity:.88;pointer-events:none;box-shadow:0 3px 8px rgba(0,0,0,.4)}
-body.bt-fight #joy{display:block}
+/* cần di chuyển: hiện ở phòng chờ và trong trận; ẩn khi xem toàn bộ map, chọn / chuẩn bị trận và khi mở thanh Chức năng */
+#joy{display:block}
+body.bt-on:not(.bt-fight) #joy,body.ov-on #joy,#wrap.menu-open ~ #joy{display:none}
 #wrap.menu-open ~ #fs-btn{display:none !important}
 
 /* ---------- điện thoại nằm ngang (màn hình thấp) ---------- */
