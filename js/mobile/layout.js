@@ -36,6 +36,9 @@
     const ph = typeof BT !== 'undefined' ? BT.phase : 'off';
     document.body.classList.toggle('bt-on', ph !== 'off');
     document.body.classList.toggle('bt-fight', ph === 'fight');
-    if(ph !== 'fight' && typeof JOY !== 'undefined' && JOY.active){ JOY.active = false; JOY.x = JOY.y = 0; }
+    document.body.classList.toggle('ov-on', !!(typeof VIEW !== 'undefined' && VIEW.overview));   // xem toàn bộ map: ẩn cần di chuyển
+    // cần di chuyển bị ẩn (đang chọn pet / chuẩn bị trận...) thì nhả cần
+    const joyOn = ph === 'off' ? !(typeof VIEW !== 'undefined' && VIEW.overview) : ph === 'fight';
+    if(!joyOn && typeof JOY !== 'undefined' && JOY.active){ JOY.active = false; JOY.x = JOY.y = 0; }
   }, 150);
 })();
