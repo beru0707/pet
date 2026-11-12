@@ -153,6 +153,29 @@ function tmBuild(T, j, img){
     gTBs.drawImage(overTBu, x*ts, y*ts, ts, ts, x*ts, y*ts, ts, ts);
     gTBu.clearRect(x*ts, y*ts, ts, ts);
   }
+  // GỘP các cột công trình liền kề của CÙNG 1 nhà thành 1 nhóm, dùng chung mark = đáy thấp nhất.
+  // Nếu không, mỗi cột có mark riêng (cột có tường thì thấp, cột mái nhô ra thì cao) nên pet đứng giữa các mốc đó
+  // bị nhà che một nửa, không che một nửa.
+  // Hai cột x và x+1 thuộc cùng 1 nhà khi ở ít nhất 1 hàng chung, id ô bên phải = id ô bên trái + 1 (các ô cùng hàng của 1 sprite có id liên tiếp).
+  {
+    const par = T.runs.map((_, i) => i);
+    const find = i => par[i] === i ? i : (par[i] = find(par[i]));
+    const sameHouse = (A, B) => {
+      const y0 = Math.max(A.y0, B.y0), y1 = Math.min(A.y1, B.y1);
+      for(let y = y0; y <= y1; y++){
+        const a = bid[y*W + A.x], b = bid[y*W + B.x];
+        if(a >= 0 && b === a + 1) return true;
+      }
+      return false;
+    };
+    for(let a = 0; a < T.runs.length; a++) for(let b = 0; b < T.runs.length; b++){
+      const A = T.runs[a], B = T.runs[b];
+      if(B.x === A.x + 1 && sameHouse(A, B)) par[find(a)] = find(b);
+    }
+    const mx = new Map();
+    T.runs.forEach((r, i) => { const g = find(i); mx.set(g, Math.max(mx.get(g) ?? -Infinity, r.mark)); });
+    T.runs.forEach((r, i) => { r.mark = mx.get(find(i)); });
+  }
 }
 function loadTilemap(id){
   const m = mapById(id); if(!m || !m.tilemap) return Promise.resolve(null);
