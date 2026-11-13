@@ -396,6 +396,38 @@ drawScene = function(t){ camUpdate(); _drawScene(t); };
 const _setActiveMap = setActiveMap;
 setActiveMap = function(id){ const r = _setActiveMap(id); camSnap(); return r; };
 
+// ---------- lớp xem vùng đi được (debug): phím G bật / tắt, hoặc mở trang với ?grid ----------
+let TM_GRID = /[?&]grid\b/.test(location.search);
+window.addEventListener('keydown', e => {
+  if(e.code !== 'KeyG' || e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '')) return;
+  TM_GRID = !TM_GRID;
+});
+function tmDrawGrid(T, cam){
+  const ts = T.ts, x0 = Math.max(0, Math.floor(cam.x/ts)), y0 = Math.max(0, Math.floor(cam.y/ts)), x1 = Math.min(T.mw - 1, Math.floor((cam.x + CW)/ts)), y1 = Math.min(T.mh - 1, Math.floor((cam.y + CH)/ts));
+  cx.save(); cx.lineWidth = 1;
+  for(let gy = y0; gy <= y1; gy++) for(let gx = x0; gx <= x1; gx++){
+    const k = gy*T.mw + gx, x = gx*ts, y = gy*ts;
+    if(T.cn[k]){ cx.fillStyle = 'rgba(60,140,255,.30)'; cx.fillRect(x, y, ts, ts); }                                   // cầu thang: đi được, nối 2 tầng
+    else if(T.br[k]){ cx.fillStyle = 'rgba(190,90,255,.28)'; cx.fillRect(x, y, ts, ts); }                              // cầu: đi được (trên / dưới cầu)
+    else if(!tmCellOK(T, k, false) && !tmCellOK(T, k, true)){ cx.fillStyle = 'rgba(255,0,40,.5)'; cx.fillRect(x, y, ts, ts);   // CẤM ĐI: nền đỏ + dấu X (vẫn nhìn rõ trên vách đá đỏ)
+      cx.strokeStyle = 'rgba(255,255,255,.55)'; cx.beginPath(); cx.moveTo(x + 10, y + 10); cx.lineTo(x + ts - 10, y + ts - 10); cx.moveTo(x + ts - 10, y + 10); cx.lineTo(x + 10, y + ts - 10); cx.stroke(); }
+    else if(T.hi[k]){ cx.fillStyle = 'rgba(255,220,40,.12)'; cx.fillRect(x, y, ts, ts); }                                // đi được, mặt bằng cao
+    cx.strokeStyle = 'rgba(255,255,255,.16)'; cx.strokeRect(x + .5, y + .5, ts - 1, ts - 1);
+  }
+  cx.strokeStyle = '#ff2bd6'; cx.lineWidth = 4;   // tường chặn hai bên cầu thang
+  (T.walls || []).forEach(w => { cx.beginPath(); cx.moveTo(w.x, w.y0); cx.lineTo(w.x, w.y1); cx.stroke(); });
+  cx.restore();
+  if(VIEW.overview) return;
+  // chú thích góc trên trái màn hình
+  cx.save(); cx.translate(cam.x, cam.y);
+  const rows = [['rgba(255,30,30,.8)', 'Cấm đi'], ['rgba(60,140,255,.8)', 'Cầu thang'], ['rgba(190,90,255,.8)', 'Cầu'], ['rgba(255,220,40,.6)', 'Mặt bằng cao (đi được)'], ['#ff2bd6', 'Tường chặn cầu thang']];
+  const ly = 64; cx.fillStyle = '#000b'; cx.fillRect(12, ly, 400, 22 + rows.length*38 + 30);
+  cx.font = '600 24px Fredoka, sans-serif'; cx.textAlign = 'left'; cx.textBaseline = 'middle';
+  rows.forEach((r, i) => { cx.fillStyle = r[0]; cx.fillRect(28, ly + 26 + i*38, 28, 24); cx.fillStyle = '#fff'; cx.fillText(r[1], 70, ly + 39 + i*38); });
+  cx.fillStyle = '#ffffffaa'; cx.font = '20px Fredoka, sans-serif'; cx.fillText('Phím G: tắt lưới', 28, ly + 26 + rows.length*38 + 14);
+  cx.restore();
+}
+
 // ---------- vẽ ----------
 function tmDrawRun(T, r){
   if(r.tree){
@@ -447,6 +479,7 @@ drawMapScene = function(mid, t){
   drawTargetMarkers(mid, t);
   sw.forEach(p => { p.target = p._wpSave; });
   drawProjectiles(mid); drawExplosions(mid);
+  if(TM_GRID) tmDrawGrid(T, cam);
   cx.restore();
 };
 
