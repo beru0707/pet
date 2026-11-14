@@ -101,6 +101,7 @@ function ensureMap(id){
   const names = petsOnMap(id);
   return Promise.all([
     loadBg(id),
+    typeof loadTilemap === 'function' ? loadTilemap(id) : null,   // map dạng ô: dựng khi cần (xem map/tilemap.js)
     runPool(PETS.filter(p=>p.map===id).map(p => () => ensurePet(p)), LOAD_PARALLEL)
   ]);
 }

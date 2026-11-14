@@ -22,7 +22,9 @@ async function bootAssets(){
     return m === first;
   }).map(d=>d.name);
   const L = makeLoader(), bar = L.querySelector('#ld-bar'), txt = L.querySelector('#ld-txt'), pct = L.querySelector('#ld-pct');
-  const jobs = [ {label:'Đang tải bản đồ…', run:()=>loadBg(first)}, ...names.map(n=>({label:'Đang tải '+n+'…', run:()=>loadPetWalk(n)})) ];
+  const jobs = [ {label:'Đang tải bản đồ…', run:()=>loadBg(first)},
+    {label:'Đang dựng bản đồ…', run:()=>typeof loadTilemap === 'function' ? loadTilemap(first) : null},   // dựng tilemap ngay trong màn hình chờ, không để khựng sau khi vào game
+    ...names.map(n=>({label:'Đang tải '+n+'…', run:()=>loadPetWalk(n)})) ];
   let done = 0; const upd = () => { const p = Math.round(done/jobs.length*100); bar.style.width = p+'%'; pct.textContent = p+'%'; };
   await runPool(jobs.map(j => async () => { txt.textContent = j.label; await j.run(); }), LOAD_PARALLEL, () => { done++; upd(); });
   txt.textContent = 'Sẵn sàng!'; bar.style.width = '100%'; pct.textContent = '100%';
@@ -34,5 +36,7 @@ function startBackgroundLoad(){
   cur.forEach(n => T.push(() => loadPetSkills(n)));
   MAPS.forEach(m => { if(m.id === ACTIVE_MAP) return; T.push(() => loadBg(m.id)); petsOnMap(m.id).forEach(n => T.push(() => loadPetWalk(n).then(()=>loadPetLook(n)))); });
   PETS.filter(p=>p.map).forEach(p => T.push(() => loadPetSkills(p.def.name)));
-  return runPool(T, 2);
+  // Mỗi việc chỉ chạy khi trình duyệt rảnh, lần lượt từng cái: giải nén sheet 2048px khá nặng, chạy dồn dập sẽ làm game giật
+  const idle = cb => window.requestIdleCallback ? requestIdleCallback(() => cb(), {timeout:1500}) : setTimeout(cb, 120);
+  return runPool(T.map(f => () => new Promise(r => idle(r)).then(f)), 1);
 }

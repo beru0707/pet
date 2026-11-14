@@ -31,6 +31,7 @@ function tmBuild(T, j, img){
   T.ts = ts; T.mw = W; T.mh = H; T.w = W*ts; T.h = H*ts;
   const mk = () => { const c = document.createElement('canvas'); c.width = T.w; c.height = T.h; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; return [c, g]; };
   const [under, gu] = mk(), [overT, gT] = mk(), [overTB, gTB] = mk(), [overTBu, gTBu] = mk(), [overTBs, gTBs] = mk(), [overB, gB] = mk(), [overBr, gBr] = mk();   // overBr: riêng các ô cầu   // overT: cây · overB: nhà / tháp (mỗi loại xếp lớp riêng)
+  const used = new Set([gu]);   // lớp nào thực sự được vẽ vào; lớp rỗng sẽ thu nhỏ còn 1x1 ở cuối hàm để trả RAM (mỗi lớp cỡ cả map)
   const front = new Set(TM_CFG.front), pass = new Set(TM_CFG.walkOver);
   const N = W*H, fg = new Uint8Array(N), top = new Int8Array(N).fill(-1), pr = new Uint8Array(N), so = new Uint8Array(N), ps = new Uint8Array(N), fp = new Uint8Array(N), bid = new Int16Array(N).fill(-1), hi = new Uint8Array(N), cn = new Uint8Array(N), br = new Uint8Array(N);
   const ord = new Map(TM_CFG.order.map((n, i) => [n, i])), walkTop = new Set(TM_CFG.walkTop.map(n => ord.get(n)));
@@ -69,10 +70,10 @@ function tmBuild(T, j, img){
       const ti = isTree && inst[L.name] ? inst[L.name][k] : -1;   // thuộc cây nào (-1: ô lẻ, vd. phần lều / lâu đài nằm trong layer cây)
       const g = flat.has(L.name) ? gu : isTree ? (ti >= 0 ? (isFrontTree ? gT : (bldCell[k] ? (tbu.push([k, ti]), gTBu) : gTB)) : (isFrontTree ? gT : gu)) : isBld ? (trCell[k] ? gu : gB) :   // ô vừa có cây vừa có nhà: nhà vẽ ở nền (dưới pet), cây ở lớp trên pet
          (above && fg[k]) ? gT : (above && fp[k]) ? gB : gu;
-      g.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts);
+      g.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts); used.add(g);
       if(isTree && ti >= 0 && g !== gu) fg[k] = 1;
       const oi = ord.get(L.name); if(oi !== undefined){ if(oi > top[k]) top[k] = oi; pr[k] |= 1 << oi; }
-      if(bridgeL.has(L.name)){ br[k] = 1; gBr.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts); }
+      if(bridgeL.has(L.name)){ br[k] = 1; used.add(gBr); gBr.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, t.x*ts, t.y*ts, ts, ts); }
       if(conn.has(L.name)) cn[k] = 1;
       if(foot.has(L.name)){ fp[k] = 1; bid[k] = id; }
       if(pass.has(L.name)) ps[k] = 1;
@@ -141,7 +142,7 @@ function tmBuild(T, j, img){
     const run = T.runs.find(q => q.x === x && y >= q.y0 && y <= q.y1); if(!run) continue;
     if(run.mark > tm){ run.mark = Math.max(run.mark, tm + 1); continue; }
     if(moved.has(k)) continue; moved.add(k);
-    gTBs.drawImage(overTBu, x*ts, y*ts, ts, ts, x*ts, y*ts, ts, ts);
+    gTBs.drawImage(overTBu, x*ts, y*ts, ts, ts, x*ts, y*ts, ts, ts); used.add(gTBs);
     gTBu.clearRect(x*ts, y*ts, ts, ts);
   }
   // GỘP các cột công trình liền kề của CÙNG 1 nhà thành 1 nhóm, dùng chung mark = đáy thấp nhất.
@@ -167,4 +168,6 @@ function tmBuild(T, j, img){
     T.runs.forEach((r, i) => { const g = find(i); mx.set(g, Math.max(mx.get(g) ?? -Infinity, r.mark)); });
     T.runs.forEach((r, i) => { r.mark = mx.get(find(i)); });
   }
+  // Lớp không có ô nào thì thu còn 1x1 (vẽ một canvas 1x1 trong suốt = không vẽ gì, nên hình không đổi)
+  [[overT, gT], [overTB, gTB], [overTBu, gTBu], [overTBs, gTBs], [overB, gB], [overBr, gBr]].forEach(([c, g]) => { if(!used.has(g)){ c.width = 1; c.height = 1; } });
 }

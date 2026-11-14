@@ -33,5 +33,6 @@ function stepGame(t, dt){
 
 bootAssets().catch(e=>console.error('[boot]',e)).then(()=>{
   loadGame(); initPets(); updateHUD(); requestAnimationFrame(frame);
-  startBackgroundLoad();
+  window.GAME_RUNNING = true;   // từ đây loadSheet nhường luồng giữa các lần cắt để game không giật
+  setTimeout(startBackgroundLoad, 1500);   // cho vài giây đầu chạy mượt rồi mới nạp ngầm phần còn lại
 });

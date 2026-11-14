@@ -8,7 +8,8 @@ const PREFER_WEBP = true;   // ưu tiên .webp cạnh .png; không có thì tự
 const LOAD_PARALLEL = 3;    // số sheet giải nén cùng lúc
 
 function tryImg(src){
-  const load = s => new Promise(r=>{ const im=new Image(); im.decoding='async'; im.onload=()=>r(im); im.onerror=()=>r(null); im.src=s; });
+  // decode() giải nén ảnh ở luồng khác; nếu không có thì lần drawImage đầu tiên sẽ giải nén ngay trên luồng chính (gây khựng với sheet 2048px)
+  const load = s => new Promise(r=>{ const im=new Image(); im.decoding='async'; im.onload=()=>{ (im.decode ? im.decode() : Promise.resolve()).catch(()=>{}).then(()=>r(im)); }; im.onerror=()=>r(null); im.src=s; });
   return (PREFER_WEBP && /\.png$/i.test(src)) ? load(src.replace(/\.png$/i,'.webp')).then(im => im || load(src)) : load(src);
 }
 async function runPool(tasks, n, onEach){
