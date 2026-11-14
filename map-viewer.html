@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Xem map – vùng đi được</title>
+<style>
+  :root{ --bg:#10161d; --panel:#18212b; --line:#2b3947; --text:#e8eef4; --dim:#8fa1b3; --accent:#ffd54a; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; background:var(--bg); color:var(--text); font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
+  #cv{ position:fixed; inset:0; width:100%; height:100%; display:block; cursor:grab; touch-action:none; }
+  #cv.drag{ cursor:grabbing; }
+  #panel{ position:fixed; top:12px; left:12px; width:250px; max-height:calc(100% - 64px); overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; box-shadow:0 6px 24px #0008; }
+  #panel h1{ font-size:15px; margin:0 0 10px; }
+  #panel label.row{ display:flex; align-items:center; gap:8px; padding:3px 0; cursor:pointer; user-select:none; }
+  #panel select,#panel button,#panel input[type=file]{ width:100%; margin:0 0 8px; background:#0e151c; color:var(--text); border:1px solid var(--line); border-radius:6px; padding:6px 8px; font:inherit; }
+  #panel button{ cursor:pointer; } #panel button:hover{ border-color:var(--accent); }
+  .btns{ display:flex; gap:6px; } .btns button{ margin:0; }
+  .sw{ width:18px; height:14px; border-radius:3px; flex:none; border:1px solid #fff3; }
+  .sw.x{ background:rgba(255,0,40,.6); position:relative; }
+  .sw.x::after{ content:"✕"; position:absolute; inset:0; font-size:11px; line-height:12px; text-align:center; color:#fff9; }
+  hr{ border:0; border-top:1px solid var(--line); margin:10px 0; }
+  #stats{ color:var(--dim); font-size:12px; }
+  #status{ position:fixed; left:12px; right:12px; bottom:12px; padding:7px 12px; background:var(--panel); border:1px solid var(--line); border-radius:8px; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; }
+  #msg{ position:fixed; inset:0; display:grid; place-items:center; pointer-events:none; color:var(--dim); font-size:16px; }
+  @media (max-width:560px){ #panel{ width:210px; } }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="msg">Đang tải map…</div>
+
+<aside id="panel">
+  <h1>🗺️ Xem map · vùng đi được</h1>
+  <select id="preset" title="Chọn map"></select>
+  <input id="file" type="file" accept=".json,application/json" title="Mở file JSON Sprite Fusion khác (dùng tileset mặc định)">
+  <label class="row"><input type="checkbox" id="oArt" checked> Hiện hình map</label>
+  <label class="row"><span class="sw x"></span><input type="checkbox" id="oBlock" checked> Ô cấm đi</label>
+  <label class="row"><span class="sw" style="background:rgba(60,140,255,.7)"></span><input type="checkbox" id="oStair" checked> Cầu thang</label>
+  <label class="row"><span class="sw" style="background:rgba(190,90,255,.7)"></span><input type="checkbox" id="oBridge" checked> Cầu</label>
+  <label class="row"><span class="sw" style="background:rgba(255,220,40,.5)"></span><input type="checkbox" id="oHigh" checked> Mặt bằng cao (đi được)</label>
+  <label class="row"><span class="sw" style="background:#ff2bd6"></span><input type="checkbox" id="oWall" checked> Tường chặn cầu thang</label>
+  <label class="row"><span class="sw" style="background:#2de2ff"></span><input type="checkbox" id="oMark" checked> Mốc xếp lớp nhà / cây</label>
+  <label class="row"><span class="sw" style="background:#fff3"></span><input type="checkbox" id="oGrid" checked> Lưới ô</label>
+  <hr>
+  <div class="btns"><button id="bFit">Vừa khung</button><button id="b100">100%</button></div>
+  <div id="stats"></div>
+  <hr>
+  <div style="font-size:12px;color:var(--dim)">Kéo để di chuyển · cuộn chuột / chụm hai ngón để phóng to, thu nhỏ · rê chuột lên ô để xem chi tiết.<br>Trang này chỉ để xem, không ảnh hưởng game.</div>
+</aside>
+<div id="status">Rê chuột lên một ô để xem chi tiết</div>
+
+<!-- cùng bộ quy tắc va chạm và cách dựng map với game -->
+<script src="js/map/tilemap-core.js"></script>
+<script>
+'use strict';
+// Thêm map vào danh sách chọn: thêm 1 dòng (đường dẫn JSON Sprite Fusion + tileset). Hoặc mở trang với ?map=...&tileset=...
+const PRESETS = [
+  {name:'Đồng cỏ', map:'assets/maps/grass.json', tileset:'assets/maps/spritesheet.png'},
+];
+
+const $ = id => document.getElementById(id);
+const cv = $('cv'), cx = cv.getContext('2d');
+const O = {}; ['oArt','oBlock','oStair','oBridge','oHigh','oWall','oMark','oGrid'].forEach(id => { O[id] = $(id); O[id].addEventListener('change', draw); });
+
+// tmCellOK trong game nằm ở map/tilemap.js (gắn với game) nên viết lại bản y hệt ở đây
+const cellOK = (T, k, deck) => deck ? (T.br[k] === 1 || (T.hi[k] === 1 && T.walk[k] === 1)) : T.walk[k] === 1;
+
+let T = null, J = null, art = null, cellLayers = null, tilesetUrl = PRESETS[0].tileset;
+const V = {s:1, x:0, y:0};   // phóng to + dịch chuyển (toạ độ màn hình = thế giới * s + x/y)
+let dpr = 1, hover = -1;
+
+const loadImg = src => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('không đọc được ' + src)); i.src = src; });
+
+async function loadMap(mapUrl, tsUrl, jsonObj){
+  $('msg').style.display = 'grid'; $('msg').textContent = 'Đang tải map…';
+  try{
+    const [j, img] = await Promise.all([jsonObj ? Promise.resolve(jsonObj) : fetch(mapUrl).then(r => { if(!r.ok) throw new Error('HTTP ' + r.status + ' ' + mapUrl); return r.json(); }), loadImg(tsUrl)]);
+    const t = {}; tmBuild(t, j, img);
+    T = t; J = j; tilesetUrl = tsUrl;
+    // ghép sẵn hình map đầy đủ (nền + cây + nhà) như game
+    art = document.createElement('canvas'); art.width = T.w; art.height = T.h;
+    const g = art.getContext('2d'); g.imageSmoothingEnabled = false;
+    [T.under, T.overTBu, T.overTBs, T.overB, T.overTB, T.overT].forEach(c => g.drawImage(c, 0, 0));
+    // tên các lớp có mặt trong mỗi ô (để hiện khi rê chuột)
+    cellLayers = new Map();
+    j.layers.forEach(L => { for(const tl of L.tiles){ if(tl.x < 0 || tl.y < 0 || tl.x >= T.mw || tl.y >= T.mh) continue; const k = tl.y*T.mw + tl.x; (cellLayers.get(k) || cellLayers.set(k, []).get(k)).push(L.name); } });
+    let blocked = 0, stairs = 0, bridges = 0, high = 0;
+    for(let k = 0; k < T.mw*T.mh; k++){ if(T.cn[k]) stairs++; else if(T.br[k]) bridges++; else if(!cellOK(T, k, false) && !cellOK(T, k, true)) blocked++; else if(T.hi[k]) high++; }
+    $('stats').textContent = `Map ${T.mw}×${T.mh} ô (${T.ts}px) · cấm đi ${blocked} · cầu thang ${stairs} · cầu ${bridges} · mặt cao ${high}`;
+    $('msg').style.display = 'none';
+    fit();
+  }catch(e){ console.error(e); $('msg').style.display = 'grid'; $('msg').textContent = 'Lỗi: ' + e.message; }
+}
+
+function resize(){
+  dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(innerWidth*dpr); cv.height = Math.round(innerHeight*dpr);
+  draw();
+}
+function fit(){
+  if(!T) return;
+  V.s = Math.min(innerWidth / T.w, innerHeight / T.h) * .96;
+  V.x = (innerWidth - T.w*V.s)/2; V.y = (innerHeight - T.h*V.s)/2;
+  draw();
+}
+function zoomAt(px, py, factor){
+  const ns = Math.min(4, Math.max(.1, V.s*factor)), f = ns / V.s;
+  V.x = px - (px - V.x)*f; V.y = py - (py - V.y)*f; V.s = ns; draw();
+}
+
+function draw(){
+  cx.setTransform(1, 0, 0, 1, 0, 0); cx.fillStyle = '#0b1117'; cx.fillRect(0, 0, cv.width, cv.height);
+  if(!T) return;
+  cx.setTransform(dpr*V.s, 0, 0, dpr*V.s, dpr*V.x, dpr*V.y); cx.imageSmoothingEnabled = false;
+  const ts = T.ts, px = 1 / V.s;   // px = 1 điểm ảnh màn hình tính theo đơn vị thế giới
+  if(O.oArt.checked) cx.drawImage(art, 0, 0); else { cx.fillStyle = '#1b2631'; cx.fillRect(0, 0, T.w, T.h); }
+  const x0 = Math.max(0, Math.floor(-V.x/V.s/ts)), y0 = Math.max(0, Math.floor(-V.y/V.s/ts)),
+        x1 = Math.min(T.mw - 1, Math.floor((innerWidth - V.x)/V.s/ts)), y1 = Math.min(T.mh - 1, Math.floor((innerHeight - V.y)/V.s/ts));
+  const big = ts*V.s >= 22;   // ô đủ lớn thì vẽ dấu X
+  for(let gy = y0; gy <= y1; gy++) for(let gx = x0; gx <= x1; gx++){
+    const k = gy*T.mw + gx, x = gx*ts, y = gy*ts;
+    if(T.cn[k]){ if(O.oStair.checked){ cx.fillStyle = 'rgba(60,140,255,.38)'; cx.fillRect(x, y, ts, ts); } }
+    else if(T.br[k]){ if(O.oBridge.checked){ cx.fillStyle = 'rgba(190,90,255,.34)'; cx.fillRect(x, y, ts, ts); } }
+    else if(!cellOK(T, k, false) && !cellOK(T, k, true)){
+      if(O.oBlock.checked){
+        cx.fillStyle = 'rgba(255,0,40,.5)'; cx.fillRect(x, y, ts, ts);
+        if(big){ cx.strokeStyle = 'rgba(255,255,255,.55)'; cx.lineWidth = 2*px; cx.beginPath(); cx.moveTo(x + 10, y + 10); cx.lineTo(x + ts - 10, y + ts - 10); cx.moveTo(x + ts - 10, y + 10); cx.lineTo(x + 10, y + ts - 10); cx.stroke(); }
+      }
+    }
+    else if(T.hi[k] && O.oHigh.checked){ cx.fillStyle = 'rgba(255,220,40,.14)'; cx.fillRect(x, y, ts, ts); }
+  }
+  if(O.oGrid.checked && ts*V.s >= 10){
+    cx.strokeStyle = 'rgba(255,255,255,.18)'; cx.lineWidth = px; cx.beginPath();
+    for(let gx = x0; gx <= x1 + 1; gx++){ cx.moveTo(gx*ts, y0*ts); cx.lineTo(gx*ts, (y1 + 1)*ts); }
+    for(let gy = y0; gy <= y1 + 1; gy++){ cx.moveTo(x0*ts, gy*ts); cx.lineTo((x1 + 1)*ts, gy*ts); }
+    cx.stroke();
+  }
+  if(O.oWall.checked){ cx.strokeStyle = '#ff2bd6'; cx.lineWidth = Math.max(3*px, 2); cx.beginPath(); (T.walls || []).forEach(w => { cx.moveTo(w.x, w.y0); cx.lineTo(w.x, w.y1); }); cx.stroke(); }
+  if(O.oMark.checked){   // mốc xếp lớp: pet có chân ở dưới vạch = đứng trước (vẽ đè lên) công trình / cây
+    cx.lineWidth = Math.max(3*px, 2);
+    cx.strokeStyle = '#2de2ff'; cx.beginPath(); T.runs.forEach(r => { cx.moveTo(r.x*ts, r.mark); cx.lineTo((r.x + 1)*ts, r.mark); }); cx.stroke();
+    cx.strokeStyle = '#ff9a2d'; cx.beginPath(); T.trees.forEach(t => { const y = (t.oy + 2.5)*ts; cx.moveTo(t.ox*ts, y); cx.lineTo((t.ox + 3)*ts, y); }); cx.stroke();
+  }
+  if(hover >= 0){ cx.strokeStyle = '#ffd54a'; cx.lineWidth = Math.max(3*px, 2); const hx = hover % T.mw, hy = (hover/T.mw)|0; cx.strokeRect(hx*ts, hy*ts, ts, ts); }
+}
+
+function describe(k){
+  const gx = k % T.mw, gy = (k/T.mw)|0, L = cellLayers.get(k) || [];
+  let st;
+  if(T.cn[k]) st = 'CẦU THANG (đi được, nối mặt cao ↔ thấp)';
+  else if(T.br[k]) st = 'CẦU (đi được)';
+  else if(!cellOK(T, k, false) && !cellOK(T, k, true)) st = 'CẤM ĐI';
+  else st = 'đi được' + (T.hi[k] ? ' · mặt bằng cao' : ' · mặt thấp');
+  return `Ô (${gx}, ${gy}) · x ${gx*T.ts}–${(gx + 1)*T.ts}, y ${gy*T.ts}–${(gy + 1)*T.ts}px · ${st} · lớp: ${L.length ? [...new Set(L)].join(', ') : '(trống)'}`;
+}
+function cellFromEvent(e){
+  if(!T) return -1;
+  const wx = (e.clientX - V.x)/V.s, wy = (e.clientY - V.y)/V.s, gx = Math.floor(wx/T.ts), gy = Math.floor(wy/T.ts);
+  return (gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) ? -1 : gy*T.mw + gx;
+}
+
+// ---- kéo, phóng to bằng chuột / cảm ứng ----
+const ptrs = new Map(); let lastDist = 0;
+cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY}); cv.classList.add('drag'); lastDist = 0; });
+cv.addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId);
+  if(p){
+    if(ptrs.size === 1){ V.x += e.clientX - p.x; V.y += e.clientY - p.y; }
+    p.x = e.clientX; p.y = e.clientY;
+    if(ptrs.size === 2){
+      const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if(lastDist) zoomAt((a.x + b.x)/2, (a.y + b.y)/2, d / lastDist);
+      lastDist = d;
+    }
+    draw();
+  }
+  if(e.pointerType === 'mouse' || !p){ const k = cellFromEvent(e); if(k !== hover){ hover = k; draw(); } $('status').textContent = k >= 0 ? describe(k) : 'Rê chuột lên một ô để xem chi tiết'; }
+});
+const up = e => { ptrs.delete(e.pointerId); lastDist = 0; if(!ptrs.size) cv.classList.remove('drag'); };
+cv.addEventListener('pointerup', e => { const wasTap = ptrs.size === 1; up(e); if(wasTap && e.pointerType !== 'mouse'){ const k = cellFromEvent(e); hover = k; $('status').textContent = k >= 0 ? describe(k) : ''; draw(); } });
+cv.addEventListener('pointercancel', up);
+cv.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY*.0015)); }, {passive:false});
+addEventListener('resize', resize);
+$('bFit').onclick = fit;
+$('b100').onclick = () => { if(!T) return; zoomAt(innerWidth/2, innerHeight/2, 1 / V.s); };
+
+// ---- chọn map ----
+PRESETS.forEach((p, i) => { const o = document.createElement('option'); o.value = i; o.textContent = p.name; $('preset').appendChild(o); });
+$('preset').addEventListener('change', () => { const p = PRESETS[+$('preset').value]; if(!p) return; loadMap(p.map, p.tileset); });
+$('file').addEventListener('change', e => {
+  const f = e.target.files[0]; if(!f) return;
+  f.text().then(t => loadMap(null, tilesetUrl, JSON.parse(t))).catch(err => { $('msg').style.display = 'grid'; $('msg').textContent = 'File JSON không hợp lệ: ' + err.message; });
+});
+
+resize();
+const q = new URLSearchParams(location.search);
+if(q.get('map')){ const o = document.createElement('option'); o.textContent = q.get('map'); $('preset').prepend(o); $('preset').value = 0; loadMap(q.get('map'), q.get('tileset') || PRESETS[0].tileset); }
+else loadMap(PRESETS[0].map, PRESETS[0].tileset);
+</script>
+</body>
+</html>
