@@ -23,6 +23,8 @@ const TM_CFG = {
   stairWallPad: 0,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng dài bằng mép viền của 1 ô (64px), không có dải
   stairWallY: [.25, 1],                              // đoạn của đường chặn theo chiều dọc ô cầu thang: [đầu, cuối] tính theo tỉ lệ chiều cao ô. [0,1] = đủ 1 mép ô (64px); [0,.5] = nửa trên; [.5,1] = nửa dưới; [.25,.75] = đoạn giữa
   walkOver:  ['Stairs'],                           // luôn đi được, kể cả đè lên vách
+  trunkWalk:  true,                                // true: ô chân công trình nằm dưới THÂN cây phía trước (cây đè lên nhà) thì đi được; pet đi vào đó bị cây che, nhà nằm sau pet (cây -> pet -> nhà). Ô GỐC cây vẫn chặn
+  trunkCover: .5,                                  // tỉ lệ pixel đặc tối thiểu của ô tile cây để tính là thân cây (0..1). Ô tán / viền mỏng (ít pixel) không tính, vẫn chặn như nhà
 };
 
 // ---------- dựng map ----------
@@ -41,7 +43,7 @@ function tmBuild(T, j, img){
   j.layers.forEach(L => { if(L.name === TM_CFG.trees[0]) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) trCell[t.y*W + t.x] = 1; });
   // nhận diện từng cái cây (khối 3x3) theo id ô, riêng cho từng layer cây
   const treeLayers = new Set(TM_CFG.trees), tFront = TM_CFG.trees[0], tCorner = TM_CFG.treeIds[0][0], isTreeId = v => TM_CFG.treeIds.some(q => v >= q[0] && v <= q[1]);
-  const bldCell = new Uint8Array(N), inst = {}; T.trees = []; const tbu = [];   // tbu: ô cây phía sau nằm dưới công trình
+  const bldCell = new Uint8Array(N), inst = {}, tgm = {}; T.trees = []; const tbu = [];   // tgm: layer cây -> (ô -> id tile)   // tbu: ô cây phía sau nằm dưới công trình
   j.layers.forEach(L => { if(foot.has(L.name)) for(const t of L.tiles) if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H) bldCell[t.y*W + t.x] = 1; });
   j.layers.forEach(L => {
     if(!treeLayers.has(L.name)) return;
@@ -53,7 +55,7 @@ function tmBuild(T, j, img){
       const n = T.trees.length; T.trees.push({ox:x, oy:y, layer:L.name});
       for(let dy = 0; dy < 3; dy++) for(let dx = 0; dx < 3; dx++){ const X = x + dx, Y = y + dy; if(X < W && Y < H && gm.has(Y*W + X) && ins[Y*W + X] < 0) ins[Y*W + X] = n; }
     }
-    inst[L.name] = ins;
+    inst[L.name] = ins; tgm[L.name] = gm;
   });
   const tr0 = T.trees.slice();   // thứ tự gốc (ti là chỉ số trong mảng này)
   T.trees.sort((a, b) => (a.layer === tFront) - (b.layer === tFront));   // cây phía sau vẽ trước
@@ -101,6 +103,22 @@ function tmBuild(T, j, img){
     return l + r + 1; };
   const same = (a, b) => { const d = bid[b] - bid[a], wa = segW(a), w = wa > 1 ? wa : segW(b); return w > 1 ? d === w : (d >= 2 && d <= 8); };
   for(let k = 0; k < N; k++) if(fp[k] && (k + W >= N || !fp[k + W] || !same(k, k + W))) so[k] = 1;   // chân công trình: ô dưới cùng của mỗi cột
+  // Cây phía trước đè lên chân nhà: ô chân nhà nằm dưới THÂN cây (tile cây đặc >= trunkCover) thì bỏ chặn.
+  // Hình vẫn đúng thứ tự cây -> pet -> nhà: ô đó đã vẽ ở nền (dưới pet) vì có tile cây, còn cây xếp theo đáy gốc nên che pet.
+  if(TM_CFG.trunkWalk && tgm[tFront] && inst[tFront]){
+    try{
+      const cv = document.createElement('canvas'); cv.width = cv.height = ts; const cg = cv.getContext('2d', {willReadFrequently:true}), memo = new Map();
+      const cover = id => {
+        if(!memo.has(id)){
+          cg.clearRect(0, 0, ts, ts); cg.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, 0, 0, ts, ts);
+          const d = cg.getImageData(0, 0, ts, ts).data; let n = 0; for(let i = 3; i < d.length; i += 4) if(d[i] > 16) n++;
+          memo.set(id, n/(ts*ts));
+        }
+        return memo.get(id);
+      };
+      for(const [k, id] of tgm[tFront]) if(fp[k] && so[k] && inst[tFront][k] >= 0 && cover(id) >= TM_CFG.trunkCover) so[k] = 0;
+    }catch(e){ console.warn('[tilemap] không đọc được điểm ảnh tileset (mở bằng file://?), bỏ qua trunkWalk', e); }
+  }
   // Va chạm của cây: mỗi cây chỉ chặn đúng ô GỐC (giữa hàng dưới cùng của khối 3x3); tán hai bên và phần trên đi vòng ra sau được
   for(const tr of T.trees){ const X = tr.ox + 1, Y = tr.oy + 2; if(X < W && Y < H) so[Y*W + X] = 1; }
   // đường chặn thẳng đứng ở mép hai bên cầu thang: {x, y0, y1} (px)
