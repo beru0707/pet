@@ -73,6 +73,10 @@ const _walkable = walkable;
 walkable = function(x, y){ const T = tmGet(TM_CUR || ACTIVE_MAP); return T ? tmWalkable(T, x, y, TM_DECK) : _walkable(x, y); };
 
 // ---------- TÌM ĐƯỜNG: bấm điểm đến -> pet tự đi vòng vật cản tới điểm đi được gần nhất ----------
+// Ô GỐC cây chỉ bị chặn phần dưới (TM_CFG.rootBlock) nên tìm đường coi nó là ô đi được ở dải phía TRÊN: điểm đứng đại diện của ô gốc cây nằm giữa dải đó, ô khác là tâm ô.
+// Ra / vào ô gốc cây chỉ từ phía trên hoặc hai bên (đi ngang qua dải trên được); từ phía dưới thì phải đi vòng vì phần dưới bị chặn.
+const tmRootOK = (T, k) => T.rp !== undefined && T.rp[k] === 1 && TM_CFG.rootBlock < 1;
+function tmCellPt(T, k){ const x = k % T.mw, y = (k / T.mw) | 0; return {x:(x + .5)*T.ts, y:(y + (tmRootOK(T, k) ? (1 - TM_CFG.rootBlock)/2 : .5))*T.ts}; }
 function tmHeapPush(h, c, i){ h.push([c, i]); let k = h.length - 1; while(k > 0){ const q = (k - 1) >> 1; if(h[q][0] <= h[k][0]) break; [h[q], h[k]] = [h[k], h[q]]; k = q; } }
 function tmHeapPop(h){
   const top = h[0], last = h.pop();
@@ -110,16 +114,19 @@ function tmFindPath(T, sx, sy, tx, ty, deck0){
   const s0 = (sgy*W + sgx)*2 + (deck0 ? 1 : 0), dist = new Float64Array(2*N).fill(Infinity), prev = new Int32Array(2*N).fill(-1), heap = [];
   dist[s0] = 0; tmHeapPush(heap, 0, s0);
   // trạng thái mới khi bước từ trạng thái d vào ô n; -1 nếu không bước được
-  const step = (d, X, Y) => X < 0 || Y < 0 || X >= W || Y >= H || !tmCellOK(T, Y*W + X, d) ? -1 : (tmDeckAt(T, Y*W + X, d) ? 1 : 0);
+  const step0 = (d, X, Y) => X < 0 || Y < 0 || X >= W || Y >= H || !tmCellOK(T, Y*W + X, d) ? -1 : (tmDeckAt(T, Y*W + X, d) ? 1 : 0);   // ô đi được hoàn toàn
+  const step = (d, X, Y) => (d === 0 && X >= 0 && Y >= 0 && X < W && Y < H && tmRootOK(T, Y*W + X) && !tmCellOK(T, Y*W + X, d)) ? 0 : step0(d, X, Y);   // + ô gốc cây (dải trên đi được)
   while(heap.length){
     const [c, st] = tmHeapPop(heap); if(c > dist[st]) continue;
     const k = st >> 1, d = st & 1, x = k % W, y = (k / W) | 0;
     for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++){
       if(!dx && !dy) continue;
       const X = x + dx, Y = y + dy, nd2 = step(d, X, Y); if(nd2 < 0) continue;
-      if(dx && dy && (step(d, x + dx, y) < 0 || step(d, x, y + dy) < 0)) continue;   // không cắt góc vật cản
+      if(dx && dy && (step0(d, x + dx, y) < 0 || step0(d, x, y + dy) < 0)) continue;   // không cắt góc vật cản (ô gốc cây cũng tính là vật cản ở đây)
+      if(!d && ((tmRootOK(T, k) && Y > y) || (tmRootOK(T, Y*W + X) && y > Y))) continue;   // ô gốc cây: không ra / vào từ phía dưới (phần dưới bị chặn)
+      if(!d && (tmRootOK(T, k) || tmRootOK(T, Y*W + X)) && !tmLOS(T, tmCellPt(T, k), tmCellPt(T, Y*W + X), false)) continue;   // cạnh nối ô gốc cây: kiểm đúng bằng tmLOS
       if(dx && dy && T.cn && (T.cn[y*W + x + dx] || T.cn[(y + dy)*W + x] || T.cn[Y*W + X] !== T.cn[k])) continue;   // gần cầu thang: chỉ đi thẳng, không đi chéo sượt qua góc
-      if(T.bc && (T.bc[k] || T.bc[Y*W + X]) && !tmLOS(T, {x:(x + .5)*ts, y:(y + .5)*ts}, {x:(X + .5)*ts, y:(Y + .5)*ts}, !!d)) continue;   // gần dải chặn: kiểm đúng bằng tmLOS
+      if(T.bc && (T.bc[k] || T.bc[Y*W + X]) && !tmLOS(T, tmCellPt(T, k), tmCellPt(T, Y*W + X), !!d)) continue;   // gần dải chặn: kiểm đúng bằng tmLOS
       if(!d && tmLevelBlocked(T, k, Y*W + X)) continue;                                // không đổi tầng cao <-> thấp, trừ qua cầu thang
       if(dx && T.cn && T.cn[Y*W + X] !== T.cn[k]) continue;                           // vào / ra cầu thang chỉ đi THẲNG ĐỨNG (không ngang, không chéo): chéo sẽ chạm dải chặn ở mép cầu thang
       const ns = (Y*W + X)*2 + nd2, nd = c + (dx && dy ? 1.414 : 1);
@@ -129,13 +136,18 @@ function tmFindPath(T, sx, sy, tx, ty, deck0){
   const cd = k => Math.min(dist[k*2], dist[k*2 + 1]);
   // ô đích: chính ô được bấm nếu tới được, không thì ô tới được gần điểm bấm nhất
   const tgx = Math.floor(tx/ts), tgy = Math.floor(ty/ts);
-  let goal = -1, exact = false;
-  if(tgx >= 0 && tgy >= 0 && tgx < W && tgy < H && cd(tgy*W + tgx) < Infinity){ goal = tgy*W + tgx; exact = true; }
+  let goal = -1, exact = false, skip = -1;
+  // bấm vào phần DƯỚI của ô gốc cây (bị chặn): điểm đi được gần nhất là phía TRƯỚC thân cây chứ không phải dải trên phía sau thân, nên bỏ ô gốc cây đó khi chọn đích
+  if(tgx >= 0 && tgy >= 0 && tgx < W && tgy < H && tmRootOK(T, tgy*W + tgx)){
+    const f = (ty - tgy*ts)/ts, free = 1 - TM_CFG.rootBlock;
+    if(f >= free && f - free > 1 - f) skip = tgy*W + tgx;
+  }
+  if(skip < 0 && tgx >= 0 && tgy >= 0 && tgx < W && tgy < H && cd(tgy*W + tgx) < Infinity){ goal = tgy*W + tgx; exact = true; }
   else {
     let best = Infinity;
     for(let k = 0; k < N; k++){
-      if(cd(k) === Infinity) continue;
-      const d = Math.hypot(((k % W) + .5)*ts - tx, (((k / W) | 0) + .5)*ts - ty);
+      if(k === skip || cd(k) === Infinity) continue;
+      const cp = tmCellPt(T, k), d = Math.hypot(cp.x - tx, cp.y - ty);
       if(d < best - 1e-6 || (Math.abs(d - best) <= 1e-6 && cd(k) < cd(goal))){ best = d; goal = k; }
     }
   }
@@ -143,9 +155,9 @@ function tmFindPath(T, sx, sy, tx, ty, deck0){
   let gs = dist[goal*2] <= dist[goal*2 + 1] ? goal*2 : goal*2 + 1;
   const sts = []; for(let st = gs; st !== s0 && st >= 0; st = prev[st]) sts.push(st);
   sts.reverse();
-  const pts = [{x:sx, y:sy, d:!!deck0}, ...sts.map(st => { const k = st >> 1; return {x:((k % W) + .5)*ts, y:(((k / W) | 0) + .5)*ts, d:(st & 1) === 1}; })];
+  const pts = [{x:sx, y:sy, d:!!deck0}, ...sts.map(st => { const k = st >> 1, cp = tmCellPt(T, k); return {x:cp.x, y:cp.y, d:(st & 1) === 1}; })];
   if(pts.length > 1 && !tmLOS(T, pts[0], pts[1], pts[0].d)){   // xuất phát lệch tâm ô và đường thẳng tới điểm đầu bị chặn: về tâm ô trước
-    const c0 = {x:(sgx + .5)*ts, y:(sgy + .5)*ts, d:pts[0].d};
+    const c0 = {...tmCellPt(T, sgy*W + sgx), d:pts[0].d};
     if(Math.hypot(c0.x - pts[0].x, c0.y - pts[0].y) > 4) pts.splice(1, 0, c0);
   }
   const out = []; let i = 0;   // rút gọn đường: chỉ nối tắt trong cùng 1 trạng thái trên / dưới cầu
