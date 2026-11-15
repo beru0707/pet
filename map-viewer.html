@@ -124,8 +124,9 @@ function draw(){
     else if(T.br[k]){ if(O.oBridge.checked){ cx.fillStyle = 'rgba(190,90,255,.34)'; cx.fillRect(x, y, ts, ts); } }
     else if(!cellOK(T, k, false) && !cellOK(T, k, true)){
       if(O.oBlock.checked){
-        cx.fillStyle = 'rgba(255,0,40,.5)'; cx.fillRect(x, y, ts, ts);
-        if(big){ cx.strokeStyle = 'rgba(255,255,255,.55)'; cx.lineWidth = 2*px; cx.beginPath(); cx.moveTo(x + 10, y + 10); cx.lineTo(x + ts - 10, y + ts - 10); cx.moveTo(x + ts - 10, y + 10); cx.lineTo(x + 10, y + ts - 10); cx.stroke(); }
+        const part = T.rp && T.rp[k] ? TM_CFG.rootBlock : 1, by = y + ts*(1 - part), bh = ts*part;   // ô gốc cây chỉ chặn rootBlock phần dưới
+        cx.fillStyle = 'rgba(255,0,40,.5)'; cx.fillRect(x, by, ts, bh);
+        if(big){ cx.strokeStyle = 'rgba(255,255,255,.55)'; cx.lineWidth = 2*px; cx.beginPath(); cx.moveTo(x + 10, by + 10); cx.lineTo(x + ts - 10, by + bh - 10); cx.moveTo(x + ts - 10, by + 10); cx.lineTo(x + 10, by + bh - 10); cx.stroke(); }
       }
     }
     else if(T.hi[k] && O.oHigh.checked){ cx.fillStyle = 'rgba(255,220,40,.14)'; cx.fillRect(x, y, ts, ts); }
@@ -150,7 +151,7 @@ function describe(k){
   let st;
   if(T.cn[k]) st = 'CẦU THANG (đi được, nối mặt cao ↔ thấp)';
   else if(T.br[k]) st = 'CẦU (đi được)';
-  else if(!cellOK(T, k, false) && !cellOK(T, k, true)) st = 'CẤM ĐI';
+  else if(!cellOK(T, k, false) && !cellOK(T, k, true)) st = (T.rp && T.rp[k]) ? 'GỐC CÂY (chặn ' + Math.round(TM_CFG.rootBlock*100) + '% phía dưới ô, phần trên đi được)' : 'CẤM ĐI';
   else st = 'đi được' + (T.hi[k] ? ' · mặt bằng cao' : ' · mặt thấp');
   return `Ô (${gx}, ${gy}) · x ${gx*T.ts}–${(gx + 1)*T.ts}, y ${gy*T.ts}–${(gy + 1)*T.ts}px · ${st} · lớp: ${L.length ? [...new Set(L)].join(', ') : '(trống)'}`;
 }

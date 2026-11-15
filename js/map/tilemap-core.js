@@ -23,8 +23,7 @@ const TM_CFG = {
   stairWallPad: 0,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng dài bằng mép viền của 1 ô (64px), không có dải
   stairWallY: [.25, 1],                              // đoạn của đường chặn theo chiều dọc ô cầu thang: [đầu, cuối] tính theo tỉ lệ chiều cao ô. [0,1] = đủ 1 mép ô (64px); [0,.5] = nửa trên; [.5,1] = nửa dưới; [.25,.75] = đoạn giữa
   walkOver:  ['Stairs'],                           // luôn đi được, kể cả đè lên vách
-  trunkWalk:  true,                                // true: ô CHÂN nhà nằm dưới THÂN cây đứng trước nhà (gốc cây thấp hơn chân nhà) thì đi được; pet đi vào đó bị cây che, nhà nằm sau pet (cây -> pet -> nhà). Ô GỐC cây và các ô chân nhà còn lại vẫn chặn. false = mọi chân nhà đều chặn
-  trunkCover: .5,                                  // tỉ lệ pixel đặc tối thiểu của ô tile cây để tính là thân cây (0..1). Ô tán / viền mỏng (ít pixel) không tính, vẫn chặn như nhà
+  rootBlock: .6,                                   // ô GỐC cây (giữa hàng dưới cùng của khối 3x3) chỉ chặn chừng này (tỉ lệ 0..1) phần DƯỚI của ô; phần trên đi vào được nên pet đứng sát sau thân cây. 1 = chặn cả ô. Ô chân nhà thì luôn chặn cả ô, kể cả khi thân cây đè lên
 };
 
 // ---------- dựng map ----------
@@ -56,40 +55,9 @@ function tmBuild(T, j, img){
   });
   const tr0 = T.trees.slice();   // thứ tự gốc (ti là chỉ số trong mảng này)
   T.trees.sort((a, b) => (a.layer === tFront) - (b.layer === tFront));   // cây phía sau vẽ trước
-  // Hai ô công trình chồng dọc thuộc CÙNG 1 công trình khi id ô dưới lớn hơn id ô trên 2..8 (Sprite Fusion đánh id theo hàng, bước = bề ngang).
-  // Nhà xây sát ngay dưới lâu đài (id chỉ lệch 1) là công trình KHÁC -> có chân và khối xếp lớp riêng.
-  // Chính xác hơn: id ô dưới - id ô trên phải đúng bằng BỀ NGANG của hàng ô đó (các ô liền nhau cùng hàng có id tăng dần 1). Nhờ vậy cái thùng gỗ (2 ô rộng)
-  // xếp ngay trên hang lửa (3 ô rộng) không bị gộp thành 1 công trình, dù id lệch nhau 3 như trong nội bộ hang. Hàng chỉ có 1 ô (phần đầu tháp bị cây che) thì lấy bề ngang hàng dưới.
-  const segW = k => { let l = 0, r = 0;
-    while((k - l) % W > 0 && bid[k - l - 1] >= 0 && bid[k - l - 1] === bid[k - l] - 1) l++;
-    while((k + r + 1) % W !== 0 && bid[k + r + 1] >= 0 && bid[k + r + 1] === bid[k + r] + 1) r++;
-    return l + r + 1; };
-  const same = (a, b) => { const d = bid[b] - bid[a], wa = segW(a), w = wa > 1 ? wa : segW(b); return w > 1 ? d === w : (d >= 2 && d <= 8); };
-  // Cây (Trees front) đè lên nhà = 2 LỚP riêng, xếp theo trục y cùng với pet: mốc cây = GỐC cây, mốc nhà = CHÂN nhà, mốc nào thấp hơn thì vẽ sau = nằm trên.
-  //   gốc cây nằm dưới chân nhà -> cây hiển thị trên nhà; chân nhà nằm dưới gốc cây -> nhà hiển thị trên cây. Chỉ ô GỐC cây và ô CHÂN nhà là không đi được.
-  // Ngoại lệ (trunkWalk): chân nhà nằm dưới THÂN cây đứng trước nhà (gốc cây thấp hơn chân nhà) thì đi được. wt = các ô đó. Nhà có ô wt hạ mốc xuống mép TRÊN ô wt
-  //   để pet đứng ở đó nằm trước cả căn nhà, sau cây (cây -> pet -> nhà), không bị nhà cắt ngang.
-  const wt = new Uint8Array(N);
-  for(let li = j.layers.length - 1; li >= 0; li--){ const L = j.layers[li]; if(foot.has(L.name)) for(const t of L.tiles){ const id = +t.id; if(t.x >= 0 && t.y >= 0 && t.x < W && t.y < H && id >= 0){ fp[t.y*W + t.x] = 1; bid[t.y*W + t.x] = id; } } }
-  if(TM_CFG.trunkWalk && tgm[tFront] && inst[tFront]){
-    try{
-      const cv = document.createElement('canvas'); cv.width = cv.height = ts; const cg = cv.getContext('2d', {willReadFrequently:true}), memo = new Map();
-      const cover = id => {
-        if(!memo.has(id)){
-          cg.clearRect(0, 0, ts, ts); cg.drawImage(img, (id % cols)*ts, Math.floor(id / cols)*ts, ts, ts, 0, 0, ts, ts);
-          const d = cg.getImageData(0, 0, ts, ts).data; let n = 0; for(let i = 3; i < d.length; i += 4) if(d[i] > 16) n++;
-          memo.set(id, n/(ts*ts));
-        }
-        return memo.get(id);
-      };
-      for(const [k, id] of tgm[tFront]){
-        const ti = inst[tFront][k];
-        if(ti < 0 || !fp[k] || (k + W < N && fp[k + W] && same(k, k + W))) continue;   // chỉ ô CHÂN nhà nằm trong khối 3x3 của 1 cái cây
-        if(tr0[ti].oy + 2 <= Math.floor(k / W)) continue;                              // gốc cây phải THẤP hơn chân nhà (cây đứng trước); ngược lại nhà đứng trước cây, chân nhà vẫn chặn
-        if(cover(id) >= TM_CFG.trunkCover) wt[k] = 1;                                  // tile cây đủ đặc = thân cây
-      }
-    }catch(e){ console.warn('[tilemap] không đọc được điểm ảnh tileset (mở bằng file://?), bỏ qua trunkWalk', e); }
-  }
+  // Cây (Trees front) đè lên nhà = 2 LỚP riêng (cây: gT / gTB, nhà: gB), xếp theo trục y cùng với pet: mốc cây = GỐC cây, mốc nhà = CHÂN nhà, mốc nào thấp hơn thì vẽ sau = nằm trên.
+  //   gốc cây nằm dưới chân nhà -> cây hiển thị trên nhà; chân nhà nằm dưới gốc cây -> nhà hiển thị trên cây.
+  // Va chạm: ô CHÂN nhà luôn chặn cả ô, kể cả khi thân cây đè lên (lớp nhà bên dưới vẫn chặn); ô GỐC cây chỉ chặn rootBlock phía dưới (xem tmWalkable trong map/tilemap.js).
   let firstFront = j.layers.length;
   j.layers.forEach((L, i) => { if(front.has(L.name)) firstFront = Math.min(firstFront, i); });
   // JSON: layer đầu danh sách nằm TRÊN CÙNG -> vẽ từ cuối lên đầu
@@ -124,11 +92,20 @@ function tmBuild(T, j, img){
     }
     grow.forEach(k => { hi[k] = 1; });
   }
+  // Hai ô công trình chồng dọc thuộc CÙNG 1 công trình khi id ô dưới lớn hơn id ô trên 2..8 (Sprite Fusion đánh id theo hàng, bước = bề ngang).
+  // Nhà xây sát ngay dưới lâu đài (id chỉ lệch 1) là công trình KHÁC -> có chân và khối xếp lớp riêng.
+  // Chính xác hơn: id ô dưới - id ô trên phải đúng bằng BỀ NGANG của hàng ô đó (các ô liền nhau cùng hàng có id tăng dần 1). Nhờ vậy cái thùng gỗ (2 ô rộng)
+  // xếp ngay trên hang lửa (3 ô rộng) không bị gộp thành 1 công trình, dù id lệch nhau 3 như trong nội bộ hang. Hàng chỉ có 1 ô (phần đầu tháp bị cây che) thì lấy bề ngang hàng dưới.
+  const segW = k => { let l = 0, r = 0;
+    while((k - l) % W > 0 && bid[k - l - 1] >= 0 && bid[k - l - 1] === bid[k - l] - 1) l++;
+    while((k + r + 1) % W !== 0 && bid[k + r + 1] >= 0 && bid[k + r + 1] === bid[k + r] + 1) r++;
+    return l + r + 1; };
+  const same = (a, b) => { const d = bid[b] - bid[a], wa = segW(a), w = wa > 1 ? wa : segW(b); return w > 1 ? d === w : (d >= 2 && d <= 8); };
   for(let k = 0; k < N; k++) if(fp[k] && (k + W >= N || !fp[k + W] || !same(k, k + W))) so[k] = 1;   // chân công trình: ô dưới cùng của mỗi cột
-  // Chân nhà nằm dưới THÂN cây đứng trước nhà (xem wt ở trên) thì mở khoá. Chỉ GỐC cây và CHÂN nhà chặn đường, mọi ô khác của cây / nhà đều đi được
-  for(let k = 0; k < N; k++) if(wt[k]) so[k] = 0;
   // Va chạm của cây: mỗi cây chỉ chặn đúng ô GỐC (giữa hàng dưới cùng của khối 3x3); tán hai bên và phần trên đi vòng ra sau được
-  for(const tr of T.trees){ const X = tr.ox + 1, Y = tr.oy + 2; if(X < W && Y < H) so[Y*W + X] = 1; }
+  // Ô gốc cây: T.walk vẫn = 0 (tìm đường coi là vật cản), nhưng nếu nền ô đi được (không phải chân nhà) thì đánh dấu T.rp: tmWalkable chỉ chặn phần DƯỚI (rootBlock), phần trên đi được
+  T.rp = new Uint8Array(N);
+  for(const tr of T.trees){ const X = tr.ox + 1, Y = tr.oy + 2; if(X < W && Y < H){ const q = Y*W + X; if(!so[q] && (ps[q] || walkTop.has(top[q]))) T.rp[q] = 1; so[q] = 1; } }
   // đường chặn thẳng đứng ở mép hai bên cầu thang: {x, y0, y1} (px)
   T.cn = cn; T.walls = []; T.bands = [];
   if(TM_CFG.stairWall) for(let k = 0; k < N; k++) if(cn[k]){
@@ -154,7 +131,7 @@ function tmBuild(T, j, img){
         if(!A[y*W + x]){ y++; continue; }
         const y0 = y; y++;
         while(y < H && A[y*W + x] && !(b && !same((y-1)*W + x, y*W + x))) y++;   // công trình: tách khi sang công trình khác
-        const w = wt[(y - 1)*W + x] === 1; T.runs.push({x, y0, y1:y - 1, b, wt:w, mark: w ? (y - 1)*ts : y*ts - 16});
+        T.runs.push({x, y0, y1:y - 1, b, mark:y*ts - 16});
       }
     }
   }
@@ -189,8 +166,8 @@ function tmBuild(T, j, img){
       const A = T.runs[a], B = T.runs[b];
       if(B.x === A.x + 1 && sameHouse(A, B)) par[find(a)] = find(b);
     }
-    const mx = new Map(), wm = new Map();
-    T.runs.forEach((r, i) => { const g = find(i); mx.set(g, Math.max(mx.get(g) ?? -Infinity, r.mark)); if(r.wt) wm.set(g, Math.min(wm.get(g) ?? Infinity, r.mark)); });
-    T.runs.forEach((r, i) => { const g = find(i); r.mark = wm.has(g) ? wm.get(g) : mx.get(g); });
+    const mx = new Map();
+    T.runs.forEach((r, i) => { const g = find(i); mx.set(g, Math.max(mx.get(g) ?? -Infinity, r.mark)); });
+    T.runs.forEach((r, i) => { r.mark = mx.get(find(i)); });
   }
 }
