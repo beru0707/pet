@@ -35,8 +35,10 @@ function tmCellOK(T, k, deck){ return deck ? (T.br[k] === 1 || (T.hi[k] === 1 &&
 function tmWalkable(T, x, y, deck){
   const gx = Math.floor(x / T.ts), gy = Math.floor(y / T.ts);
   if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) return false;
-  if(!tmCellOK(T, gy*T.mw + gx, deck)) return false;
-  return true;
+  const k = gy*T.mw + gx;
+  if(tmCellOK(T, k, deck)) return true;
+  // ô GỐC cây chỉ chặn TM_CFG.rootBlock (vd. 60%) phần DƯỚI của ô; phần trên đi vào được. Tìm đường (lưới ô) vẫn coi cả ô là vật cản nên đi vòng, còn đi tay / đi lang thang thì sát được thân cây
+  return !deck && T.rp !== undefined && T.rp[k] === 1 && (y - gy*T.ts) < T.ts*(1 - TM_CFG.rootBlock);
 }
 // trạng thái "trên cầu" sau khi pet nằm ở ô k: đầu cầu (mặt cao + ô cầu) -> lên cầu; ô cầu khác -> giữ nguyên; ngoài cầu -> xuống
 function tmDeckAt(T, k, deck){ return T.br[k] ? (T.hi[k] ? true : !!deck) : false; }
