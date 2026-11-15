@@ -287,5 +287,6 @@ drawMapScene = function(mid, t){
   cx.restore();
 };
 
-// nạp sớm mọi tilemap (nhẹ); khi chưa xong thì map vẫn hiện ảnh nền bg
-MAPS.forEach(m => { if(m.tilemap) loadTilemap(m.id); });
+// KHÔNG dựng sẵn mọi tilemap lúc nạp script nữa (tmBuild chạy đồng bộ, tạo 7 canvas cỡ cả map, làm khựng đúng lúc vào game).
+// Map đang mở được dựng trong màn hình chờ (boot.js), các map khác dựng khi cần (ensureMap trong pet-loader.js).
+// Khi chưa dựng xong thì map vẫn hiện ảnh nền bg.
