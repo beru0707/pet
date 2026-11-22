@@ -101,7 +101,7 @@ function drawPet(p, t){
   cx.save();
   const paint = () => {   // vẽ ảnh thú (lật theo hướng nhìn)
     if(!(customImg?.complete && customImg.naturalWidth)) return;
-    if(p.facingLeft && !p.def.dWalk){ cx.save(); cx.translate(rd(p.x-offL),rd(p.y+offT+actualBob)); cx.scale(-1,1); cx.drawImage(customImg,0,0,drawW,drawH); cx.restore(); }
+    if((!!p.facingLeft !== !!p.def.spriteLeft) && !p.def.dWalk){ cx.save(); cx.translate(rd(p.x-offL),rd(p.y+offT+actualBob)); cx.scale(-1,1); cx.drawImage(customImg,0,0,drawW,drawH); cx.restore(); }
     else cx.drawImage(customImg,rd(p.x+offL),rd(p.y+offT+actualBob),drawW,drawH);
   };
   if(p.selected){   // vầng sáng ôm theo hình thú: viền trắng-vàng sát + 2 lớp quầng vàng, chồng nhiều lần cho đậm
