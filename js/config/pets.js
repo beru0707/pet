@@ -8,9 +8,9 @@
 // scale: hệ số nhân kích thước riêng cho từng con (1.0 = bình thường, 0.8 = nhỏ hơn 20%, 1.2 = lớn hơn 20%)
 //        MỘT scale này áp dụng chung cho mọi trạng thái: đi, đứng yên, ngủ, tấn công (game tự cân ảnh các trạng thái cho nhân vật to bằng nhau)
 const PET_DEF = [
-  {name:'Chicken', scale:1.1, sw:137, sh:200, spriteLeft:true},
-  {name:'Ducky',   scale:1.1, sw:143, sh:200, spriteLeft:true},
-  {name:'Penguin', scale:1.1, sw:142, sh:200, spriteLeft:true},
+  {name:'Chicken', scale:0.825, sw:137, sh:200, spriteLeft:true},
+  {name:'Ducky',   scale:0.825, sw:143, sh:200, spriteLeft:true},
+  {name:'Penguin', scale:0.825, sw:142, sh:200, spriteLeft:true},
 ];
 // spriteLeft: true = ảnh gốc nhìn sang TRÁI (game sẽ lật khi đi sang phải)
 // ============ CẤU HÌNH ANIMATION CHO TỪNG THÚ (bạn chỉnh ở đây) ============
