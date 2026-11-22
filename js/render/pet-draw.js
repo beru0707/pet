@@ -64,6 +64,15 @@ function drawPet(p, t){
     customImg = IMGS[p.def.imgKey];
   }
 
+  // Nhân vật 4 hướng: chọn khung theo p.dir (front/back/left/right), không lật ảnh
+  if (p.def.dWalk) {
+    const dr = p.dir || 'front';
+    fitImg = null; fitMode = null; userK = 1;
+    if (p.isAttacking) { const A = p.def.dAttack && p.def.dAttack[dr]; customImg = A ? A[Math.min(p.attackFrame, A.length-1)] : null; }
+    else if (p.moving && !p.sleeping) { const W = p.def.dWalk[dr]; customImg = W ? W[p.animFrame % W.length] : null; }
+    else { const I = p.def.dIdle && p.def.dIdle[dr]; customImg = I ? I[Math.floor(lt * (p.def.idleFps || 12)) % I.length] : null; }
+  }
+
   // ĐỒNG BỘ KÍCH THƯỚC: Tính tỷ lệ nguyên gốc của ảnh để không bị bóp méo
   let ratio = 1;
   if(customImg?.complete && customImg.naturalWidth) ratio = customImg.naturalWidth / customImg.naturalHeight;
@@ -93,7 +102,7 @@ function drawPet(p, t){
   cx.save();
   const paint = () => {   // vẽ ảnh thú (lật theo hướng nhìn)
     if(!(customImg?.complete && customImg.naturalWidth)) return;
-    if(p.facingLeft){ cx.save(); cx.translate(rd(p.x-offL),rd(p.y+offT+actualBob)); cx.scale(-1,1); cx.drawImage(customImg,0,0,drawW,drawH); cx.restore(); }
+    if(p.facingLeft && !p.def.dWalk){ cx.save(); cx.translate(rd(p.x-offL),rd(p.y+offT+actualBob)); cx.scale(-1,1); cx.drawImage(customImg,0,0,drawW,drawH); cx.restore(); }
     else cx.drawImage(customImg,rd(p.x+offL),rd(p.y+offT+actualBob),drawW,drawH);
   };
   if(p.selected){   // vầng sáng ôm theo hình thú: viền trắng-vàng sát + 2 lớp quầng vàng, chồng nhiều lần cho đậm

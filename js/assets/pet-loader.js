@@ -47,9 +47,24 @@ function petOpts(c){
 }
 const refreshPetMenu = () => { if(typeof MENU !== 'undefined' && MENU.open && MENU.tab === 'pets') renderMenu(); };
 
+// Nhân vật 4 hướng: nạp sheet <hướng>-<kind>.webp cho từng hướng vào def[store][hướng]
+function loadDirSheets(o, kind, store, fallbackKind){
+  const {c, def} = o, spec0 = kind==='walk' ? c.walkSheet : kind==='attack' ? c.attackSheet : c.idleSheet;
+  def[store] = def[store] || {};
+  return Promise.all(PET_DIRS.map(d => {
+    const mk = k => Object.assign({}, spec0, {src: spec0.src.replace(/[^\/]*$/, d+'-'+k+'.webp')});
+    const k0 = (fallbackKind && d === 'back') ? fallbackKind : kind;   // hướng back không có blink: dùng thẳng idle
+    return loadSheet(mk(k0)).then(fr => fr || (fallbackKind && k0 !== fallbackKind ? loadSheet(mk(fallbackKind)) : null)).then(fr => { if(fr) def[store][d] = fr; else warnMissing(def.name, d+'-'+kind, spec0); });
+  }));
+}
 function loadPetWalk(n){
   const j = petJob(n); if(j.walk) return j.walk;
   const o = petCfg(n); if(!o) return j.walk = Promise.resolve();
+  if(o.c.dirs) return j.walk = loadDirSheets(o, 'walk', 'dWalk').then(()=>{
+    const W = o.def.dWalk && o.def.dWalk.front;
+    if(W){ applyWalk(n, o.c.dirs+'_front_walk', W, petOpts(o.c)); refreshPetMenu(); }
+    else warnMissing(n,'walkSheet – thú này sẽ không hiện:',o.c.walkSheet);
+  });
   return j.walk = loadSheet(o.c.walkSheet).then(fr=>{
     if(fr){ applyWalk(n, o.c._walkId.replace(/^assets\//,'').replace(/\//g,'_'), fr, petOpts(o.c)); refreshPetMenu(); }
     else warnMissing(n,'walkSheet – thú này sẽ không hiện:',o.c.walkSheet);
@@ -59,6 +74,10 @@ function loadPetLook(n){
   const j = petJob(n); if(j.look) return j.look;
   const o = petCfg(n); if(!o) return j.look = Promise.resolve();
   const {c, def} = o, base = c._base;
+  if(c.dirs) return j.look = loadDirSheets(o, 'blink', 'dIdle', 'idle').then(()=>{
+    const I = def.dIdle && def.dIdle.front; if(I){ def.idleFrames = I; def.idleImg = I[0]; }
+    refreshPetMenu();
+  });
   const idleSpec = c.idleSheet || base+'/idle.png';
   const sleepSpec = c.sleepSheet || {src: base+'/sleep.png', cols:1, rows:1};
   return j.look = Promise.all([
@@ -70,6 +89,7 @@ function loadPetSkills(n){
   const j = petJob(n); if(j.skills) return j.skills;
   const o = petCfg(n); if(!o) return j.skills = Promise.resolve();
   const {c, def} = o, base = c._base, jobs = [];
+  if(c.dirs) return j.skills = loadDirSheets(o, 'attack', 'dAttack').then(()=>{ const A = def.dAttack && def.dAttack.front; if(A) def.attackAnimFrames = A.length; });
   const atkSpec = c.attackSheet || (c.fireballSheet ? base+'/attack.png' : null);
   if(atkSpec) jobs.push(loadSheet(atkSpec).then(fr=>{
     if(!fr){ if(c.attackSheet) warnMissing(n,'attackSheet',atkSpec); return; }

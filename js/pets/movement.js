@@ -3,6 +3,9 @@
    Tự đi lang thang, đi theo phím WASD / cần ảo / điểm bấm, ngủ, ảnh động bước chân.
    ================================================================== */
 
+// Hướng nhìn của nhân vật 4 hướng theo vector (vx,vy)
+const dirOf = (vx, vy) => Math.abs(vx) >= Math.abs(vy) ? (vx < 0 ? 'left' : 'right') : (vy < 0 ? 'back' : 'front');
+
 // ---- Thú đi bộ: mượt, chân khớp quãng đường ----
 function updateWalker(p, t, dt){
   const depth = pSize(p.y) / 100;                 // = 1 (cỡ cố định)
@@ -25,7 +28,8 @@ function updateWalker(p, t, dt){
   const nx = p.x + p.vx*depth*dt, ny = p.y + p.vy*depth*dt;
   if(!walkable(p.x,p.y) || [walkable(nx,ny),walkable(nx-15,ny),walkable(nx+15,ny)].filter(Boolean).length >= 2){ p.x = nx; p.y = ny; }
   else { p.tvx = -p.tvx || -30; p.tvy = 0; p.vx *= .3; p.vy = 0; p.nextTurn = t + 1.5; }
-  if(Math.abs(p.vx) > 4) p.facingLeft = p.vx < 0;  // chỉ quay đầu khi thật sự đổi hướng
+  if(Math.abs(p.vx) > 4) p.facingLeft = p.vx < 0;
+  if(Math.hypot(p.vx, p.vy) > 4) p.dir = dirOf(p.vx, p.vy);  // chỉ quay đầu khi thật sự đổi hướng
   // bước chân tỉ lệ với quãng đường -> không bị trượt
   const speed = Math.hypot(p.vx, p.vy) * depth;
   const img = IMGS[p.def.imgKey.replace('_anim','_')+'1'];
