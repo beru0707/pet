@@ -79,10 +79,10 @@ function loadPetLook(n){
     refreshPetMenu();
   });
   const idleSpec = c.idleSheet || base+'/idle.png';
-  const sleepSpec = c.sleepSheet || {src: base+'/sleep.png', cols:1, rows:1};
+  const sleepSpec = c.sleepSheet || null;   // không khai sleepSheet thì ngủ bằng ảnh đứng yên (khỏi tải file sleep.png không có)
   return j.look = Promise.all([
     loadSheet(idleSpec).then(fr=>{ if(fr){ def.idleFrames = fr; def.idleImg = fr[0]; } else if(c.idleSheet) warnMissing(n,'idleSheet',idleSpec); }),
-    loadSheet(sleepSpec).then(fr=>{ if(fr){ def.sleepFrames = fr; def.sleepImg = fr[0]; } else if(c.sleepSheet) warnMissing(n,'sleepSheet',sleepSpec); })
+    (sleepSpec ? loadSheet(sleepSpec) : Promise.resolve(null)).then(fr=>{ if(fr){ def.sleepFrames = fr; def.sleepImg = fr[0]; } else if(c.sleepSheet) warnMissing(n,'sleepSheet',sleepSpec); })
   ]).then(refreshPetMenu);
 }
 function loadPetSkills(n){

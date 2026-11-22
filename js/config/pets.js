@@ -8,10 +8,11 @@
 // scale: hệ số nhân kích thước riêng cho từng con (1.0 = bình thường, 0.8 = nhỏ hơn 20%, 1.2 = lớn hơn 20%)
 //        MỘT scale này áp dụng chung cho mọi trạng thái: đi, đứng yên, ngủ, tấn công (game tự cân ảnh các trạng thái cho nhân vật to bằng nhau)
 const PET_DEF = [
-  {name:'Pirate Leader', scale:1.3, sw:240, sh:200},
-  {name:'Pirate Zombie', scale:1.3, sw:240, sh:200},
-  {name:'Squidman', scale:1.3, sw:240, sh:200},
+  {name:'Chicken', scale:1.1, sw:137, sh:200, spriteLeft:true},
+  {name:'Ducky',   scale:1.1, sw:143, sh:200, spriteLeft:true},
+  {name:'Penguin', scale:1.1, sw:142, sh:200, spriteLeft:true},
 ];
+// spriteLeft: true = ảnh gốc nhìn sang TRÁI (game sẽ lật khi đi sang phải)
 // ============ CẤU HÌNH ANIMATION CHO TỪNG THÚ (bạn chỉnh ở đây) ============
 // CHỈ DÙNG SPRITE SHEET: mỗi trạng thái là 1 ảnh ghép nhiều khung, game tự cắt theo lưới rồi phát animation.
 // Số khung KHÔNG cố định: game tự nhận số cột / hàng / khung của từng sheet (6x6, 5x3, 8x1 ... đều được), đọc từ trái sang phải, từ trên xuống.
@@ -28,23 +29,18 @@ const SHEET_DEFAULT = {cols:6, rows:6, max:256};   // max = cạnh dài tối đ
 //   idleFps / sleepFps : số khung/giây của idle (mặc định 12) / ngủ (mặc định 6) · attackFps (mặc định 12.5) · attackFireFrame: khung thứ mấy thì bắn (mặc định 6)
 //   idleFit / sleepFit / attackFit : cách cân cỡ ảnh cho bằng nhân vật lúc đi: 'height' (idle, attack mặc định), 'width' (sleep mặc định), 'none' (không cân)
 //   idleScale / sleepScale / attackScale : nhân thêm cỡ (1 = giữ nguyên; 1.2 = to hơn 20%)
-// Nhân vật 4 hướng (front = nhìn xuống, back = nhìn lên, left, right). Ảnh ở assets/<thư-mục>/<hướng>-<walk|idle|blink|attack>.webp
-// (đã cắt viền trong suốt, mỗi khung 240x200). back không có blink -> dùng idle.
-// walk 4x5=20 khung · idle/blink 4x4=16 · attack 5x2=10.
+// Nhân vật 4 hướng (nếu có bộ ảnh front/back/left/right): khai {dirs:'thư-mục'} + ảnh <hướng>-<walk|idle|blink|attack>.webp, game chọn khung theo p.dir
 const PET_DIRS = ['front','back','left','right'];
-const dirSheet = (dir, id, kind, cols, rows, extra) => Object.assign({src:'assets/'+id+'/'+dir+'-'+kind+'.webp', cols, rows}, extra||{});
-function charAnim(id){
-  return {
-    dirs: id,
-    walkSheet:   dirSheet('front', id, 'walk', 4, 5),
-    idleSheet:   dirSheet('front', id, 'blink', 4, 4, {fps:12}),
-    attackSheet: dirSheet('front', id, 'attack', 5, 2, {fps:12.5, fireFrame:10}),
-  };
-}
+// Chicken / Ducky / Penguin: 1 hướng nhìn (lật ngang khi đổi hướng). walk 4x3=12 · idle 4x3=12 (có chớp mắt) · attack (Throw) 4x2=8
+const petSheets = id => ({
+  walkSheet:   {src:'assets/'+id+'/walk.webp',   cols:4, rows:3},
+  idleSheet:   {src:'assets/'+id+'/idle.webp',   cols:4, rows:3, fps:12},
+  attackSheet: {src:'assets/'+id+'/attack.webp', cols:4, rows:2, fps:12.5},
+});
 const PET_ANIM = {
-  'Pirate Leader': charAnim('pirate-leader'),
-  'Pirate Zombie': charAnim('pirate-zombie'),
-  'Squidman':      charAnim('squidman'),
+  'Chicken': petSheets('chicken'),
+  'Ducky':   petSheets('ducky'),
+  'Penguin': petSheets('penguin'),
 };
 
 // Cấu hình kỹ năng bắn lửa (thêm vào cuối config.js)
