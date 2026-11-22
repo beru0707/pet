@@ -97,7 +97,6 @@ function drawPet(p, t){
   const ws = (p.moving && !p.sleeping && !p.isAttacking && p.def.walkScale) || 1;
   if (ws !== 1) { drawH *= ws; drawW *= ws; offL = -drawW/2; offT = -drawH; }
 
-  softShadow(p.x + dw*ws*.07, p.y+3, dw*ws*.42, dh*ws*.11, 0.36 * (1 + actualBob/60));
 
   cx.save();
   const paint = () => {   // vẽ ảnh thú (lật theo hướng nhìn)
