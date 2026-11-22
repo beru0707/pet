@@ -22,6 +22,7 @@ function frame(ts){
 }
 let OFS = 0;
 function stepGame(t, dt){
+  window.GAME_T = t;   // giờ game hiện tại (phím nhảy / sự kiện bị đánh dùng làm mốc bắt đầu hoạt ảnh)
   // MỌI map đều chạy liên tục: thú ở map không đang xem vẫn đi lại; thú chưa thả (map=null) thì đứng trong danh sách
   PETS.forEach(p => { if(p.map && !p.dragging) updatePet(p, t, dt); });
 

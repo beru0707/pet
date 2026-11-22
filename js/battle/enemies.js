@@ -41,8 +41,9 @@ function btHurtEnemy(e, dmg, pet){
 }
 function btHurtPet(p, dmg, t){
   if(p.bdead) return;
-  p.bhp -= dmg; p.btFlash = t + .25; btFx(p.x, p.y - 90, '-' + Math.round(dmg), '#ff6b6b');
-  if(p.bhp <= 0){ p.bhp = 0; p.bdead = true; p.map = null; p.isAttacking = false; p.selected = false; closePetPanel(); btFx(p.x, p.y - 60, '💀', '#fff'); }
+  p.bhp -= dmg; p.btFlash = t + .25;
+  p.hurtAt = t; p.hurtKind = (p.def.ex && p.def.ex.dizzy && p.bhp > 0 && p.bhp < p.bmax * .3) ? 'dizzy' : 'hurt';   // máu thấp -> choáng btFx(p.x, p.y - 90, '-' + Math.round(dmg), '#ff6b6b');
+  if(p.bhp <= 0){ p.bhp = 0; p.bdead = true; p.deadAt = t; p.isAttacking = false; p.selected = false; closePetPanel(); btFx(p.x, p.y - 60, '💀', '#fff'); }
 }
 // Móc vào spawnExplosion (pets.js): quả cầu lửa nổ -> gây sát thương lan cho địch trong bán kính
 function battleOnBlast(x, y, map, def, kind = 'attack'){

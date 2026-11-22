@@ -17,6 +17,15 @@
       (sel.length ? sel : mine).forEach(p => triggerAttack(p));
     });
 
+    // nút nhảy 🦘: pet đang chọn nhảy; chưa chọn ai -> mọi pet ở map đang xem nhảy
+    const jb = mk('button', 'jump-btn', '🦘');
+    jb.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      const fight = typeof BT !== 'undefined' && BT.phase === 'fight';
+      const mine = PETS.filter(p => p.map === (fight ? BT.map : ACTIVE_MAP) && !p.bdead), sel = mine.filter(p => p.selected);
+      (sel.length ? sel : mine).forEach(p => triggerJump(p, window.GAME_T || 0));
+    });
+
     // cần di chuyển ảo: điều khiển pet đang chọn (chưa chọn thì tự chọn pet đầu tiên còn sống). Thay cho phím WASD
     window.JOY = {active:false, x:0, y:0};
     const keyDir0 = keyDir;
