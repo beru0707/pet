@@ -90,6 +90,10 @@ function loadPetSkills(n){
   const o = petCfg(n); if(!o) return j.skills = Promise.resolve();
   const {c, def} = o, base = c._base, jobs = [];
   if(c.dirs) return j.skills = loadDirSheets(o, 'attack', 'dAttack').then(()=>{ const A = def.dAttack && def.dAttack.front; if(A) def.attackAnimFrames = A.length; });
+  if(c.extra) Object.entries(c.extra).forEach(([k, e]) => jobs.push(loadSheet(e).then(fr => {   // run / jump / hurt / dead ...
+    if(!fr){ warnMissing(n, k, e); return; }
+    def.ex = def.ex || {}; def.ex[k] = {frames: fr, scale: e.scale || 1, dx: e.dx || 0, dy: e.dy || 0};
+  })));
   const atkSpec = c.attackSheet || (c.fireballSheet ? base+'/attack.png' : null);
   if(atkSpec) jobs.push(loadSheet(atkSpec).then(fr=>{
     if(!fr){ if(c.attackSheet) warnMissing(n,'attackSheet',atkSpec); return; }

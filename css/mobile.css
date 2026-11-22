@@ -27,6 +27,10 @@
 @media (pointer:coarse){ #fs-btn.can{display:block} }
 body.bt-fight #bt-atk{display:block}
 body.is-fs #fs-btn{opacity:.6}
+/* nút nhảy 🦘 (phím Space): ngay trên nút tấn công */
+#jump-btn{position:fixed;z-index:30;right:max(26px,env(safe-area-inset-right));bottom:104px;width:56px;height:56px;border-radius:50%;border:2px solid #fff6;background:radial-gradient(circle at 35% 30%,#7fd6ff,#2a7fd0);font-size:24px;line-height:1;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.45);user-select:none;-webkit-user-select:none}
+#jump-btn:active{transform:scale(.92)}
+body.bt-on:not(.bt-fight) #jump-btn,body.ov-on #jump-btn,#wrap.menu-open ~ #jump-btn{display:none}
 
 /* ---------- đang trong trận: bỏ nút Chức năng, bảng thú, nút toàn màn hình ---------- */
 body.bt-on #btn-deco,body.bt-on #pet-panel,body.bt-on #fs-btn{display:none !important}

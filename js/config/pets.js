@@ -32,10 +32,14 @@ const SHEET_DEFAULT = {cols:6, rows:6, max:256};   // max = cạnh dài tối đ
 // Nhân vật 4 hướng (nếu có bộ ảnh front/back/left/right): khai {dirs:'thư-mục'} + ảnh <hướng>-<walk|idle|blink|attack>.webp, game chọn khung theo p.dir
 const PET_DIRS = ['front','back','left','right'];
 // Chicken / Ducky / Penguin: 1 hướng nhìn (lật ngang khi đổi hướng). walk 4x3=12 · idle 4x3=12 (có chớp mắt) · attack (Throw) 4x2=8
+// PET_EXTRA: sheet phụ (đã cắt viền, có thể rộng/cao hơn khung chuẩn): cols/rows + scale (so với khung chuẩn) + dx/dy (phần của chiều cao vẽ) để chân vẫn đứng đúng chỗ.
+// run 5x2 · jumpup/jumpfall 5x1 · jumpthrow 4x2 (tấn công khi đang nhảy) · hurt 3x2 · dizzy 5x2 (bị đánh nặng, máu <30%) · dead 5x2
+const PET_EXTRA = {"chicken":{"run":{"cols":5,"rows":2,"scale":1.055,"dx":0.0,"dy":0.0},"jumpup":{"cols":5,"rows":1,"scale":1.11,"dx":0.0,"dy":0.0},"jumpfall":{"cols":5,"rows":1,"scale":1.105,"dx":0.0,"dy":0.0},"jumpthrow":{"cols":4,"rows":2,"scale":1.12,"dx":-0.02,"dy":0.0},"hurt":{"cols":3,"rows":2,"scale":1.005,"dx":0.0,"dy":-0.005},"dizzy":{"cols":5,"rows":2,"scale":1.0,"dx":-0.014,"dy":0.0},"dead":{"cols":5,"rows":2,"scale":1.18,"dx":-0.13,"dy":-0.098}},"ducky":{"run":{"cols":5,"rows":2,"scale":1.055,"dx":0.0,"dy":0.0},"jumpup":{"cols":5,"rows":1,"scale":1.115,"dx":0.0,"dy":0.0},"jumpfall":{"cols":5,"rows":1,"scale":1.1,"dx":0.0,"dy":0.0},"jumpthrow":{"cols":4,"rows":2,"scale":1.13,"dx":-0.022,"dy":0.0},"hurt":{"cols":3,"rows":2,"scale":1.0,"dx":0.0,"dy":-0.002},"dizzy":{"cols":5,"rows":2,"scale":1.0,"dx":-0.015,"dy":0.0},"dead":{"cols":5,"rows":2,"scale":1.19,"dx":-0.117,"dy":-0.1}},"penguin":{"run":{"cols":5,"rows":2,"scale":1.055,"dx":0.0,"dy":0.0},"jumpup":{"cols":5,"rows":1,"scale":1.115,"dx":0.0,"dy":0.0},"jumpfall":{"cols":5,"rows":1,"scale":1.115,"dx":0.0,"dy":0.0},"jumpthrow":{"cols":4,"rows":2,"scale":1.12,"dx":-0.021,"dy":0.0},"hurt":{"cols":3,"rows":2,"scale":1.005,"dx":0.0,"dy":-0.005},"dizzy":{"cols":5,"rows":2,"scale":1.0,"dx":-0.015,"dy":0.0},"dead":{"cols":5,"rows":2,"scale":1.165,"dx":-0.12,"dy":-0.103}}};
 const petSheets = id => ({
   walkSheet:   {src:'assets/'+id+'/walk.webp',   cols:4, rows:3},
   idleSheet:   {src:'assets/'+id+'/idle.webp',   cols:4, rows:3, fps:12},
   attackSheet: {src:'assets/'+id+'/attack.webp', cols:4, rows:2, fps:12.5},
+  extra: Object.fromEntries(Object.entries(PET_EXTRA[id]).map(([k,v]) => [k, Object.assign({src:'assets/'+id+'/'+k+'.webp'}, v)])),
 });
 const PET_ANIM = {
   'Chicken': petSheets('chicken'),

@@ -38,7 +38,21 @@ function updateWalker(p, t, dt){
   if(speed > 5){ p.animPhase = (p.animPhase + speed*dt/cycleLen) % 1; p.animFrame = Math.floor(p.animPhase * p.def.animFrames) % p.def.animFrames; p.moving = true; }
   else { p.animPhase = 0; p.animFrame = 0; p.moving = false; }
 }
+// Nhảy (phím Space / nút 🦘): chỉ phát hoạt ảnh nhảy, pet vẫn đi được; kéo dài khoảng 0,8 giây
+function triggerJump(p, t){
+  if(!p || p.bdead || !p.def.ex || !p.def.ex.jumpup) return;
+  const dur = (p.def.ex.jumpup.frames.length + p.def.ex.jumpfall.frames.length) / 12;
+  if(p.jumpAt !== undefined && t - p.jumpAt < dur) return;   // đang nhảy
+  p.jumpAt = t; p.sleepUntil = 0;
+}
 function updatePet(p, t, dt){
+  // Đã chết (trong trận): đứng yên phát hết hoạt ảnh chết, nằm thêm một chút rồi mới biến mất
+  if(p.bdead){
+    p.vx = p.vy = 0; p.tvx = p.tvy = 0; p.moving = false; p.isAttacking = false; p.target = null;
+    const n = (p.def.ex && p.def.ex.dead) ? p.def.ex.dead.frames.length : 0;
+    if(t > (p.deadAt || 0) + n/12 + .9) p.map = null;
+    return;
+  }
   if (p.skillCd > 0) p.skillCd -= dt;   // thời gian hồi skill
   // Xử lý khi Pet đang trong trạng thái tấn công (Attack Animation)
   if (p.isAttacking) {

@@ -29,8 +29,27 @@ function drawPet(p, t){
   const bob=mv?Math.abs(Math.sin(t*8+p.phase))*-6:Math.sin(t*2.5+p.phase)*-2;
   const br=1;   // không nhún kích thước
   
+  // Hoạt ảnh phụ (chết > bị đánh > nhảy > chạy): chọn trạng thái dựa trên mốc thời gian
+  const EX = p.def.ex, FPS_EX = 12;
+  let exKey = null, exFrame = 0, exLift = 0;
+  if (EX && !p.def.dWalk) {
+    const at = (k, t0, fps) => { const n = EX[k] ? EX[k].frames.length : 0, i = (t - t0) * (fps || FPS_EX); return (n && i >= 0 && i < n) ? Math.floor(i) : -1; };
+    if (p.bdead && EX.dead) { exKey = 'dead'; exFrame = Math.min(EX.dead.frames.length - 1, Math.max(0, Math.floor((t - (p.deadAt || 0)) * FPS_EX))); }
+    else if (!p.isAttacking && p.hurtAt !== undefined && (exFrame = at(p.hurtKind || 'hurt', p.hurtAt)) >= 0) exKey = p.hurtKind || 'hurt';
+    else if (p.jumpAt !== undefined && EX.jumpup && EX.jumpfall) {
+      const nu = EX.jumpup.frames.length, nf = EX.jumpfall.frames.length, i = Math.floor((t - p.jumpAt) * FPS_EX);
+      if (i >= 0 && i < nu + nf) {
+        const ph = (t - p.jumpAt) * FPS_EX / (nu + nf);   // 0..1: độ cao theo vòng cung
+        exLift = Math.sin(Math.PI * ph) * .18;
+        if (p.isAttacking && EX.jumpthrow) { exKey = 'jumpthrow'; exFrame = Math.min(p.attackFrame, EX.jumpthrow.frames.length - 1); }
+        else if (i < nu) { exKey = 'jumpup'; exFrame = i; } else { exKey = 'jumpfall'; exFrame = i - nu; }
+      }
+    }
+    if (!exKey && EX.run && p.moving && !p.sleeping && !p.isAttacking && Math.hypot(p.vx, p.vy) > 70) { exKey = 'run'; exFrame = -1; }
+  }
+
   // Đổi trạng thái: nhớ giờ vào trạng thái mới để hoạt ảnh đứng/ngủ chạy từ khung 1
-  const stNow = p.isAttacking ? 'attack' : p.sleeping ? 'sleep' : p.moving ? 'walk' : 'idle';
+  const stNow = exKey ? 'x_' + exKey : p.isAttacking ? 'attack' : p.sleeping ? 'sleep' : p.moving ? 'walk' : 'idle';
   if (p._stPrev !== stNow) {
     p._stPrev = stNow; p._stT0 = t;
   }
@@ -73,6 +92,13 @@ function drawPet(p, t){
     else { const I = p.def.dIdle && p.def.dIdle[dr]; customImg = I ? I[Math.floor(lt * (p.def.idleFps || 12)) % I.length] : null; }
   }
 
+  let exDX = 0, exDY = 0;
+  if (exKey) {
+    const e = EX[exKey], n = e.frames.length;
+    customImg = e.frames[exFrame >= 0 ? exFrame : Math.floor(lt * 14) % n];
+    fitImg = null; fitMode = null; userK = e.scale; exDX = e.dx; exDY = e.dy;
+  }
+
   // ĐỒNG BỘ KÍCH THƯỚC: Tính tỷ lệ nguyên gốc của ảnh để không bị bóp méo
   let ratio = 1;
   if(customImg?.complete && customImg.naturalWidth) ratio = customImg.naturalWidth / customImg.naturalHeight;
@@ -92,6 +118,8 @@ function drawPet(p, t){
 
   const st = p.isAttacking ? (p.atkKind || 'attack') : p.sleeping ? 'sleep' : !p.moving ? 'idle' : null;   // trạng thái đang vẽ
   if (customImg && st) { offL += (p.def[st+'DX'] || 0) * drawH; offT += (p.def[st+'DY'] || 0) * drawH; }
+
+  if (exKey) { offL += exDX * drawH; offT += (exDY - exLift) * drawH; }
 
   //Scale 
   const ws = (p.moving && !p.sleeping && !p.isAttacking && p.def.walkScale) || 1;
