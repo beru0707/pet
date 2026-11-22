@@ -100,7 +100,7 @@ function btFight(t, dt){
     if(p.isAttacking){
       if(!p.btAimed){   // vừa bắt đầu đòn do người chơi bấm: tự quay + ngắm vào địch gần nhất trong tầm
         const kd = p.atkKind || 'attack', e = btNearestEnemy(p.x, p.y, (kd !== 'attack' && p.def[kd+'BallFrames']) ? (p.def[kd+'Reach'] ?? 650) : s.range);
-        if(e){ p.facingLeft = e.x < p.x; p.target = {x:e.x, y:e.y}; }
+        if(e){ p.facingLeft = e.x < p.x; p.dir = dirOf(e.x - p.x, e.y - p.y); p.target = {x:e.x, y:e.y}; }
         p.btAimed = true;
       }
       const kind = p.atkKind || 'attack';
