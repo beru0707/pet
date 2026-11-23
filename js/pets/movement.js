@@ -1,6 +1,6 @@
 /* ==================================================================
    PETS – DI CHUYỂN
-   Tự đi lang thang, đi theo phím WASD / cần ảo / điểm bấm, ngủ, ảnh động bước chân.
+   Tự đi lang thang, đi theo phím WASD / cần ảo / điểm bấm, ảnh động bước chân.
    ================================================================== */
 
 // Hướng nhìn của nhân vật 4 hướng theo vector (vx,vy)
@@ -43,7 +43,7 @@ function triggerJump(p, t){
   if(!p || p.bdead || !p.def.ex || !p.def.ex.jumpup) return;
   const dur = (p.def.ex.jumpup.frames.length + p.def.ex.jumpfall.frames.length) / 12;
   if(p.jumpAt !== undefined && t - p.jumpAt < dur) return;   // đang nhảy
-  p.jumpAt = t; p.sleepUntil = 0;
+  p.jumpAt = t;
 }
 function updatePet(p, t, dt){
   // Đã chết (trong trận): đứng yên phát hết hoạt ảnh chết, nằm thêm một chút rồi mới biến mất
@@ -85,17 +85,6 @@ function updatePet(p, t, dt){
     return; // Dừng logic di chuyển khi đang attack
   }
 
-  // Đang ngủ: đứng yên (ảnh ngủ), tự dậy khi hết giờ hoặc khi có lệnh đi (phím WASD / bấm điểm đến)
-  if (t < (p.sleepUntil||0)) {
-    const kdw = p.selected ? keyDir() : {x:0,y:0};
-    if (!(kdw.x || kdw.y || p.target)) {
-      p.vx = 0; p.vy = 0; if (p.tvx !== undefined) { p.tvx = 0; p.tvy = 0; }
-      p.moving = false; p.animFrame = 0; p.animPhase = 0; p.sleeping = true;
-      return;
-    }
-    p.sleepUntil = 0;
-  }
-  p.sleeping = false;
 
   // hướng đi: ưu tiên phím WASD/mũi tên; nếu không có thì đi tới điểm vừa bấm (p.target)
   let kd = p.selected ? keyDir() : {x:0,y:0};

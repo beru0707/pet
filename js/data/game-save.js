@@ -4,7 +4,7 @@
    ================================================================== */
 
 // GAME STATE
-let state = { coins:200, xp:0, lv:1, petsData:[], activeMap:null };   // activeMap: map đang xem, mở lại game vào đúng map này
+let state = { petsData:[], activeMap:null };   // activeMap: map đang xem, mở lại game vào đúng map này
 function saveGame(){
   state.petsData = PETS.map(p=>({id:p.def.name, x:p.x, y:p.y, map:p.map}));
   localStorage.setItem(SAVE, JSON.stringify(state));
@@ -13,7 +13,6 @@ function loadGame(){
   try {
     const raw = localStorage.getItem(SAVE); if(!raw) return;
     const s = JSON.parse(raw);
-    state.coins = s.coins||200; state.lv = s.lv||1; state.xp = s.xp||0;
     if(s.petsData) state.petsData = s.petsData;
     if(s.activeMap) state.activeMap = s.activeMap;
     _savedById = null;

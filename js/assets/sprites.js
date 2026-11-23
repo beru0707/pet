@@ -4,7 +4,7 @@
    ================================================================== */
 
 // ---------- SPRITE SHEET (1 ảnh ghép nhiều khung) ----------
-// Trong PET_ANIM mỗi thú khai báo: walkSheet / idleSheet / sleepSheet / attackSheet
+// Trong PET_ANIM mỗi thú khai báo: walkSheet / idleSheet / attackSheet
 
 const _yield = () => new Promise(r => setTimeout(r, 0));
 

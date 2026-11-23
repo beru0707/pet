@@ -131,15 +131,12 @@ function btFight(t, dt){
 function btEnd(win){
   BT.phase = 'result'; $b('bt-hud').style.display = 'none';
   const mm = Math.floor(BT.elapsed/60), ss = Math.floor(BT.elapsed%60);
-  const reward = win ? BATTLE_CFG.reward : 0;
-  if(reward){ state.coins += reward; try{ updateHUD(); }catch(e){} }
   const used = PETS.filter(p => BT.stat[p.def.name] && p.bmax);
   const rows = used.map(p => `<tr><td>${esc(p.def.name)}</td><td>${Math.round(BT.stat[p.def.name].dmg)}</td><td>${p.bdead ? '✖' : Math.round(p.bhp) + '/' + p.bmax}</td></tr>`).join('');
   $b('bt-res').innerHTML = `<div class="card"><h2>${win ? '🏆 Chiến thắng!' : '💀 Thất bại'}</h2>
     <div>⏱ Thời gian: <b>${mm}:${String(ss).padStart(2,'0')}</b></div>
     <div>🪱 Hạ gục: <b>${BT.kills}/${BT.total}</b> địch</div>
     <div>🐾 Pet sống sót: <b>${used.filter(p=>!p.bdead).length}/${used.length}</b></div>
-    ${reward ? `<div>🪙 Thưởng: <b>+${reward}</b> xu</div>` : ''}
     <table><tr><th>Pet</th><th>Sát thương</th><th>Máu</th></tr>${rows}</table>
     <button class="bt-btn" id="bt-back" style="background:linear-gradient(180deg,#6fd13e,#3d9a1e)">Về phòng chờ</button></div>`;
   $b('bt-res').style.display = 'flex';
@@ -149,7 +146,7 @@ function btExit(){
   if(BT.phase !== 'result' && BT.phase !== 'prep' && BT.phase !== 'pick') return;
   BT.phase = 'leaving'; BT.chosen = null; $b('bt-pick').style.display = 'none'; $b('bt-sp').style.display = 'none'; BT.paused = false; $b('bt-res').style.display = 'none'; $b('bt-bar').style.display = 'none'; $b('bt-hud').style.display = 'none';
   btFade(()=>{
-    BT.snap.forEach(s => { const p = s.p; Object.assign(p, {map:s.map, x:s.x, y:s.y, vx:0, vy:0, target:null, isAttacking:false, hasFired:false, attackTime:0, bdead:false, btAimed:false, selected:false, idleUntil:0, nextTurn:0, sleepUntil:0}); if(p.tvx !== undefined){ p.tvx = 0; p.tvy = 0; } });
+    BT.snap.forEach(s => { const p = s.p; Object.assign(p, {map:s.map, x:s.x, y:s.y, vx:0, vy:0, target:null, isAttacking:false, hasFired:false, attackTime:0, bdead:false, btAimed:false, selected:false, idleUntil:0, nextTurn:0}); if(p.tvx !== undefined){ p.tvx = 0; p.tvy = 0; } });
     PROJECTILES.length = 0; EXPLOSIONS.length = 0; BT.enemies = []; BT.fx = [];
     setActiveMap(BT.lobby);
     BT.phase = 'off'; $b('bt-open').style.display = '';

@@ -15,7 +15,7 @@ function triggerAttack(pet, kind = 'attack') {
   if (!pet || !pet.def[kind+'AnimFrames'] || pet.isAttacking) return;
   if (kind !== 'attack') { if (pet.skillCd > 0) return; pet.skillCd = pet.def[kind+'Cd'] ?? 5; }
   pet.atkKind = kind;
-  pet.isAttacking = true; pet.sleepUntil = 0; pet.sleeping = false;
+  pet.isAttacking = true;
   pet.attackTime = 0;
   pet.hasFired = false;
 }

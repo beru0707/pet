@@ -1,11 +1,11 @@
 /* ==================================================================
    RENDER – VẼ MỘT CON THÚ
-   Chọn đúng khung (đi / đứng / ngủ / tấn công), cân kích thước theo vùng nhìn thấy (imgBox), bóng, vầng sáng khi chọn, biểu tượng đói / buồn / ngủ.
+   Chọn đúng khung (đi / đứng / tấn công), cân kích thước theo vùng nhìn thấy (imgBox), bóng, vầng sáng khi chọn.
    ================================================================== */
 
-// Vùng NHÌN THẤY (không trong suốt) của ảnh. Dùng để cân kích thước ảnh đứng yên/ngủ với ảnh đi bộ
+// Vùng NHÌN THẤY (không trong suốt) của ảnh. Dùng để cân kích thước ảnh đứng yên với ảnh đi bộ
 // (mỗi file PNG có lề trong suốt khác nhau nên cùng 'scale' vẫn ra nhân vật to nhỏ khác nhau).
-// Chỉ đọc được khi mở game qua http(s)/Live Server; mở file:// trình duyệt chặn -> tự bỏ qua (dùng idleScale/sleepScale thủ công).
+// Chỉ đọc được khi mở game qua http(s)/Live Server; mở file:// trình duyệt chặn -> tự bỏ qua (dùng idleScale thủ công).
 function imgBox(img){
   if(!img || !img.complete || !img.naturalWidth) return null;
   if(img._bb !== undefined) return img._bb || null;
@@ -45,11 +45,11 @@ function drawPet(p, t){
         else if (i < nu) { exKey = 'jumpup'; exFrame = i; } else { exKey = 'jumpfall'; exFrame = i - nu; }
       }
     }
-    if (!exKey && EX.run && p.moving && !p.sleeping && !p.isAttacking && Math.hypot(p.vx, p.vy) > 70) { exKey = 'run'; exFrame = -1; }
+    if (!exKey && EX.run && p.moving && !p.isAttacking && Math.hypot(p.vx, p.vy) > 70) { exKey = 'run'; exFrame = -1; }
   }
 
-  // Đổi trạng thái: nhớ giờ vào trạng thái mới để hoạt ảnh đứng/ngủ chạy từ khung 1
-  const stNow = exKey ? 'x_' + exKey : p.isAttacking ? 'attack' : p.sleeping ? 'sleep' : p.moving ? 'walk' : 'idle';
+  // Đổi trạng thái: nhớ giờ vào trạng thái mới để hoạt ảnh đứng yên chạy từ khung 1
+  const stNow = exKey ? 'x_' + exKey : p.isAttacking ? 'attack' : p.moving ? 'walk' : 'idle';
   if (p._stPrev !== stNow) {
     p._stPrev = stNow; p._stT0 = t;
   }
@@ -65,12 +65,7 @@ function drawPet(p, t){
     fitImg = IMGS[atkKey + '1']; fitMode = p.def[kind+'Fit'] || 'height'; userK = p.def[kind+'Scale'] || 1;   // cân theo khung 1 để các khung không bị lúc to lúc nhỏ
   } else if (p.def.animFrames) {
     const walkKey = p.def.imgKey.replace('_anim','_');
-    if (p.sleeping) {                                                                            // đang ngủ
-      const SF = p.def.sleepFrames;
-      if (SF && SF.length > 1) { customImg = SF[Math.floor(lt * (p.def.sleepFps || 6)) % SF.length]; fitImg = SF[0]; }
-      else customImg = p.def.sleepImg || p.def.idleImg || IMGS[walkKey + 1];
-      if (customImg !== IMGS[walkKey + 1]) { fitMode = p.def.sleepFit || 'none'; userK = p.def.sleepScale || 1; }
-    } else if (p.moving) {                                                                       // đang đi: khung đi bộ
+    if (p.moving) {                                                                       // đang đi: khung đi bộ
       customImg = IMGS[walkKey + (p.animFrame + 1)];
     } else {                                                                                     // đứng yên
       const IF = p.def.idleFrames;
@@ -88,7 +83,7 @@ function drawPet(p, t){
     const dr = p.dir || 'front';
     fitImg = null; fitMode = null; userK = 1;
     if (p.isAttacking) { const A = p.def.dAttack && p.def.dAttack[dr]; customImg = A ? A[Math.min(p.attackFrame, A.length-1)] : null; }
-    else if (p.moving && !p.sleeping) { const W = p.def.dWalk[dr]; customImg = W ? W[p.animFrame % W.length] : null; }
+    else if (p.moving) { const W = p.def.dWalk[dr]; customImg = W ? W[p.animFrame % W.length] : null; }
     else { const I = p.def.dIdle && p.def.dIdle[dr]; customImg = I ? I[Math.floor(lt * (p.def.idleFps || 12)) % I.length] : null; }
   }
 
@@ -116,13 +111,13 @@ function drawPet(p, t){
   let drawH = dh * userK, drawW = drawH * ratio;
   let offL = -drawW/2, offT = -drawH;
 
-  const st = p.isAttacking ? (p.atkKind || 'attack') : p.sleeping ? 'sleep' : !p.moving ? 'idle' : null;   // trạng thái đang vẽ
+  const st = p.isAttacking ? (p.atkKind || 'attack') : !p.moving ? 'idle' : null;   // trạng thái đang vẽ
   if (customImg && st) { offL += (p.def[st+'DX'] || 0) * drawH; offT += (p.def[st+'DY'] || 0) * drawH; }
 
   if (exKey) { offL += exDX * drawH; offT += (exDY - exLift) * drawH; }
 
   //Scale 
-  const ws = (p.moving && !p.sleeping && !p.isAttacking && p.def.walkScale) || 1;
+  const ws = (p.moving && !p.isAttacking && p.def.walkScale) || 1;
   if (ws !== 1) { drawH *= ws; drawW *= ws; offL = -drawW/2; offT = -drawH; }
 
 

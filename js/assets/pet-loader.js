@@ -1,11 +1,10 @@
 /* ==================================================================
    ASSETS – NẠP THÚ
-   Đọc PET_ANIM -> nạp 3 tầng cho từng thú: walk (bắt buộc) -> look (idle + sleep) -> skills (attack, fireball, explosion).
+   Đọc PET_ANIM -> nạp 3 tầng cho từng thú: walk (bắt buộc) -> look (idle) -> skills (attack, fireball, explosion).
    Nạp theo nhu cầu theo map (ensureMap).
    ================================================================== */
 
-// Khai báo ngắn: nếu không ghi, game tự tìm <thư mục thú>/idle.png, sleep.png (ảnh đơn), attack.png cạnh walk.png.
-// (sleep.png không có thì thôi: thú ngủ bằng ảnh đứng yên.)
+// Khai báo ngắn: nếu không ghi, game tự tìm <thư mục thú>/idle.png (ảnh đơn), attack.png cạnh walk.png.
 const srcOf = s => s ? (typeof s === 'string' ? s : s.src) : '';
 Object.values(PET_ANIM).forEach(c=>{
   c._base = srcOf(c.walkSheet).replace(/\/[^\/]*$/,'');
@@ -28,7 +27,7 @@ function loadSkills(key, sheetPath, def, petName) {
     });
 }
 
-// ---------- THÚ: nạp 3 tầng: walk (bắt buộc) -> look (idle+sleep) -> skills ----------
+// ---------- THÚ: nạp 3 tầng: walk (bắt buộc) -> look (idle) -> skills ----------
 const PETJOB = {};
 const petJob = n => PETJOB[n] || (PETJOB[n] = {});
 const petCfg = n => { const c = PET_ANIM[n], def = PET_DEF.find(d=>d.name===n); return (c && def && c.walkSheet) ? {c, def} : null; };
@@ -36,11 +35,11 @@ const sv = (s,k) => (s && typeof s === 'object') ? s[k] : undefined;
 function petOpts(c){
   return {
     stride: (sv(c.walkSheet,'stride') ?? c.stride) || 1, speedMul: (sv(c.walkSheet,'speed') ?? c.speed) || 1,
-    idleFit: sv(c.idleSheet,'fit') ?? c.idleFit, sleepFit: sv(c.sleepSheet,'fit') ?? c.sleepFit, attackFit: sv(c.attackSheet,'fit') ?? c.attackFit,
-    idleScale: sv(c.idleSheet,'scale') ?? c.idleScale, sleepScale: sv(c.sleepSheet,'scale') ?? c.sleepScale, walkScale: sv(c.walkSheet,'scale') ?? 1, attackScale: sv(c.attackSheet,'scale') ?? c.attackScale, fireballScale: sv(c.fireballSheet,'scale') ?? 1, explosionScale: sv(c.explosionSheet,'scale') ?? 1,
-    idleFps: sv(c.idleSheet,'fps') ?? c.idleFps ?? 12, sleepFps: sv(c.sleepSheet,'fps') ?? c.sleepFps ?? 6, attackFps: sv(c.attackSheet,'fps') ?? c.attackFps, fireballFps: sv(c.fireballSheet,'fps') ?? 6.67, explosionFps: sv(c.explosionSheet,'fps') ?? 16.7,
+    idleFit: sv(c.idleSheet,'fit') ?? c.idleFit, attackFit: sv(c.attackSheet,'fit') ?? c.attackFit,
+    idleScale: sv(c.idleSheet,'scale') ?? c.idleScale, walkScale: sv(c.walkSheet,'scale') ?? 1, attackScale: sv(c.attackSheet,'scale') ?? c.attackScale, fireballScale: sv(c.fireballSheet,'scale') ?? 1, explosionScale: sv(c.explosionSheet,'scale') ?? 1,
+    idleFps: sv(c.idleSheet,'fps') ?? c.idleFps ?? 12, attackFps: sv(c.attackSheet,'fps') ?? c.attackFps, fireballFps: sv(c.fireballSheet,'fps') ?? 6.67, explosionFps: sv(c.explosionSheet,'fps') ?? 16.7,
     attackFireFrame: sv(c.attackSheet,'fireFrame') ?? c.attackFireFrame,
-    idleDX: sv(c.idleSheet,'dx'), idleDY: sv(c.idleSheet,'dy'), sleepDX: sv(c.sleepSheet,'dx'), sleepDY: sv(c.sleepSheet,'dy'), attackDX: sv(c.attackSheet,'dx'), attackDY: sv(c.attackSheet,'dy'),
+    idleDX: sv(c.idleSheet,'dx'), idleDY: sv(c.idleSheet,'dy'), attackDX: sv(c.attackSheet,'dx'), attackDY: sv(c.attackSheet,'dy'),
     skill1Scale: sv(c.skill1Sheet,'scale'), skill1Fps: sv(c.skill1Sheet,'fps'), skill1DX: sv(c.skill1Sheet,'dx'), skill1DY: sv(c.skill1Sheet,'dy'), skill1Cd: sv(c.skill1Sheet,'cd'), skill1Dmg: sv(c.skill1Sheet,'dmg'), skill1Range: sv(c.skill1Sheet,'range'), skill1FireFrame: sv(c.skill1Sheet,'fireFrame'), skill1Speed: sv(c.skill1Sheet,'speed'), skill1Reach: sv(c.skill1Sheet,'reach'),
     skill1BallScale: sv(c.skill1BallSheet,'scale') ?? 1, skill1BallFps: sv(c.skill1BallSheet,'fps') ?? 6.67, skill1BlastScale: sv(c.skill1BlastSheet,'scale') ?? 1, skill1BlastFps: sv(c.skill1BlastSheet,'fps') ?? 16.7
   };
@@ -79,10 +78,8 @@ function loadPetLook(n){
     refreshPetMenu();
   });
   const idleSpec = c.idleSheet || base+'/idle.png';
-  const sleepSpec = c.sleepSheet || null;   // không khai sleepSheet thì ngủ bằng ảnh đứng yên (khỏi tải file sleep.png không có)
   return j.look = Promise.all([
-    loadSheet(idleSpec).then(fr=>{ if(fr){ def.idleFrames = fr; def.idleImg = fr[0]; } else if(c.idleSheet) warnMissing(n,'idleSheet',idleSpec); }),
-    (sleepSpec ? loadSheet(sleepSpec) : Promise.resolve(null)).then(fr=>{ if(fr){ def.sleepFrames = fr; def.sleepImg = fr[0]; } else if(c.sleepSheet) warnMissing(n,'sleepSheet',sleepSpec); })
+    loadSheet(idleSpec).then(fr=>{ if(fr){ def.idleFrames = fr; def.idleImg = fr[0]; } else if(c.idleSheet) warnMissing(n,'idleSheet',idleSpec); })
   ]).then(refreshPetMenu);
 }
 function loadPetSkills(n){

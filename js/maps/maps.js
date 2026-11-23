@@ -39,7 +39,7 @@ function placePetAt(p, x, y, mid = ACTIVE_MAP){
       if(nx>=100 && nx<=wb.w-100 && ny>=180 && ny<=wb.h-74 && walkable(nx,ny)){ best = {x:nx,y:ny}; break; }
     }
   if(!best) best = spawnPos();
-  Object.assign(p, { map:mid, x:best.x, y:best.y, vx:0, vy:0, target:null, sleepUntil:0, idleUntil:0, nextTurn:0 });
+  Object.assign(p, { map:mid, x:best.x, y:best.y, vx:0, vy:0, target:null, idleUntil:0, nextTurn:0 });
   if(p.tvx !== undefined){ p.tvx = 0; p.tvy = 0; }
   ensurePet(p);   // thú vừa thả có thể chưa nạp ảnh
   saveGame();

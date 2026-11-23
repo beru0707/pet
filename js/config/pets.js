@@ -6,7 +6,7 @@
 
 // PETS
 // scale: hệ số nhân kích thước riêng cho từng con (1.0 = bình thường, 0.8 = nhỏ hơn 20%, 1.2 = lớn hơn 20%)
-//        MỘT scale này áp dụng chung cho mọi trạng thái: đi, đứng yên, ngủ, tấn công (game tự cân ảnh các trạng thái cho nhân vật to bằng nhau)
+//        MỘT scale này áp dụng chung cho mọi trạng thái: đi, đứng yên, tấn công (game tự cân ảnh các trạng thái cho nhân vật to bằng nhau)
 const PET_DEF = [
   {name:'Chicken', scale:0.825, sw:137, sh:200, spriteLeft:true},
   {name:'Ducky',   scale:0.825, sw:143, sh:200, spriteLeft:true},
@@ -20,15 +20,14 @@ const PET_DEF = [
 const SHEET_DEFAULT = {cols:6, rows:6, max:256};   // max = cạnh dài tối đa của 1 khung sau khi cắt (px). Thú chỉ vẽ cao ~100-160px nên 256 là dư; RAM tỉ lệ bình phương. Sheet nào vẽ rất to thì ghi riêng max trong sheet đó   
 //   walkSheet   : (BẮT BUỘC) sheet ĐI BỘ.  Thú nào chưa có walkSheet -> không hiện (F12 có cảnh báo [PET_ANIM])
 //   idleSheet   : sheet ĐỨNG YÊN (nhiều khung = chớp mắt). Bỏ trống = tự tìm idle.png cạnh walk.png; không có thì dùng khung 1 của walk
-//   sleepSheet  : ảnh NGỦ. Bỏ trống = tự tìm sleep.png (ảnh đơn); không có thì dùng ảnh đứng yên
 //   attackSheet : sheet TẤN CÔNG (chỉ Shibav3_1, phím Enter)
 //   fireballSheet / explosionSheet : sheet quả cầu lửa / vụ nổ của kỹ năng bắn (ghi kèm frames: số khung thật)
 //   Mỗi mục viết ngắn 'đường dẫn.png' (tự nhận lưới) hoặc ép tay {src:'...', cols:5, rows:3, frames:13}. Ảnh đơn: {src:'...', cols:1, rows:1}
 //   stride : độ dài 1 chu kỳ bước (lớn hơn = chân bước chậm hơn so với quãng đường; mặc định 1)
 //   speed  : hệ số tốc độ đi (mặc định 1; 0.7 = chậm hơn, 1.3 = nhanh hơn)
-//   idleFps / sleepFps : số khung/giây của idle (mặc định 12) / ngủ (mặc định 6) · attackFps (mặc định 12.5) · attackFireFrame: khung thứ mấy thì bắn (mặc định 6)
-//   idleFit / sleepFit / attackFit : cách cân cỡ ảnh cho bằng nhân vật lúc đi: 'height' (idle, attack mặc định), 'width' (sleep mặc định), 'none' (không cân)
-//   idleScale / sleepScale / attackScale : nhân thêm cỡ (1 = giữ nguyên; 1.2 = to hơn 20%)
+//   idleFps : số khung/giây của idle (mặc định 12) · attackFps (mặc định 12.5) · attackFireFrame: khung thứ mấy thì bắn (mặc định 6)
+//   idleFit / attackFit : cách cân cỡ ảnh cho bằng nhân vật lúc đi: 'height' (idle, attack mặc định), 'none' (không cân)
+//   idleScale / attackScale : nhân thêm cỡ (1 = giữ nguyên; 1.2 = to hơn 20%)
 // Nhân vật 4 hướng (nếu có bộ ảnh front/back/left/right): khai {dirs:'thư-mục'} + ảnh <hướng>-<walk|idle|blink|attack>.webp, game chọn khung theo p.dir
 const PET_DIRS = ['front','back','left','right'];
 // Chicken / Ducky / Penguin: 1 hướng nhìn (lật ngang khi đổi hướng). walk 4x3=12 · idle 4x3=12 (có chớp mắt) · attack (Throw) 4x2=8

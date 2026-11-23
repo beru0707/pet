@@ -12,7 +12,7 @@ Tài liệu này liệt kê đầy đủ tính năng, nơi cài đặt từng t�
 - Mở qua máy chủ web (Live Server, `python -m http.server`…), **không** mở bằng `file://` (trình duyệt chặn đọc điểm ảnh để cân kích thước, và chặn một số cách nạp ảnh).
 - Thư mục `assets/` (ảnh nền, sprite sheet pet, ảnh quái) nằm cạnh `index.html`, không thuộc mã nguồn.
   - Ảnh nền: `assets/background/<id>.webp|png`
-  - Pet: `assets/<tên pet viết thường>/walk|idle|sleep|attack|skill1….webp`
+  - Pet: `assets/<tên pet viết thường>/walk|idle|attack|skill1….webp`
   - Quái: đường dẫn khai báo trong `ENEMY_TYPES` (`js/config/battle.js`).
 - Có thể đặt ảnh trên máy chủ ngoài (Cloudinary…): chỉ cần đổi đường dẫn `src` / `bg` trong config.
 
@@ -32,14 +32,14 @@ js/
             pet-loader.js      nạp 3 tầng cho pet, ensurePet, ensureMap
             boot.js            màn hình chờ, bootAssets, startBackgroundLoad
   pets/     world.js           PETS, walkable, spawnPos, initPets, pSize
-            movement.js        updatePet, updateWalker (đi, ngủ, đánh, tới điểm bấm)
+            movement.js        updatePet, updateWalker (đi, đánh, tới điểm bấm)
             skills.js          triggerAttack, quả cầu bay, vụ nổ
   input/    keyboard.js        WASD / mũi tên, Enter, phím 1
             pointer.js         chọn pet, bấm chỗ trống, kéo pet giữa các map
   render/   pet-draw.js        drawPet
             fx-draw.js         vòng điểm đến, quả cầu, vụ nổ
             scene.js           drawMapScene, drawOverview
-  ui/       hud.js             xu, cấp, toast
+  ui/       hud.js             toast
   maps/     maps.js            ACTIVE_MAP, setActiveMap, setOverview, placePetAt
   menu/     menu.js            thanh chức năng, tab Pet / Map
             body.js            thẻ pet, thẻ map, thumbNode, renderMenu
@@ -72,17 +72,16 @@ Hàm chỉ cần có mặt lúc chạy (ví dụ `render/scene.js` gọi `btDraw
 | Menu chức năng | Hai tab: **Pet** (kéo thẻ pet thả vào map, cất về danh sách) và **Map** | `menu/*` |
 | Chọn và điều khiển pet | Bấm pet để chọn (vùng bấm hình elip bao cả thân, pet cao vẫn bấm được); WASD / mũi tên đi; bấm chỗ trống để đi tới đó | `input/*`, `pets/movement.js` |
 | Tốc độ đi cố định | Giữ phím không đi nhanh hơn đi thường (`KEY_SPEED_WALK`, `KEY_SPEED_OTHER`, nhân `speed` của pet) | `pets/movement.js`, `config/pets.js` |
-| Xu | Xu +3 mỗi 5 giây | `main.js` |
 | Vùng đi được | Chỉ dùng `WALK_POLY` (đa giác cho phép) và `FORBIDDEN` (các vùng cấm) | `config/world.js`, `pets/world.js` |
 | Kích thước cố định | Cỡ pet không đổi theo vị trí; không tự phóng to, thu nhỏ khi đổi trạng thái | `render/pet-draw.js`, `PET_BASE_SIZE` |
 | Hào quang khi chọn | Viền sáng ôm theo hình pet | `render/pet-draw.js` |
 
 ### 3.2 Pet và hoạt ảnh
 - **Chỉ dùng sprite sheet**, lưới mặc định 6×6 (`SHEET_DEFAULT`). Ô trống ở cuối sheet tự bị bỏ nếu không ghi `frames`. Không còn tự nhận lưới.
-- Sheet: `walkSheet` (bắt buộc), `idleSheet`, `sleepSheet`, `attackSheet`, `skill1Sheet`, `skill1BallSheet`, `skill1BlastSheet`, `fireballSheet`, `explosionSheet`.
+- Sheet: `walkSheet` (bắt buộc), `idleSheet`, `attackSheet`, `skill1Sheet`, `skill1BallSheet`, `skill1BlastSheet`, `fireballSheet`, `explosionSheet`.
 - Đi bộ chạy theo **quãng đường** (không theo fps): chỉnh bằng `stride` (độ dài bước) và `speed`.
 - Mỗi sheet có `scale` riêng; `dx`, `dy` chỉnh vị trí đứng (đơn vị = phần của chiều cao khung; 0 = giữ nguyên). Khi pet quay trái, `dx` tự đảo theo hướng nhìn.
-- Hoạt ảnh đứng yên và ngủ chạy lại từ khung 1 mỗi lần vào trạng thái. Sau đòn đánh pet đứng yên 0.25 giây rồi mới đi tiếp.
+- Hoạt ảnh đứng yên chạy lại từ khung 1 mỗi lần vào trạng thái. Sau đòn đánh pet đứng yên 0.25 giây rồi mới đi tiếp.
 - Hình mặc định của pet quay phải. Sprite quay trái thì tự lật ảnh sheet trước khi dùng.
 
 ### 3.3 Đòn và kỹ năng
@@ -108,12 +107,12 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 - **Tốc độ x2 / x4**: `main.js` cộng độ lệch `OFS` vào đồng hồ game và chia mỗi khung thành nhiều bước nhỏ để không lỡ va chạm.
 - **Xếp lớp**: pet và quái xếp chung theo trục y (ai thấp hơn trên màn hình thì nằm đè lên). Thanh máu và chữ sát thương vẽ trên lớp phủ `#bt-ov`.
 - **Thanh máu**: kiểu khung đá, pet màu xanh lá, quái màu đỏ cam; độ cao theo `barDY` (có thể đặt riêng trong `PET_DEF` của từng pet).
-- **Kết thúc**: thắng khi hết đợt và hết quái, nhận `reward` xu; thua khi mọi pet gục. Pet gục bị gỡ khỏi map. Bảng tổng kết có thời gian, số quái hạ, sát thương từng pet.
+- **Kết thúc**: thắng khi hết đợt và hết quái, thua khi mọi pet gục. Pet gục bị gỡ khỏi map. Bảng tổng kết có thời gian, số quái hạ, sát thương từng pet.
 - **Không lưu trong trận**: `saveGame` bị chặn khi `BT.phase !== 'off'`; thoát trận khôi phục map và vị trí pet trước trận.
 
 ### 3.5 Nạp ảnh và hiệu năng
 - Ưu tiên `.webp` cạnh `.png` (`PREFER_WEBP`).
-- Nạp 3 tầng theo nhu cầu: `loadPetWalk` → `loadPetLook` (idle, sleep) → `loadPetSkills` (attack, skill, fireball, explosion).
+- Nạp 3 tầng theo nhu cầu: `loadPetWalk` → `loadPetLook` (idle) → `loadPetSkills` (attack, skill, fireball, explosion).
 - Vào game chỉ nạp ảnh nền và pet của map đang mở (màn hình chờ `bootAssets`); phần còn lại nạp ngầm (`startBackgroundLoad`).
 - Chỉ giải nén tối đa `LOAD_PARALLEL` sheet cùng lúc.
 - Khung được thu nhỏ tối đa `SHEET_DEFAULT.max` px mỗi cạnh để giảm bộ nhớ.
@@ -140,11 +139,11 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 | Khóa lưu localStorage (đổi để reset dữ liệu) | `SAVE` trong `config/world.js` |
 
 **Thuộc tính của một sheet** (viết dạng `{ src: '...', ... }`, mặc định không cần ghi):
-`cols`, `rows` (mặc định 6×6), `frames` (mặc định tự đếm), `fps` (idle 12, sleep 6, attack và skill 12.5), `scale` (1), `dx`, `dy` (0), riêng `walkSheet`: `stride`, `speed` (1); riêng `attackSheet`: `fireFrame`; riêng `skill1Sheet`: `cd`, `dmg`, `range`, `reach`, `fireFrame`, `speed`, `ballX`, `ballY`.
+`cols`, `rows` (mặc định 6×6), `frames` (mặc định tự đếm), `fps` (idle 12, attack và skill 12.5), `scale` (1), `dx`, `dy` (0), riêng `walkSheet`: `stride`, `speed` (1); riêng `attackSheet`: `fireFrame`; riêng `skill1Sheet`: `cd`, `dmg`, `range`, `reach`, `fireFrame`, `speed`, `ballX`, `ballY`.
 
 ## 5. Dữ liệu và trạng thái
 
-- `state` (`data/game-save.js`): `{coins, xp, lv, petsData[], activeMap}`; lưu vào `localStorage[SAVE]`.
+- `state` (`data/game-save.js`): `{petsData[], activeMap}`; lưu vào `localStorage[SAVE]`.
 - `petsData[i]` lưu theo **id = tên pet**: `{id, x, y, map}`. Bản lưu cũ lưu theo chỉ số vẫn đọc được (`savedPet`).
 - `PETS[]` (`pets/world.js`): mỗi pet có `def`, vị trí `x y`, vận tốc, `map` (null = đang trong danh sách), `selected`, `target`, `isAttacking`, `atkKind`, `attackFrame`, `skillCd`, cờ trận (`bhp`, `bmax`, `bdead`, `btNext`, `_autoGo`…).
 - `BT` (`battle/state.js`): pha `off → entering → pick → prep → fight → result → leaving`, danh sách quái, hiệu ứng chữ, `speed`, `auto`, `paused`, `chosen`.

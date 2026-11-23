@@ -8,7 +8,6 @@
 const BATTLE_CFG = {
   map: 'fire',          // id map chiến đấu (trong MAPS)
   maxPets: 5,           // số pet tối đa được đặt
-  reward: 60,           // xu thưởng khi thắng
   waveRest: 3,          // giây nghỉ trước mỗi đợt
   hpGrow: 0.25,         // mỗi đợt địch trâu hơn 25%
   blastRadius: 120,     // bán kính nổ của quả cầu lửa (px)
