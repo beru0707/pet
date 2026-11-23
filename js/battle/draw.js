@@ -31,15 +31,16 @@ function btBar(x, y, w, frac, kind){
   oc.restore();
 }
 // Vẽ thân 1 con địch lên canvas game (gọi từ render/scene.js, xếp chung với pet theo trục y: ai thấp hơn trên màn hình thì nằm trên)
+// Chọn hoạt ảnh theo trạng thái: chết (dead | dead2) > attack / hurt > đi (idle | walk | run). idle / walk / run lặp lại, còn lại phát 1 lần.
 function btDrawEnemy(e, t){
-  const T = e.T, A = T.anim[e.st] || T.anim.travel, fr = BT.frames[e.type] && BT.frames[e.type][A.sheet];
-  cx.save(); cx.globalAlpha = Math.min(1, e.born*2) * (e.die ? Math.max(0, e.die/.6) : 1);
-  cx.translate(e.x, e.y); if(e.face < 0) cx.scale(-1, 1);
+  const T = e.T, key = e.die ? e.dk : e.st === 'move' ? e.gait : e.st, A = T.anim[key] || T.anim.walk || T.anim.idle, fr = BT.frames[e.type] && BT.frames[e.type][A.sheet];
+  cx.save(); cx.globalAlpha = Math.min(1, e.born*2) * (e.die ? Math.min(1, e.die/.5) : 1);   // chết: nằm yên rồi mờ dần ở 0.5s cuối
+  cx.translate(e.x, e.y); if((e.face < 0) !== !!T.spriteLeft) cx.scale(-1, 1);              // lật nếu hướng nhìn của ảnh gốc khác hướng cần quay
   if(e.flash > 0) cx.filter = 'brightness(2.4)';
   if(fr && fr.length){
-    const idx = A.seq[Math.min(A.seq.length-1, Math.floor(e.tm * A.fps) % (e.st === 'travel' ? A.seq.length : 1e9))];
+    const el = e.die ? e.dieMax - e.die : e.tm, i = Math.floor(el * A.fps), idx = A.loop ? i % A.n : Math.min(A.n - 1, i);
     const f = fr[Math.min(fr.length-1, idx)], hh = T.h * (A.scale ?? 1), ww = hh * f.width / f.height;
-    cx.drawImage(f, -ww/2, -hh*T.anchor, ww, hh);
+    cx.drawImage(f, -ww * (T.ax ?? .5), -hh*T.anchor, ww, hh);
   } else {   // hình tạm khi chưa có sprite
     const pulse = 1 + Math.sin(t*6 + e.seed)*.06;
     cx.fillStyle = '#c93b4a'; cx.beginPath(); cx.ellipse(0, -40, 46*pulse, 40*pulse, 0, 0, 7); cx.fill();
@@ -56,7 +57,14 @@ function btDraw(t){
   oc.setTransform(1,0,0,1,0,0); oc.clearRect(0,0,w,h); oc.setTransform(k,0,0,k,-CAM.x*k,-CAM.y*k);
   if(BT.phase !== 'fight' && BT.phase !== 'result') return;
   // thanh máu địch (thân địch vẽ trên canvas game, xem btDrawEnemy, để xếp lớp đúng với pet)
-  BT.enemies.forEach(e => { if(!e.die) btBar(e.x, e.y - (e.st === 'travel' ? 70 : e.T.h*.8), 90, e.hp/e.max, 'enemy'); });
+  BT.enemies.forEach(e => { if(!e.die) btBar(e.x, e.y - e.T.bar, 90, e.hp/e.max, 'enemy'); });
+  // đạn của quái bắn xa (Skeleton ném đá): xoay tròn khi bay
+  BT.shots.forEach(s => {
+    const img = BT.frames[s.type] && BT.frames[s.type][s.P.sheet], f = img && img[0], z = s.P.size;
+    oc.save(); oc.translate(s.x, s.y); oc.rotate(s.rot);
+    if(f) oc.drawImage(f, -z/2, -z/2, z, z); else { oc.fillStyle = '#b8c2cc'; oc.beginPath(); oc.arc(0, 0, z*.3, 0, 7); oc.fill(); }
+    oc.restore();
+  });
   // pet: thanh máu 
   PETS.forEach(p => {
     if(p.map !== BT.map || p.bdead || !p.bmax) return;

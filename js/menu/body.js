@@ -7,7 +7,12 @@
 // nút ảnh nhỏ của pet: <img> (ảnh thường) hoặc <canvas> (khung cắt từ sprite sheet)
 function thumbNode(def, cls){
   const src = petThumbSrc(def); let n;
-  if(src instanceof HTMLCanvasElement){ n = document.createElement('canvas'); n.width = src.width; n.height = src.height; n.getContext('2d').drawImage(src,0,0); }
+  if(src instanceof HTMLCanvasElement){
+    n = document.createElement('canvas');
+    const bb = typeof imgBox === 'function' ? imgBox(src) : null;   // cắt lề trong suốt quanh nhân vật cho ảnh nhỏ to và nằm giữa ô
+    if(bb){ n.width = Math.ceil(bb.w); n.height = Math.ceil(bb.h); n.getContext('2d').drawImage(src, bb.x0, bb.y0, bb.w, bb.h, 0, 0, n.width, n.height); }
+    else { n.width = src.width; n.height = src.height; n.getContext('2d').drawImage(src,0,0); }
+  }
   else { n = document.createElement('img'); n.src = src ? src.src : ''; n.draggable = false; n.alt = ''; }
   if(cls) n.className = cls; return n;
 }

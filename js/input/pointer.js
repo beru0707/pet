@@ -27,7 +27,7 @@ function ovUp(e){
   toast(p.def.name+' đã chuyển sang '+mapById(tl.id).name); if(MENU.open) renderMenu();
 }
 function petHit(p, x, y){
-  const sz = pSize(p.y), H = sz * (p.def.scale ?? 1) * (p.def.walkScale || 1);   // chiều cao nhân vật trên màn hình
+  const sz = pSize(p.y), H = sz * (p.def.scale ?? 1) * (p.def.walkScale || 1) * (p.def.vis || 1);   // chiều cao nhân vật trên màn hình (phần nhìn thấy, không tính lề trong suốt của khung)
   const feet = Math.hypot(x - p.x, y - p.y) < sz * 0.6;
   const dx = x - p.x, dy = y - (p.y - H * 0.45);
   const body = (dx*dx) / ((H*0.3)**2) + (dy*dy) / ((H*0.55)**2) <= 1;

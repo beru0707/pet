@@ -4,7 +4,7 @@
    ================================================================== */
 
 // ============ TRẠNG THÁI ============
-const BT = { phase:'off', map:null, lobby:null, snap:[], enemies:[], fx:[], frames:{}, stat:{}, kills:0, total:0,
+const BT = { phase:'off', map:null, lobby:null, snap:[], enemies:[], shots:[], fx:[], frames:{}, stat:{}, kills:0, total:0,
              waveIdx:0, waveState:'rest', spawned:0, nextAt:0, restUntil:0, nowT:0, elapsed:0, drag:null, banner:'', bannerT:0 };
 const btStat = def => Object.assign({}, PET_BATTLE_DEFAULT, PET_BATTLE[def.name] || {});
 

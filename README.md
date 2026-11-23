@@ -10,10 +10,10 @@ Tài liệu này liệt kê đầy đủ tính năng, nơi cài đặt từng t�
 ## 1. Chạy game
 
 - Mở qua máy chủ web (Live Server, `python -m http.server`…), **không** mở bằng `file://` (trình duyệt chặn đọc điểm ảnh để cân kích thước, và chặn một số cách nạp ảnh).
-- Thư mục `assets/` (ảnh nền, sprite sheet pet, ảnh quái) nằm cạnh `index.html`, không thuộc mã nguồn.
-  - Ảnh nền: `assets/background/<id>.webp|png`
-  - Pet: `assets/<tên pet viết thường>/walk|idle|attack|skill1….webp`
-  - Quái: đường dẫn khai báo trong `ENEMY_TYPES` (`js/config/battle.js`).
+- Ảnh nằm cạnh `index.html`, không thuộc mã nguồn:
+  - `assets/` chỉ còn ảnh nền, map và ảnh trang trí: `assets/background/<id>.webp|png`
+  - Pet: `Character/<TÊN>/` (01-Idle, 02-Throw, 03-Walk, 04-Run, 06-Jump, 07-Hurt, 08-Dead), khai báo ở `PET_DEF` (`js/config/pets.js`)
+  - Quái: `Enemy/<TÊN>/` (Zombie, Skeleton + đá `STONE`), khai báo ở `ENEMY_TYPES` (`js/config/battle.js`)
 - Có thể đặt ảnh trên máy chủ ngoài (Cloudinary…): chỉ cần đổi đường dẫn `src` / `bg` trong config.
 
 ## 2. Cấu trúc thư mục
@@ -99,7 +99,7 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 - **Chọn pet** (`pick.js`): hàng ô trên cùng là pet đã chọn (tối đa `BATTLE_CFG.maxPets`), lưới bên dưới là toàn bộ pet; bấm thẻ để chọn / bỏ.
 - **Chuẩn bị** (`prep.js`): pet đã chọn được thả sẵn vào map; kéo thẻ vào map hoặc bấm thẻ để thả / thu hồi (đây là kéo thả của phần chuẩn bị trận, không phải của menu).
 - **Đợt địch** (`BATTLE_CFG.waves`): mỗi đợt có loại, số lượng, giãn cách; địch trâu thêm `hpGrow` mỗi đợt; nghỉ `waveRest` giây giữa đợt.
-- **Quái Sâu Cát** (`ENEMY_TYPES.worm`): chui đi (`travel`) → trồi lên (`emerge`) → cắn (`attack`, trúng ở `hitAt`) → lặn (`dive`).
+- **Quái** (`ENEMY_TYPES`): **Zombie** đi tới pet gần nhất rồi đánh giáp lá cà; **Skeleton** đứng xa ném đá (đạn bay thẳng tới chỗ pet lúc ném, có thể né). Trạng thái: đứng / đi / chạy → tấn công (trúng ở `hitAt`) → giật mình (`hurt`) → chết (2 kiểu `dead`, `dead2` ngẫu nhiên).
 - **Sát thương**: pet chỉ gây sát thương bằng đòn do người chơi hoặc tự động kích hoạt; quả cầu nổ lan trong `blastRadius`. Chỉ số pet trong `PET_BATTLE` (`hp`, `dmg`, `range`, `cd`).
 - **Tự động đánh** (bật mặc định, tắt trong ⚙️): pet **không được chọn** tự nhắm quái gần nhất, đi tới điểm cách quái ~70% tầm đánh (không hiện vòng tròn điểm đến), rồi tung đòn thường, nghỉ `cd` giữa hai đòn. Chọn pet đó hoặc tắt tự động thì pet bỏ đường đi tự động.
 - **Nút ⚙️ góc trên phải** (`settings.js`): tốc độ x1 / x2 / x4, công tắc tự động đánh, Tiếp tục, Thoát trận (về phòng chờ, không thưởng). Mở bảng thì trận tạm dừng.
@@ -127,7 +127,7 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 |---|---|
 | Thêm / bớt map, map mở đầu | `MAPS` trong `config/world.js` |
 | Pet có sẵn ở map đầu hay nằm trong danh sách | `PETS_START_PLACED` |
-| Thêm pet, cỡ pet | `PET_DEF` (`name`, `scale`, `barDY`…) trong `config/pets.js` |
+| Thêm pet, cỡ pet | `PET_DEF` (`name`, `dir`, `scale`, `ox`, `oy`, `barDY`…) trong `config/pets.js`; chép thư mục sprite vào `Character/` |
 | Hoạt ảnh pet | `PET_ANIM[tên]` trong `config/pets.js` |
 | Cỡ chung của mọi pet | `PET_BASE_SIZE` (mặc định 100) |
 | Tốc độ đi | `KEY_SPEED_WALK`, `KEY_SPEED_OTHER`, `speed` của `walkSheet` |

@@ -27,7 +27,7 @@ function btEnterScene(){
   if(VIEW.overview) setOverview(false);
   PETS.forEach(p => { p.map = null; p.selected = false; p.target = null; p.isAttacking = false; p.hasFired = false; p.bdead = false; });
   PROJECTILES.length = 0; EXPLOSIONS.length = 0;
-  BT.enemies = []; BT.fx = [];
+  BT.enemies = []; BT.shots = []; BT.fx = [];
   setActiveMap(BT.map);
   BT.phase = 'pick';   // chọn pet trước (pick.js), xong mới sang 'prep'
   $b('bt-open').style.display = 'none';
@@ -44,7 +44,7 @@ async function btStart(){
   pets.forEach(p => { const s = btStat(p.def); p.bmax = p.bhp = s.hp; p.bdead = false; p.btNext = 0; p.btHit = false; p.btAimed = false; p.selected = false; p.target = null; });
   BT.snapPlaced = pets.length; BT.stat = {}; pets.forEach(p => BT.stat[p.def.name] = {dmg:0});
   BT.kills = 0; BT.total = BATTLE_CFG.waves.reduce((a,w)=>a+w.count, 0);
-  BT.waveIdx = 0; BT.waveState = 'rest'; BT.restUntil = BT.nowT + 1.5; BT.spawned = 0; BT.elapsed = 0; BT.enemies = []; BT.fx = [];
+  BT.waveIdx = 0; BT.waveState = 'rest'; BT.restUntil = BT.nowT + 1.5; BT.spawned = 0; BT.elapsed = 0; BT.enemies = []; BT.shots = []; BT.fx = [];
   $b('bt-bar').style.display = 'none'; $b('bt-hud').style.display = 'block';
   BT.phase = 'fight';
   btBanner('Sẵn sàng!');
@@ -120,6 +120,7 @@ function btFight(t, dt){
   // --- địch ---
   BT.enemies.forEach(e => btUpdateEnemy(e, t, dt));
   BT.enemies = BT.enemies.filter(e => !e.dead);
+  btUpdateShots(t, dt);
   // --- kết thúc ---
   const left = BT.total - BT.kills, myAlive = btPlaced().filter(p => !p.bdead).length;
   $b('bt-hud').textContent = 'Đợt ' + Math.min(BT.waveIdx+1, W.length) + '/' + W.length + '  ·  Địch còn: ' + left + '  ·  Pet: ' + myAlive + '/' + BT.snapPlaced;
@@ -129,13 +130,13 @@ function btFight(t, dt){
 
 // ============ TỔNG KẾT + VỀ PHÒNG CHỜ ============
 function btEnd(win){
-  BT.phase = 'result'; $b('bt-hud').style.display = 'none';
+  BT.phase = 'result'; BT.shots = []; $b('bt-hud').style.display = 'none';
   const mm = Math.floor(BT.elapsed/60), ss = Math.floor(BT.elapsed%60);
   const used = PETS.filter(p => BT.stat[p.def.name] && p.bmax);
   const rows = used.map(p => `<tr><td>${esc(p.def.name)}</td><td>${Math.round(BT.stat[p.def.name].dmg)}</td><td>${p.bdead ? '✖' : Math.round(p.bhp) + '/' + p.bmax}</td></tr>`).join('');
   $b('bt-res').innerHTML = `<div class="card"><h2>${win ? '🏆 Chiến thắng!' : '💀 Thất bại'}</h2>
     <div>⏱ Thời gian: <b>${mm}:${String(ss).padStart(2,'0')}</b></div>
-    <div>🪱 Hạ gục: <b>${BT.kills}/${BT.total}</b> địch</div>
+    <div>👾 Hạ gục: <b>${BT.kills}/${BT.total}</b> địch</div>
     <div>🐾 Pet sống sót: <b>${used.filter(p=>!p.bdead).length}/${used.length}</b></div>
     <table><tr><th>Pet</th><th>Sát thương</th><th>Máu</th></tr>${rows}</table>
     <button class="bt-btn" id="bt-back" style="background:linear-gradient(180deg,#6fd13e,#3d9a1e)">Về phòng chờ</button></div>`;
@@ -147,7 +148,7 @@ function btExit(){
   BT.phase = 'leaving'; BT.chosen = null; $b('bt-pick').style.display = 'none'; $b('bt-sp').style.display = 'none'; BT.paused = false; $b('bt-res').style.display = 'none'; $b('bt-bar').style.display = 'none'; $b('bt-hud').style.display = 'none';
   btFade(()=>{
     BT.snap.forEach(s => { const p = s.p; Object.assign(p, {map:s.map, x:s.x, y:s.y, vx:0, vy:0, target:null, isAttacking:false, hasFired:false, attackTime:0, bdead:false, btAimed:false, selected:false, idleUntil:0, nextTurn:0}); if(p.tvx !== undefined){ p.tvx = 0; p.tvy = 0; } });
-    PROJECTILES.length = 0; EXPLOSIONS.length = 0; BT.enemies = []; BT.fx = [];
+    PROJECTILES.length = 0; EXPLOSIONS.length = 0; BT.enemies = []; BT.shots = []; BT.fx = [];
     setActiveMap(BT.lobby);
     BT.phase = 'off'; $b('bt-open').style.display = '';
     try{ saveGame(); }catch(e){}

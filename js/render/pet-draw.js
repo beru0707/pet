@@ -120,6 +120,9 @@ function drawPet(p, t){
   const ws = (p.moving && !p.isAttacking && p.def.walkScale) || 1;
   if (ws !== 1) { drawH *= ws; drawW *= ws; offL = -drawW/2; offT = -drawH; }
 
+  // Căn nhân vật vào giữa + chạm chân (ox, oy trong PET_DEF): áp cho mọi trạng thái. Khi ảnh bị lật ngang, offL được lật theo nên ox tự đảo hướng.
+  offL += (p.def.ox || 0) * drawH; offT += (p.def.oy || 0) * drawH;
+
 
   cx.save();
   const paint = () => {   // vẽ ảnh thú (lật theo hướng nhìn)
