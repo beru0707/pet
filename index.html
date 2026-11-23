@@ -7,7 +7,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/hud.css">
-<link rel="stylesheet" href="css/pet-panel.css">
 <link rel="stylesheet" href="css/menu.css">
 <link rel="stylesheet" href="css/battle.css">
 <link rel="stylesheet" href="css/mobile.css">
@@ -28,18 +27,6 @@
     </div>
     <div class="d-body" id="d-body"></div>
   </div>
-  <div id="pet-panel" class="hidden">
-    <button id="pp-close" onclick="closePetPanel()">✕</button>
-    <img id="pp-img" src="">
-    <div id="pp-name">—</div>
-    <div class="sbar">🍖 <div class="sbar-bg"><div class="sbar-fill" id="b-hun" style="background:#f59e0b;width:100%"></div></div></div>
-    <div class="sbar">❤️ <div class="sbar-bg"><div class="sbar-fill" id="b-hap" style="background:#ec4899;width:100%"></div></div></div>
-    <div class="sbar">⚡ <div class="sbar-bg"><div class="sbar-fill" id="b-ene" style="background:#38bdf8;width:100%"></div></div></div>
-    <button class="pp-btn" onclick="dofeed()">🍖 Cho ăn (10🪙)</button>
-    <button class="pp-btn" onclick="doplay()">🎾 Chơi đùa</button>
-    <button class="pp-btn" onclick="dosleep()">💤 Ngủ</button>
-    <button class="pp-btn" onclick="dostash()">🏠 Cất vào danh sách</button>
-  </div>
   <div id="toast"></div>
 </div>
 <script src="js/config/world.js"></script>
@@ -59,7 +46,6 @@
 <script src="js/render/pet-draw.js"></script>
 <script src="js/render/fx-draw.js"></script>
 <script src="js/render/scene.js"></script>
-<script src="js/ui/pet-panel.js"></script>
 <script src="js/ui/hud.js"></script>
 <script src="js/maps/maps.js"></script>
 <script src="js/menu/menu.js"></script>

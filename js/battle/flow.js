@@ -26,7 +26,6 @@ function btEnterScene(){
   BT.snap = PETS.map(p => ({p, map:p.map, x:p.x, y:p.y}));
   if(VIEW.overview) setOverview(false);
   PETS.forEach(p => { p.map = null; p.selected = false; p.target = null; p.isAttacking = false; p.hasFired = false; p.bdead = false; });
-  closePetPanel();
   PROJECTILES.length = 0; EXPLOSIONS.length = 0;
   BT.enemies = []; BT.fx = [];
   setActiveMap(BT.map);

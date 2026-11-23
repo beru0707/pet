@@ -32,8 +32,8 @@ body.is-fs #fs-btn{opacity:.6}
 #jump-btn:active{transform:scale(.92)}
 body.bt-on:not(.bt-fight) #jump-btn,body.ov-on #jump-btn,#wrap.menu-open ~ #jump-btn{display:none}
 
-/* ---------- đang trong trận: bỏ nút Chức năng, bảng thú, nút toàn màn hình ---------- */
-body.bt-on #btn-deco,body.bt-on #pet-panel,body.bt-on #fs-btn{display:none !important}
+/* ---------- đang trong trận: bỏ nút Chức năng, nút toàn màn hình ---------- */
+body.bt-on #btn-deco,body.bt-on #fs-btn{display:none !important}
 
 /* ---------- cần di chuyển ảo (trái) ---------- */
 #joy{display:none;position:fixed;z-index:30;left:max(48px,calc(env(safe-area-inset-left) + 28px));bottom:56px;width:128px;height:128px;border-radius:50%;background:radial-gradient(circle,#ffffff26,#ffffff10);border:2px solid #fff5;touch-action:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
@@ -49,14 +49,6 @@ body.bt-on:not(.bt-fight) #joy,body.ov-on #joy,#wrap.menu-open ~ #joy{display:no
   .chip{padding:3px 10px;font-size:13px;border-width:1.5px}
   #toast{top:12%;padding:6px 16px;font-size:13px}
 
-  /* bảng thú: nhỏ gọn, không che cả màn hình */
-  #pet-panel{right:8px;width:158px;padding:8px 10px;border-radius:12px;max-height:calc(100% - 16px)}
-  #pp-img{height:54px;margin-bottom:4px}
-  #pp-name{font-size:14px;margin:2px 0 6px}
-  .sbar{font-size:12px;margin-bottom:4px}.sbar-bg{height:8px}
-  .pp-btn{padding:5px;font-size:12px;margin-top:5px;border-radius:8px}
-  #pp-close{top:4px;right:8px;font-size:16px}
-  #wrap.menu-open #pet-panel{top:40px;max-height:calc(100% - 40px - 118px)}
 
   /* thanh chức năng ở đáy: thấp hơn nhiều */
   #deco{padding:4px 8px 6px;border-top-width:2px}

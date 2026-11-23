@@ -20,7 +20,7 @@ function ovUp(e){
   window.removeEventListener('pointermove',ovMove); window.removeEventListener('pointerup',ovUp); window.removeEventListener('pointercancel',ovUp);
   const d=_ovDrag; _ovDrag=null; if(!d) return; cv.style.cursor='pointer';
   const p=d.pet; p.dragging=false;
-  if(!d.moved){ PETS.forEach(q=>q.selected=false); p.selected=true; p.target=null; openPetPanel(p); return; }   // chỉ bấm: chọn pet (điều khiển như bình thường)
+  if(!d.moved){ PETS.forEach(q=>q.selected=false); p.selected=true; p.target=null; return; }   // chỉ bấm: chọn pet (điều khiển như bình thường)
   const tl=e.type==='pointerup' ? tileAt(scaleXY(e)) : null;
   if(!tl){ Object.assign(p,d.orig); return; }   // thả ngoài ô: trả về chỗ cũ
   const m=toMapXY(scaleXY(e),tl); placePetAt(p,m.x,m.y,tl.id);
@@ -47,7 +47,7 @@ cv.addEventListener('pointerdown', e => {
       const cur = PETS.find(q=>q.selected);
       if(cur && cur.map===tl.id){   // đang chọn pet ở ô này: bấm chỗ trống -> pet đi tới đó
         cur.target = {x:mp.x, y:mp.y}; cur.idleUntil = 0; cur.nextTurn = 0;
-      } else { PETS.forEach(q=>q.selected=false); closePetPanel(); }
+      } else { PETS.forEach(q=>q.selected=false); }
     }
     return;
   }
@@ -58,12 +58,12 @@ cv.addEventListener('pointerdown', e => {
   });
   const cur = PETS.find(p=>p.selected);
   if(hit){
-    PETS.forEach(p=>p.selected=false); hit.selected=true; hit.target=null; openPetPanel(hit);
+    PETS.forEach(p=>p.selected=false); hit.selected=true; hit.target=null;
   } else if(cur){
     // đang chọn 1 thú, bấm vào chỗ trống -> thú đi tới đó (giữ nguyên lựa chọn)
     const wb = WB(ACTIVE_MAP);
     cur.target = {x: Math.max(100,Math.min(wb.w-100,pos.x)), y: Math.max(180,Math.min(wb.h-74,pos.y))};
     cur.idleUntil = 0; cur.nextTurn = 0;
     clickMarker = {x:cur.target.x, y:cur.target.y, t:performance.now()};
-  } else { closePetPanel(); }
+  }
 });

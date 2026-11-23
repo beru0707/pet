@@ -10,7 +10,7 @@ function setOverview(on){
   on = !!on; if(VIEW.overview === on) return;
   VIEW.overview = on;
   if(on){
-    PETS.forEach(p => { p.selected = false; p.target = null; }); closePetPanel();
+    PETS.forEach(p => { p.selected = false; p.target = null; });
     for(const k in KEYS) KEYS[k] = false;
     toast('Chọn pet để điều khiển · bấm nhãn tên map để vào map');
     MAPS.forEach(m => ensureMap(m.id));
@@ -21,7 +21,6 @@ const mapById = id => MAPS.find(m => m.id === id);
 function setActiveMap(id){
   if(!mapById(id) || id === ACTIVE_MAP) return;
   PETS.forEach(p => { p.selected = false; p.target = null; });
-  closePetPanel();
   for(const k in KEYS) KEYS[k] = false;
   ACTIVE_MAP = id; state.activeMap = id; saveGame();   // nhớ map đang xem
   if(bgSrc(id)) setBgVar(bgSrc(id));

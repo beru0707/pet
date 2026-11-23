@@ -37,6 +37,6 @@ function dragEnd(e){
   }
   // chỉ bấm (không kéo)
   if(VIEW.overview){ toast('Kéo thẻ pet thả vào một ô map'); return; }
-  if(p.map === ACTIVE_MAP){ PETS.forEach(q=>q.selected=false); p.selected = true; p.target = null; openPetPanel(p); }
+  if(p.map === ACTIVE_MAP){ PETS.forEach(q=>q.selected=false); p.selected = true; p.target = null; }
   else { const sp = spawnPos(); placePetAt(p, sp.x, sp.y); toast(p.def.name + ' đã vào ' + mapById(ACTIVE_MAP).name); renderMenu(); }
 }

@@ -20,7 +20,7 @@ Tài liệu này liệt kê đầy đủ tính năng, nơi cài đặt từng t�
 
 ```
 index.html
-css/        base · hud · pet-panel · menu · battle · mobile
+css/        base · hud · menu · battle · mobile
 js/
   config/   world.js   kích thước thế giới, vùng đi, MAPS, khóa lưu
             pets.js    PET_DEF, PET_ANIM, hằng số cỡ và tốc độ
@@ -39,8 +39,7 @@ js/
   render/   pet-draw.js        drawPet
             fx-draw.js         vòng điểm đến, quả cầu, vụ nổ
             scene.js           drawMapScene, drawOverview
-  ui/       pet-panel.js       bảng thông tin pet, cho ăn / chơi / ngủ / cất
-            hud.js             xu, cấp, toast
+  ui/       hud.js             xu, cấp, toast
   maps/     maps.js            ACTIVE_MAP, setActiveMap, setOverview, placePetAt
   menu/     menu.js            thanh chức năng, tab Pet / Map
             body.js            thẻ pet, thẻ map, thumbNode, renderMenu
@@ -73,7 +72,7 @@ Hàm chỉ cần có mặt lúc chạy (ví dụ `render/scene.js` gọi `btDraw
 | Menu chức năng | Hai tab: **Pet** (kéo thẻ pet thả vào map, cất về danh sách) và **Map** | `menu/*` |
 | Chọn và điều khiển pet | Bấm pet để chọn (vùng bấm hình elip bao cả thân, pet cao vẫn bấm được); WASD / mũi tên đi; bấm chỗ trống để đi tới đó | `input/*`, `pets/movement.js` |
 | Tốc độ đi cố định | Giữ phím không đi nhanh hơn đi thường (`KEY_SPEED_WALK`, `KEY_SPEED_OTHER`, nhân `speed` của pet) | `pets/movement.js`, `config/pets.js` |
-| Chăm pet | Đói / vui / năng lượng giảm theo thời gian; cho ăn (10 xu), chơi, ngủ, cất; xu +3 mỗi 5 giây; cấp tăng khi chơi | `ui/pet-panel.js`, `main.js` |
+| Chỉ số pet | Đói / vui / năng lượng vẫn giảm theo thời gian (không còn bảng hiển thị); xu +3 mỗi 5 giây | `main.js` |
 | Vùng đi được | Chỉ dùng `WALK_POLY` (đa giác cho phép) và `FORBIDDEN` (các vùng cấm) | `config/world.js`, `pets/world.js` |
 | Kích thước cố định | Cỡ pet không đổi theo vị trí; không tự phóng to, thu nhỏ khi đổi trạng thái | `render/pet-draw.js`, `PET_BASE_SIZE` |
 | Hào quang khi chọn | Viền sáng ôm theo hình pet | `render/pet-draw.js` |
@@ -122,7 +121,7 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 
 ### 3.6 Điện thoại
 - Màn hình cảm ứng dọc: lời nhắc xoay ngang (có nút "Vẫn chơi chế độ dọc"); nút toàn màn hình, khóa ngang nếu trình duyệt cho phép.
-- Trong trận: ẩn nút Chức năng và bảng pet; hiện cần di chuyển ảo (joystick) và nút ⚔️.
+- Trong trận: ẩn nút Chức năng; hiện cần di chuyển ảo (joystick) và nút ⚔️.
 - CSS thu gọn khi màn hình thấp: `css/mobile.css`.
 
 ## 4. Các thông số hay chỉnh

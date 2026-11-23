@@ -43,10 +43,10 @@
     const stop = () => { pid = null; JOY.active = false; JOY.x = JOY.y = 0; knob.style.transform = ''; };
     joy.addEventListener('pointerdown', e => {
       e.preventDefault(); pid = e.pointerId; joy.setPointerCapture(pid);
-      // chưa chọn pet nào: tự chọn pet đầu tiên (trong trận: pet còn sống; ngoài trận: pet ở map đang xem, mở luôn bảng thông tin)
+      // chưa chọn pet nào: tự chọn pet đầu tiên (trong trận: pet còn sống; ngoài trận: pet ở map đang xem)
       const fight = typeof BT !== 'undefined' && BT.phase === 'fight';
       const mine = PETS.filter(p => p.map === (fight ? BT.map : ACTIVE_MAP) && !p.bdead);
-      if(mine.length && !PETS.some(p => p.selected)){ mine[0].selected = true; if(!fight) openPetPanel(mine[0]); }
+      if(mine.length && !PETS.some(p => p.selected)){ mine[0].selected = true; }
       drive(e);
     });
     joy.addEventListener('pointermove', e => { if(e.pointerId === pid) drive(e); });
