@@ -142,8 +142,4 @@ function drawPet(p, t){
   cx.restore();
 
   // (đã xoá tên dưới chân)
-  cx.font='24px serif'; cx.textAlign='center'; cx.fillStyle='#fff';
-  if(p.sleeping) { cx.font='26px serif'; cx.fillText('💤', p.x+dw*.32, p.y-dh+bob-6); }
-  else if(p.hunger<50) { cx.font='24px serif'; cx.fillText('🍖', p.x+dw*.35, p.y-dh+bob-10); }
-  else if(p.happy<50) { cx.font='24px serif'; cx.fillText('😢', p.x+dw*.35, p.y-dh+bob-10); }
 }

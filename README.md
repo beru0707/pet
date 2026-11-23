@@ -72,11 +72,10 @@ Hàm chỉ cần có mặt lúc chạy (ví dụ `render/scene.js` gọi `btDraw
 | Menu chức năng | Hai tab: **Pet** (kéo thẻ pet thả vào map, cất về danh sách) và **Map** | `menu/*` |
 | Chọn và điều khiển pet | Bấm pet để chọn (vùng bấm hình elip bao cả thân, pet cao vẫn bấm được); WASD / mũi tên đi; bấm chỗ trống để đi tới đó | `input/*`, `pets/movement.js` |
 | Tốc độ đi cố định | Giữ phím không đi nhanh hơn đi thường (`KEY_SPEED_WALK`, `KEY_SPEED_OTHER`, nhân `speed` của pet) | `pets/movement.js`, `config/pets.js` |
-| Chỉ số pet | Đói / vui / năng lượng vẫn giảm theo thời gian (không còn bảng hiển thị); xu +3 mỗi 5 giây | `main.js` |
+| Xu | Xu +3 mỗi 5 giây | `main.js` |
 | Vùng đi được | Chỉ dùng `WALK_POLY` (đa giác cho phép) và `FORBIDDEN` (các vùng cấm) | `config/world.js`, `pets/world.js` |
 | Kích thước cố định | Cỡ pet không đổi theo vị trí; không tự phóng to, thu nhỏ khi đổi trạng thái | `render/pet-draw.js`, `PET_BASE_SIZE` |
 | Hào quang khi chọn | Viền sáng ôm theo hình pet | `render/pet-draw.js` |
-| Biểu tượng trạng thái | 🍖 đói, 😢 buồn, 💤 ngủ | `render/pet-draw.js` |
 
 ### 3.2 Pet và hoạt ảnh
 - **Chỉ dùng sprite sheet**, lưới mặc định 6×6 (`SHEET_DEFAULT`). Ô trống ở cuối sheet tự bị bỏ nếu không ghi `frames`. Không còn tự nhận lưới.
@@ -146,7 +145,7 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 ## 5. Dữ liệu và trạng thái
 
 - `state` (`data/game-save.js`): `{coins, xp, lv, petsData[], activeMap}`; lưu vào `localStorage[SAVE]`.
-- `petsData[i]` lưu theo **id = tên pet**: `{id, hunger, happy, energy, x, y, map}`. Bản lưu cũ lưu theo chỉ số vẫn đọc được (`savedPet`).
+- `petsData[i]` lưu theo **id = tên pet**: `{id, x, y, map}`. Bản lưu cũ lưu theo chỉ số vẫn đọc được (`savedPet`).
 - `PETS[]` (`pets/world.js`): mỗi pet có `def`, vị trí `x y`, vận tốc, `map` (null = đang trong danh sách), `selected`, `target`, `isAttacking`, `atkKind`, `attackFrame`, `skillCd`, cờ trận (`bhp`, `bmax`, `bdead`, `btNext`, `_autoGo`…).
 - `BT` (`battle/state.js`): pha `off → entering → pick → prep → fight → result → leaving`, danh sách quái, hiệu ứng chữ, `speed`, `auto`, `paused`, `chosen`.
 - `VIEW`, `ACTIVE_MAP` (`maps/maps.js`); `MENU` (`menu/menu.js`).

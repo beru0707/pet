@@ -37,7 +37,7 @@ function initPets(){
     const sp = (saved.x && saved.y) ? {x:saved.x, y:saved.y} : spawnPos();
     return {
       def, map, x:sp.x, y:sp.y, vx:0, vy:0, phase:Math.random()*7, nextTurn:0, idleUntil:0, facingLeft:false,
-      hunger:saved.hunger??100, happy:saved.happy??100, energy:saved.energy??100, selected:false,
+      selected:false,
       animFrame:0, animTime:0   // dùng cho animation đa frame
     };
   });

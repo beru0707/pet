@@ -6,7 +6,7 @@
 // GAME STATE
 let state = { coins:200, xp:0, lv:1, petsData:[], activeMap:null };   // activeMap: map đang xem, mở lại game vào đúng map này
 function saveGame(){
-  state.petsData = PETS.map(p=>({id:p.def.name, hunger:p.hunger, happy:p.happy, energy:p.energy, x:p.x, y:p.y, map:p.map}));
+  state.petsData = PETS.map(p=>({id:p.def.name, x:p.x, y:p.y, map:p.map}));
   localStorage.setItem(SAVE, JSON.stringify(state));
 }
 function loadGame(){
