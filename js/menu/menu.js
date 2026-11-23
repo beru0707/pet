@@ -8,11 +8,10 @@ const MENU = { open:false, tab:'pets', fp:'all', fm:'all', pet:null, map:null };
 const GM_TITLES = { pets:'DANH SÁCH PET', maps:'DANH SÁCH MAP', settings:'CÀI ĐẶT' };
 const gmEl = document.getElementById('gm');
 
-// cỡ chữ gốc của khung theo chiều cao màn hình (mọi kích thước trong khung tính theo em)
+// cỡ chữ gốc của khung theo kích thước cửa sổ (mọi kích thước trong khung tính theo em)
 function gmFit(){
-  const w = document.getElementById('wrap');
   const pad = parseFloat(getComputedStyle(gmEl).paddingTop) || 0;
-  gmEl.style.fontSize = Math.max(8, Math.min(16, (w.clientHeight - pad - 8) / 37)) + 'px';   // khung cao ~37em (3 hàng thẻ + tiêu đề)
+  gmEl.style.fontSize = Math.max(8, Math.min(18, (innerHeight - pad - 8) / 41, innerWidth * .96 / 66)) + 'px';   // khung cao ~41em, rộng 66em (3 hàng thẻ + tiêu đề)
 }
 function setMenuTab(tab){
   MENU.tab = tab;
