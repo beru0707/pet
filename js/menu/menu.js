@@ -11,7 +11,7 @@ const gmEl = document.getElementById('gm');
 // cỡ chữ gốc của khung theo kích thước cửa sổ (mọi kích thước trong khung tính theo em)
 function gmFit(){
   const pad = parseFloat(getComputedStyle(gmEl).paddingTop) || 0;
-  gmEl.style.fontSize = Math.max(8, Math.min(18, (innerHeight - pad - 8) / 41, innerWidth * .96 / 66)) + 'px';   // khung cao ~41em, rộng 66em (3 hàng thẻ + tiêu đề)
+  gmEl.style.fontSize = Math.max(8, Math.min(18, (innerHeight - pad - 8) / 38.5, innerWidth * .96 / 76)) + 'px';   // khung cao ~38em, rộng 76em (ngang, tỉ lệ ~2:1) (3 hàng thẻ + tiêu đề)
 }
 function setMenuTab(tab){
   MENU.tab = tab;

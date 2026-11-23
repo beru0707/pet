@@ -40,7 +40,7 @@ function petsView(){
       <div class="gdesc">📍 ${place}</div>
       <div class="gact">${gBtn('red','recall','THU HỒI','',!p.map)}${here ? gBtn('green','select','CHỌN PET','Điều khiển') : gBtn('green','place','THẢ VÀO MAP', mapById(ACTIVE_MAP).name)}</div>`;
   }
-  return `<div class="gm-list">${gFilters([['all','TẤT CẢ'],['placed','ĐANG THẢ'],['stash','TRONG KHO']], MENU.fp, 'fp')}<div class="gm-grid">${cards}</div><div class="gm-foot">Đang thả: ${placed}/${PETS.length}</div></div><div class="gm-detail">${detail}</div>`;
+  return `<div class="gm-panel gm-list"><i class="vine tl"></i><i class="vine br"></i>${gFilters([['all','TẤT CẢ'],['placed','ĐANG THẢ'],['stash','TRONG KHO']], MENU.fp, 'fp')}<div class="gm-grid">${cards}</div><div class="gm-foot">Đang thả: ${placed}/${PETS.length}</div></div><div class="gm-panel gm-detail"><i class="vine tr"></i><i class="vine bl"></i>${detail}</div>`;
 }
 
 // ---------------- MAP ----------------
@@ -55,9 +55,9 @@ function mapsView(){
   const cols = MAPS.length <= 1 ? 1 : MAPS.length <= 4 ? 2 : 3;
   const mosaic = `<div class="mosaic" style="grid-template-columns:repeat(${cols},1fr)">${MAPS.map(m => `<i style="background-image:url('${esc(bgSrc(m.id))}')"></i>`).join('')}</div>`;
   const cards = items.map(id => {
-    if(id === ALL_MAPS) return `<div class="gcard ${MENU.map===ALL_MAPS?'sel':''} ${VIEW.overview?'placed':''}" data-map="${ALL_MAPS}"><span class="gbadge ${VIEW.overview?'ok':'off'}">${VIEW.overview?'ĐANG XEM':'TOÀN CẢNH'}</span><div class="gth gmap">${mosaic}</div><b>Xem toàn bộ</b></div>`;
+    if(id === ALL_MAPS) return `<div class="gcard ${MENU.map===ALL_MAPS?'sel':''} ${VIEW.overview?'placed':''}" data-map="${ALL_MAPS}"><span class="gbadge ${VIEW.overview?'ok':'off'}">${VIEW.overview?'ĐANG XEM':'TOÀN CẢNH'}</span><div class="gth gmap">${mosaic}</div><b>Xem toàn bộ</b><small>${PETS.filter(p=>p.map).length} pet</small></div>`;
     const m = mapById(id), on = !VIEW.overview && id === ACTIVE_MAP;
-    return `<div class="gcard ${MENU.map===id?'sel':''} ${on?'placed':''}" data-map="${esc(id)}"><span class="gbadge ${on?'ok':'off'}">${on?'ĐANG XEM':'ĐÃ MỞ'}</span><div class="gth gmap"><i style="background-image:url('${esc(bgSrc(id))}')"></i></div><b>${esc(m.name)}</b></div>`;
+    return `<div class="gcard ${MENU.map===id?'sel':''} ${on?'placed':''}" data-map="${esc(id)}"><span class="gbadge ${on?'ok':'off'}">${on?'ĐANG XEM':'ĐÃ MỞ'}</span><div class="gth gmap"><i style="background-image:url('${esc(bgSrc(id))}')"></i></div><b>${esc(m.name)}</b><small>${cnt(id)} pet</small></div>`;
   }).join('') || '<div class="gempty">Không có map nào</div>';
 
   let detail;
@@ -73,13 +73,13 @@ function mapsView(){
       <div class="gdesc">🧭 Trạng thái: <b>${on ? 'Đang xem' : 'Sẵn sàng'}</b><br>🐾 Pet đang thả: <b>${mine.length}</b> <span class="gmini" data-mini="${esc(m.id)}"></span><br>👾 Quái vật: <b>${isBattle ? esc(foes) : 'Chưa có'}</b></div>
       <div class="gact">${isBattle ? gBtn('red','battle','VÀO TRẬN') : ''}${gBtn('green','viewmap','XEM MAP')}</div>`;
   }
-  return `<div class="gm-list">${gFilters([['all','TẤT CẢ'],['pets','CÓ PET'],['empty','TRỐNG']], MENU.fm, 'fm')}<div class="gm-grid">${cards}</div><div class="gm-foot">Số map: ${MAPS.length}</div></div><div class="gm-detail">${detail}</div>`;
+  return `<div class="gm-panel gm-list"><i class="vine tl"></i><i class="vine br"></i>${gFilters([['all','TẤT CẢ'],['pets','CÓ PET'],['empty','TRỐNG']], MENU.fm, 'fm')}<div class="gm-grid">${cards}</div><div class="gm-foot">Số map: ${MAPS.length}</div></div><div class="gm-panel gm-detail"><i class="vine tr"></i><i class="vine bl"></i>${detail}</div>`;
 }
 
 // ---------------- CÀI ĐẶT ----------------
 function settingsView(){
   const canFS = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
-  return `<div class="gm-set"><div class="grow"><span>Toàn màn hình</span>${canFS ? gBtn('green sm','fs','BẬT / TẮT') : '<small>Thiết bị không hỗ trợ</small>'}</div>
+  return `<div class="gm-panel gm-set"><i class="vine tl"></i><i class="vine br"></i><div class="grow"><span>Toàn màn hình</span>${canFS ? gBtn('green sm','fs','BẬT / TẮT') : '<small>Thiết bị không hỗ trợ</small>'}</div>
     <div class="gdesc">⌨️ WASD / mũi tên: đi · Enter: đánh · phím 1: skill 1 · Space: nhảy<br>🖱️ Bấm pet để chọn, bấm chỗ trống để pet đi tới đó.</div></div>`;
 }
 
