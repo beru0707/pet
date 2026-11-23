@@ -15,6 +15,7 @@
       if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape');   // Android Chrome: chỉ khóa được khi đang toàn màn hình
     }catch(e){}
   }
+  window.toggleFullscreen = goFS;   // nút Toàn màn hình trong Cài đặt (menu/body.js)
   const mk = (tag, id, html) => { const d = document.createElement(tag); d.id = id; if(html) d.innerHTML = html; document.body.appendChild(d); return d; };
 
   // lời nhắc xoay ngang (CSS chỉ hiện khi máy cảm ứng đang để dọc)

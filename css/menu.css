@@ -1,33 +1,71 @@
 /* ==================================================================
-   MENU CHỨC NĂNG – thanh dưới, tab, nút, thẻ pet / map, ảnh kéo
+   MENU – 3 nút góc trên phải + khung gỗ (Danh sách pet / Danh sách map / Cài đặt)
+   Khung #gm tính kích thước theo em; cỡ chữ gốc đặt bằng JS (menu.js, gmFit).
    ================================================================== */
-/* THANH CHỨC NĂNG */
-#deco{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#183010f2,#102208f7);border-top:3px solid #5aa332;z-index:15;padding:8px 14px 12px;color:#e6f7c8}
-#deco.hidden{display:none}
-.d-tabs,.m-tabs{display:flex;gap:8px;margin-bottom:8px}
-.d-tabs button,.m-tabs button{flex:1;padding:8px 6px;border-radius:10px;border:2px solid #ffffff22;background:#ffffff14;color:#e6f7c8;font:700 clamp(12px,1.6vw,16px) 'Fredoka',sans-serif;cursor:pointer}
-.d-tabs button.on,.m-tabs button.on{background:#4a8a2a;border-color:#a4e27a;color:#fff}
-.m-tabs #d-done{flex:0 0 auto;background:#e08a1e;border-color:#ffd08a;color:#fff;padding:8px 18px}
-.d-body{display:flex;gap:10px;align-items:stretch;overflow-x:auto;padding-bottom:4px;min-height:88px}
-.dbtn{flex:0 0 auto;min-width:78px;padding:6px 8px;border-radius:12px;border:2px solid #ffffff22;background:#ffffff12;color:#e6f7c8;font:600 12px 'Fredoka',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
-.dbtn.on{border-color:#ffd54a;background:#ffffff30;box-shadow:0 0 0 2px #ffd54a55}
-.dbtn img{width:56px;height:56px;object-fit:contain;image-rendering:auto}
-.dbtn i{width:42px;height:42px;border-radius:50%;border:3px solid #fff8;display:block}
-.dbtn.big{font-size:20px}
-.dlabel{flex:0 0 auto;align-self:center;font:600 12px 'Fredoka',sans-serif;opacity:.8;padding:0 6px}
-/* THẺ PET + THẺ MAP + ẢNH KÉO */
-.pcard,.mcard{flex:0 0 auto;width:104px;padding:6px;border-radius:12px;border:2px solid #ffffff22;background:#ffffff12;color:#e6f7c8;font:600 12px 'Fredoka',sans-serif;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;cursor:pointer;touch-action:pan-x}
-.pcard img,.pcard canvas{width:64px;height:64px;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
-.pcard b,.mcard b{font-size:12px;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pcard small,.mcard small{font-size:10px;opacity:.75}
-.pcard.here{border-color:#a4e27a;background:#4a8a2a44}
-.pcard.free{border-style:dashed}
-.pcard:active{cursor:grabbing}
-.mcard{width:132px;cursor:pointer}
-.mcard.on{border-color:#ffd54a;background:#ffffff30;box-shadow:0 0 0 2px #ffd54a55}
-.mcard.all.on{border-color:#7ddcff;box-shadow:0 0 0 2px #7ddcff55}
-.mthumb.mosaic{display:grid;gap:2px;overflow:hidden;padding:0;background:#10200a}
-.mthumb.mosaic i{background-size:cover;background-position:center;min-height:0}
-.mthumb{width:100%;height:56px;border-radius:8px;background-size:cover;background-position:center;background-color:#2f5a1c}
+/* 3 NÚT GÓC TRÊN PHẢI */
+#top-menu{position:absolute;top:10px;right:12px;display:flex;gap:8px;z-index:45}   /* trên khung menu để đổi tab ngay */
+.tm-btn,#bt-set{width:clamp(38px,7vh,54px);height:clamp(38px,7vh,54px);display:flex;align-items:center;justify-content:center;border-radius:12px;border:3px solid #2b160a;outline:2px solid #d9a05a;outline-offset:-5px;background:linear-gradient(#b8702f,#7a4420);color:#fff;font-size:clamp(18px,3.4vh,26px);line-height:1;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.5);transition:transform .12s,filter .12s}
+.tm-btn:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.tm-btn:active{transform:scale(.94)}
+.tm-btn.on{filter:brightness(1.3);outline-color:#ffd54a}
+
+/* KHUNG MENU */
+#gm{position:absolute;inset:0;z-index:40;box-sizing:border-box;padding:clamp(54px,9.5vh,70px) 1.5% 1.5%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);font-family:'Fredoka',sans-serif;font-size:16px;color:#fff1d6}
+#gm.hidden{display:none}
+.gm-frame{position:relative;width:min(96%,66em);height:min(100%,38em);padding:2.4em 1em 1em;border-radius:1em;border:.35em solid #474d5b;background:linear-gradient(#aab0bc,#7c8393);box-shadow:0 .6em 2em rgba(0,0,0,.65),inset 0 0 0 .2em #c6cbd5}
+.gm-title{position:absolute;left:50%;top:-1.1em;transform:translateX(-50%);padding:.25em 2em;border-radius:.6em;border:.25em solid #2b160a;background:linear-gradient(#a8662f,#6e3a16);color:#f6c453;font-weight:700;font-size:2em;letter-spacing:.04em;white-space:nowrap;text-shadow:0 .08em 0 #3a1d0c,0 0 .25em #000;box-shadow:0 .2em .6em rgba(0,0,0,.5)}
+#gm-close{position:absolute;right:.6em;top:-.9em;flex:none;padding:.35em 1em;font-size:1.1em}
+.gm-frame.small{width:min(96%,36em);height:auto;padding-bottom:1.2em}
+.gm-body{height:100%;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:.8em;min-height:0}
+.gm-body.set{display:flex;justify-content:center;align-items:flex-start;padding-top:.4em}
+.gm-detail{overflow:auto}
+.gm-list,.gm-detail,.gm-set{display:flex;flex-direction:column;min-height:0;padding:.7em;border-radius:.7em;border:.25em solid #3a1d0c;background:linear-gradient(#7a4420,#5e3010);box-shadow:inset 0 0 0 .15em #a8662f}
+.gm-set{width:min(100%,32em);gap:.8em}
+.grow{display:flex;align-items:center;justify-content:space-between;gap:1em;font-weight:700;font-size:1.1em}
+
+/* BỘ LỌC */
+.gm-filters{display:flex;gap:.5em;margin-bottom:.6em}
+.gf{flex:1;padding:.45em .2em;border-radius:.5em;border:.2em solid #3a1d0c;background:linear-gradient(#a8662f,#7a4420);color:#fff1d6;font:700 1em 'Fredoka',sans-serif;cursor:pointer;white-space:nowrap}
+.gf.on{background:linear-gradient(#f0a53a,#d9801c);border-color:#8a4a10;color:#fff}
+
+/* LƯỚI THẺ */
+.gm-grid{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1em .6em;align-content:start;padding:1em .5em .5em;border-radius:.5em;background:#3f2010;box-shadow:inset 0 0 .6em rgba(0,0,0,.6)}
+.gcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:.25em;padding:.9em .3em .4em;border-radius:.6em;border:.2em solid #2b160a;background:linear-gradient(#b8702f,#8a4d22);text-align:center;cursor:pointer}
+.gcard.placed{background:linear-gradient(#e6a642,#c0782a)}
+.gcard.sel{border-color:#ffd54a;box-shadow:0 0 0 .15em #ffd54a88}
+.gcard b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.95em}
+.gbadge{position:absolute;top:-.7em;left:50%;transform:translateX(-50%);padding:.1em .7em;border-radius:99px;border:.15em solid #14210c;font-size:.68em;font-weight:700;white-space:nowrap}
+.gbadge.ok{background:#5cb82e;color:#fff}
+.gbadge.off{background:#5c7490;color:#e8f0ff}
+.gth{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:.4em;background:rgba(0,0,0,.2)}
+.gth canvas,.gth img{width:auto;height:auto;max-width:88%;max-height:88%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
+.gth.gmap,.gprev.gmap{background:#10200a}
+.gth.gmap i,.gprev.gmap i{display:block;width:100%;height:100%;background-size:cover;background-position:center}
+.mosaic{display:grid;gap:2px;width:100%;height:100%}
+.mosaic i{background-size:cover;background-position:center;min-height:0}
+.gempty{grid-column:1/-1;padding:2em 0;text-align:center;opacity:.7}
+.gm-foot{margin-top:.5em;text-align:center;font-size:.85em;opacity:.9}
+
+/* CHI TIẾT BÊN PHẢI */
+.gprev{flex:0 0 auto;height:10em;max-height:30%;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:.6em;border-radius:.6em;border:.25em solid #2b160a;background:linear-gradient(#9ed0ff 0 58%,#6fb83c 58%)}
+.gprev canvas,.gprev img{width:auto;height:auto;max-width:90%;max-height:92%;object-fit:contain}
+.gname{font-size:1.7em;font-weight:700;letter-spacing:.02em;line-height:1.1}
+.gchips{display:flex;gap:.4em;margin:.5em 0}
+.gchip{flex:1;padding:.35em .2em;border-radius:.5em;border:.15em solid #2b160a;background:#3f2010;font-size:.8em;font-weight:700;text-align:center;white-space:nowrap}
+.gdesc{flex:1;min-height:0;overflow:auto;padding:.5em .7em;border-radius:.5em;border:.15em solid #2b160a;background:#3f2010;font-size:.9em;line-height:1.5}
+.gm-set .gdesc{flex:none}
+.gmini{display:inline-flex;gap:.2em;vertical-align:middle}
+.gmini canvas,.gmini img{width:1.8em;height:1.8em;object-fit:contain}
+.gact{display:flex;gap:.6em;margin-top:.6em}
+
+/* NÚT */
+.gm-btn{flex:1;padding:.55em .4em;border-radius:.6em;border:.2em solid #1c1008;color:#fff;font:700 1.05em 'Fredoka',sans-serif;text-shadow:0 .08em 0 rgba(0,0,0,.45);box-shadow:inset 0 .15em 0 rgba(255,255,255,.3);cursor:pointer}
+.gm-btn small{display:block;font-size:.62em;font-weight:600;opacity:.92}
+.gm-btn.red{background:linear-gradient(#ee5b3d,#b5301a)}
+.gm-btn.green{background:linear-gradient(#7bd94a,#3f9c1f)}
+.gm-btn.sm{flex:none;padding:.4em 1.2em}
+.gm-btn:active:not(:disabled){transform:scale(.96)}
+.gm-btn:disabled{filter:grayscale(.75) brightness(.7);cursor:default}
+
+/* ẢNH KÉO (dùng ở phần chuẩn bị trận) */
 .drag-ghost{position:fixed;width:72px;height:72px;object-fit:contain;pointer-events:none;opacity:.88;z-index:100;transform:translate(-50%,-80%);filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
-.dlabel{max-width:150px;line-height:1.3}

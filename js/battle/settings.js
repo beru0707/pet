@@ -27,5 +27,5 @@ $b('sp-exit').addEventListener('click', () => {
   BT.phase = 'result'; btExit();   // bỏ trận: về phòng chờ, không có thưởng
 });
 // hiện nút ⚙️ chỉ khi đang đánh
-setInterval(() => { $b('bt-set').style.display = BT.phase === 'fight' ? 'block' : 'none'; if(BT.phase !== 'fight' && BT.paused) btSetOpen(false); }, 150);
+setInterval(() => { $b('bt-set').style.display = BT.phase === 'fight' ? 'flex' : 'none'; if(BT.phase !== 'fight' && BT.paused) btSetOpen(false); }, 150);
 btSetSync();

@@ -41,9 +41,8 @@ js/
             scene.js           drawMapScene, drawOverview
   ui/       hud.js             toast
   maps/     maps.js            ACTIVE_MAP, setActiveMap, setOverview, placePetAt
-  menu/     menu.js            thanh chức năng, tab Pet / Map
-            body.js            thẻ pet, thẻ map, thumbNode, renderMenu
-            pet-drag.js        kéo thẻ pet thả vào map
+  menu/     menu.js            3 nút góc trên phải (Pet · Map · Cài đặt), mở / đóng khung menu
+            body.js            nội dung khung: lưới thẻ + chi tiết, thumbNode, renderMenu
   battle/   state.js           BT, btStat
             ui.js              tự chèn nút / thanh / bảng của trận, btFade, btBanner
             pick.js            màn hình chọn pet trước trận
@@ -69,7 +68,7 @@ Hàm chỉ cần có mặt lúc chạy (ví dụ `render/scene.js` gọi `btDraw
 | Nhiều map | Mỗi map một ảnh nền (`MAPS`); mọi map chạy liên tục, pet ở map không xem vẫn đi lại | `config/world.js`, `maps/maps.js`, `main.js` |
 | Nhớ map đang xem | Lưu `state.activeMap`, mở lại game vào đúng map; map không còn trong `MAPS` thì về map đầu | `data/game-save.js`, `maps/maps.js`, `assets/boot.js` |
 | Xem toàn bộ map | Lưới thu nhỏ, kéo pet giữa các map, bấm nhãn tên map để vào | `maps/maps.js`, `render/scene.js`, `input/pointer.js` |
-| Menu chức năng | Hai tab: **Pet** (kéo thẻ pet thả vào map, cất về danh sách) và **Map** | `menu/*` |
+| Menu | 3 nút góc trên phải: **🐾 Danh sách pet**, **🗺️ Danh sách map**, **⚙️ Cài đặt**; mỗi nút mở khung gỗ giữa màn hình (lưới thẻ có bộ lọc bên trái, chi tiết + nút bên phải). Pet: THU HỒI / THẢ VÀO MAP / CHỌN PET. Map: XEM MAP, VÀO TRẬN (map chiến đấu), xem toàn cảnh. Đóng bằng nút ĐÓNG, Esc hoặc bấm nền tối | `menu/*`, `css/menu.css` |
 | Chọn và điều khiển pet | Bấm pet để chọn (vùng bấm hình elip bao cả thân, pet cao vẫn bấm được); WASD / mũi tên đi; bấm chỗ trống để đi tới đó | `input/*`, `pets/movement.js` |
 | Tốc độ đi cố định | Giữ phím không đi nhanh hơn đi thường (`KEY_SPEED_WALK`, `KEY_SPEED_OTHER`, nhân `speed` của pet) | `pets/movement.js`, `config/pets.js` |
 | Vùng đi được | Chỉ dùng `WALK_POLY` (đa giác cho phép) và `FORBIDDEN` (các vùng cấm) | `config/world.js`, `pets/world.js` |
@@ -98,7 +97,7 @@ Hàm chỉ cần có mặt lúc chạy (ví dụ `render/scene.js` gọi `btDraw
 Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đấu, quái, mọi pet) → chọn pet → chuẩn bị → đánh theo đợt → tổng kết → về phòng chờ.**
 
 - **Chọn pet** (`pick.js`): hàng ô trên cùng là pet đã chọn (tối đa `BATTLE_CFG.maxPets`), lưới bên dưới là toàn bộ pet; bấm thẻ để chọn / bỏ.
-- **Chuẩn bị** (`prep.js`): pet đã chọn được thả sẵn vào map; kéo thẻ vào map hoặc bấm thẻ để thả / thu hồi.
+- **Chuẩn bị** (`prep.js`): pet đã chọn được thả sẵn vào map; kéo thẻ vào map hoặc bấm thẻ để thả / thu hồi (đây là kéo thả của phần chuẩn bị trận, không phải của menu).
 - **Đợt địch** (`BATTLE_CFG.waves`): mỗi đợt có loại, số lượng, giãn cách; địch trâu thêm `hpGrow` mỗi đợt; nghỉ `waveRest` giây giữa đợt.
 - **Quái Sâu Cát** (`ENEMY_TYPES.worm`): chui đi (`travel`) → trồi lên (`emerge`) → cắn (`attack`, trúng ở `hitAt`) → lặn (`dive`).
 - **Sát thương**: pet chỉ gây sát thương bằng đòn do người chơi hoặc tự động kích hoạt; quả cầu nổ lan trong `blastRadius`. Chỉ số pet trong `PET_BATTLE` (`hp`, `dmg`, `range`, `cd`).
@@ -119,7 +118,7 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 
 ### 3.6 Điện thoại
 - Màn hình cảm ứng dọc: lời nhắc xoay ngang (có nút "Vẫn chơi chế độ dọc"); nút toàn màn hình, khóa ngang nếu trình duyệt cho phép.
-- Trong trận: ẩn nút Chức năng; hiện cần di chuyển ảo (joystick) và nút ⚔️.
+- Trong trận: ẩn 3 nút menu; hiện cần di chuyển ảo (joystick) và nút ⚔️.
 - CSS thu gọn khi màn hình thấp: `css/mobile.css`.
 
 ## 4. Các thông số hay chỉnh

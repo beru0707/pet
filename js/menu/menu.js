@@ -1,20 +1,35 @@
 /* ==================================================================
-   MENU – THANH CHỨC NĂNG
-   Nút góc phải trên mở thanh 2 tab: Danh sách pet | Map. Chuyển tab, bật / tắt menu.
+   MENU – 3 NÚT GÓC TRÊN PHẢI + KHUNG MENU
+   Ba nút: Danh sách pet · Danh sách map · Cài đặt. Bấm nút mở khung giữa màn hình (#gm),
+   bấm lại cùng nút / nút ĐÓNG / phím Esc / bấm nền tối để đóng. Nội dung vẽ ở body.js.
    ================================================================== */
 
-const MENU = { open:false, tab:'pets' };
+const MENU = { open:false, tab:'pets', fp:'all', fm:'all', pet:null, map:null };
+const GM_TITLES = { pets:'DANH SÁCH PET', maps:'DANH SÁCH MAP', settings:'CÀI ĐẶT' };
+const gmEl = document.getElementById('gm');
 
+// cỡ chữ gốc của khung theo chiều cao màn hình (mọi kích thước trong khung tính theo em)
+function gmFit(){
+  const w = document.getElementById('wrap');
+  gmEl.style.fontSize = Math.max(8, Math.min(16, w.clientHeight / 36)) + 'px';
+}
 function setMenuTab(tab){
   MENU.tab = tab;
-  document.getElementById('deco').classList.toggle('hidden', !MENU.open);
-  document.getElementById('wrap').classList.toggle('menu-open', MENU.open);   // bảng thông tin thú dời lên để không bị thanh menu che
-  document.querySelectorAll('#m-tabs [data-m]').forEach(x=>x.classList.toggle('on', x.dataset.m === tab));
-  if(MENU.open) renderMenu();
+  gmEl.classList.toggle('hidden', !MENU.open);
+  document.getElementById('wrap').classList.toggle('menu-open', MENU.open);   // các nút nổi (cần ảo, ⚔️...) tránh khung menu
+  document.querySelectorAll('#top-menu [data-m]').forEach(x => x.classList.toggle('on', MENU.open && x.dataset.m === tab));
+  document.getElementById('gm-title').textContent = GM_TITLES[tab] || '';
+  if(MENU.open){ gmFit(); renderMenu(); }
 }
 function setMenuOpen(on){ MENU.open = !!on; setMenuTab(MENU.tab); }
-document.getElementById('btn-deco').addEventListener('click', ()=>setMenuOpen(!MENU.open));
-document.getElementById('d-done').addEventListener('click', ()=>setMenuOpen(false));
-document.getElementById('m-tabs').addEventListener('click', e=>{
-  const t = e.target.closest('[data-m]'); if(t) setMenuTab(t.dataset.m);
+
+document.getElementById('top-menu').addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if(!b) return;
+  b.blur();
+  if(MENU.open && MENU.tab === b.dataset.m) setMenuOpen(false);
+  else { MENU.open = true; setMenuTab(b.dataset.m); }
 });
+document.getElementById('gm-close').addEventListener('click', e => { e.currentTarget.blur(); setMenuOpen(false); });
+gmEl.addEventListener('pointerdown', e => { if(e.target === gmEl) setMenuOpen(false); });   // bấm nền tối ngoài khung
+window.addEventListener('keydown', e => { if(e.key === 'Escape' && MENU.open) setMenuOpen(false); });
+window.addEventListener('resize', () => { if(MENU.open) gmFit(); });

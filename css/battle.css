@@ -26,7 +26,7 @@
 #bt-res tr+tr td{border-top:1px solid #ffffff1a}
 
 /* ---------- nút cài đặt + bảng cài đặt trong trận ---------- */
-#bt-set{position:fixed;top:12px;right:14px;z-index:32;display:none;width:44px;height:44px;border-radius:50%;border:2px solid #ffd08a;background:linear-gradient(180deg,#a85b22,#6e3512);color:#fff;font-size:22px;line-height:1;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+#bt-set{position:fixed;top:10px;right:12px;z-index:32;display:none}
 #bt-sp{position:fixed;inset:0;z-index:99970;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5)}
 #bt-sp .card{min-width:min(92vw,360px);padding:18px 22px;border-radius:16px;background:linear-gradient(#8a4a1c,#5e2f10);border:3px solid #d9a05a;color:#fff1d6;font:600 16px Fredoka,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 #bt-sp h3{text-align:center;margin-bottom:12px;font-size:22px}
@@ -58,5 +58,4 @@
   .pk-panel{top:56px;bottom:6px;padding:6px 10px}.pk-title{font-size:15px;margin-bottom:4px}
   #bt-grid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr))}.pk-card canvas,.pk-card img{width:42px;height:42px}
   .pk-btns{margin-top:6px}.pk-btns button{padding:4px 18px;font-size:14px}
-  #bt-set{top:6px;right:10px;width:36px;height:36px;font-size:18px}
 }

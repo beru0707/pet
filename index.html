@@ -14,16 +14,17 @@
 <body>
 <div id="wrap">
   <canvas id="c"></canvas>
-  <div id="hud">
-    <button class="chip" id="btn-deco" style="margin-left:auto;cursor:pointer;font-family:inherit">🧰 Chức năng</button>
+  <div id="top-menu">
+    <button class="tm-btn" id="tm-pets" data-m="pets" title="Danh sách pet">🐾</button>
+    <button class="tm-btn" id="tm-maps" data-m="maps" title="Danh sách map">🗺️</button>
+    <button class="tm-btn" id="tm-set" data-m="settings" title="Cài đặt">⚙️</button>
   </div>
-  <div id="deco" class="hidden">
-    <div class="m-tabs" id="m-tabs">
-      <button data-m="pets" class="on">🐾 Danh sách pet</button>
-      <button data-m="maps">🗺️ Map</button>
-      <button id="d-done">✔ Đóng</button>
+  <div id="gm" class="hidden">
+    <div class="gm-frame">
+      <div class="gm-title" id="gm-title">DANH SÁCH PET</div>
+      <button id="gm-close" class="gm-btn red">ĐÓNG ✕</button>
+      <div class="gm-body" id="gm-body"></div>
     </div>
-    <div class="d-body" id="d-body"></div>
   </div>
   <div id="toast"></div>
 </div>
@@ -48,7 +49,6 @@
 <script src="js/maps/maps.js"></script>
 <script src="js/menu/menu.js"></script>
 <script src="js/menu/body.js"></script>
-<script src="js/menu/pet-drag.js"></script>
 <script src="js/battle/state.js"></script>
 <script src="js/battle/ui.js"></script>
 <script src="js/battle/prep.js"></script>

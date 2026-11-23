@@ -8,7 +8,7 @@
   html,body{height:100dvh}
   #wrap{width:min(100vw,calc(100dvh*var(--ar,1.5)));height:min(100dvh,calc(100vw/var(--ar,1.5)))}
 }
-#hud{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+#top-menu{right:max(12px,env(safe-area-inset-right))}
 
 /* ---------- lời nhắc xoay ngang ---------- */
 #rot{display:none;position:fixed;inset:0;z-index:99995;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;background:#0f1d0a;color:#e6f7c8;font:600 18px Fredoka,sans-serif}
@@ -32,8 +32,8 @@ body.is-fs #fs-btn{opacity:.6}
 #jump-btn:active{transform:scale(.92)}
 body.bt-on:not(.bt-fight) #jump-btn,body.ov-on #jump-btn,#wrap.menu-open ~ #jump-btn{display:none}
 
-/* ---------- đang trong trận: bỏ nút Chức năng, nút toàn màn hình ---------- */
-body.bt-on #btn-deco,body.bt-on #fs-btn{display:none !important}
+/* ---------- đang trong trận: bỏ 3 nút menu, nút toàn màn hình ---------- */
+body.bt-on #top-menu,body.bt-on #fs-btn{display:none !important}
 
 /* ---------- cần di chuyển ảo (trái) ---------- */
 #joy{display:none;position:fixed;z-index:30;left:max(48px,calc(env(safe-area-inset-left) + 28px));bottom:56px;width:128px;height:128px;border-radius:50%;background:radial-gradient(circle,#ffffff26,#ffffff10);border:2px solid #fff5;touch-action:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
@@ -45,24 +45,10 @@ body.bt-on:not(.bt-fight) #joy,body.ov-on #joy,#wrap.menu-open ~ #joy{display:no
 
 /* ---------- điện thoại nằm ngang (màn hình thấp) ---------- */
 @media (max-height:520px) and (orientation:landscape){
-  #hud{padding-top:6px;padding-bottom:6px;gap:6px}
-  .chip{padding:3px 10px;font-size:13px;border-width:1.5px}
+  #top-menu{top:6px;right:8px;gap:5px}
   #toast{top:12%;padding:6px 16px;font-size:13px}
 
 
-  /* thanh chức năng ở đáy: thấp hơn nhiều */
-  #deco{padding:4px 8px 6px;border-top-width:2px}
-  .d-tabs,.m-tabs{gap:5px;margin-bottom:4px}
-  .d-tabs button,.m-tabs button{padding:4px 4px;font-size:12px;border-radius:8px}
-  .m-tabs #d-done{padding:4px 12px}
-  .d-body{min-height:0;gap:6px;padding-bottom:2px}
-  .dbtn{min-width:58px;padding:3px 5px;font-size:10px;gap:2px;border-radius:9px}
-  .dbtn img{width:34px;height:34px}.dbtn i{width:28px;height:28px;border-width:2px}
-  .dlabel{font-size:10px;max-width:110px;line-height:1.2}
-  .pcard{width:74px;padding:3px;gap:1px;border-radius:9px}
-  .pcard img,.pcard canvas{width:38px;height:38px}
-  .pcard b{font-size:10px}.pcard small{font-size:9px}
-  .mcard{width:100px;padding:3px;gap:1px}.mthumb{height:34px}.mcard b{font-size:10px}.mcard small{font-size:9px}
 
   /* nút Vào trận / chuẩn bị trận / HUD trận */
   #wrap.menu-open ~ #bt-open{display:none}
