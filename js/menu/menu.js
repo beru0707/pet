@@ -11,7 +11,8 @@ const gmEl = document.getElementById('gm');
 // cỡ chữ gốc của khung theo chiều cao màn hình (mọi kích thước trong khung tính theo em)
 function gmFit(){
   const w = document.getElementById('wrap');
-  gmEl.style.fontSize = Math.max(8, Math.min(16, w.clientHeight / 36)) + 'px';
+  const pad = parseFloat(getComputedStyle(gmEl).paddingTop) || 0;
+  gmEl.style.fontSize = Math.max(8, Math.min(16, (w.clientHeight - pad - 8) / 37)) + 'px';   // khung cao ~37em (3 hàng thẻ + tiêu đề)
 }
 function setMenuTab(tab){
   MENU.tab = tab;
