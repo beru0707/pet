@@ -40,7 +40,7 @@ function btDrawEnemy(e, t){
   if(fr && fr.length){
     const el = e.die ? e.dieMax - e.die : e.tm, i = Math.floor(el * A.fps), idx = A.loop ? i % A.n : Math.min(A.n - 1, i);
     const f = fr[Math.min(fr.length-1, idx)], hh = T.h * (A.scale ?? 1), ww = hh * f.width / f.height;
-    cx.drawImage(f, -ww * (T.ax ?? .5), -hh*T.anchor, ww, hh);
+    cx.drawImage(f, -ww * (T.ax ?? .5) + (A.dx || 0)*hh, -hh*T.anchor + (A.dy || 0)*hh, ww, hh);   // dx/dy: căn riêng từng trạng thái (đơn vị = chiều cao khung)
   } else {   // hình tạm khi chưa có sprite
     const pulse = 1 + Math.sin(t*6 + e.seed)*.06;
     cx.fillStyle = '#c93b4a'; cx.beginPath(); cx.ellipse(0, -40, 46*pulse, 40*pulse, 0, 0, 7); cx.fill();

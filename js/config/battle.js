@@ -31,54 +31,24 @@ const BATTLE_CFG = {
 //   spriteLeft : true = ảnh gốc nhìn sang TRÁI (game tự lật khi quái quay phải)
 //   proj   : (tuỳ chọn) quái bắn đạn thay vì đánh giáp lá cà. {sheet, size, speed, dx, dy, life, spin}
 //              sheet = tên sheet ảnh đạn · size = cỡ vẽ (px) · speed = tốc độ bay (px/giây) · dx, dy = điểm xuất phát so với chân quái (dx theo hướng nhìn) · life = giây bay tối đa · spin = vòng quay (rad/giây)
-// sheets: các sprite sheet (đọc lưới cols x rows từ khung 0, frames = số khung thật).
-// anim: mỗi trạng thái chọn sheet + số khung n + fps. loop:true = lặp; attack.hitAt = khung thứ mấy thì trúng đòn / tung đạn.
-//   dead và dead2 là 2 kiểu ngã khác nhau, mỗi con chết ngẫu nhiên một kiểu.
+// DỮ LIỆU quái nằm ở js/config/enemies.data.js (công cụ căn đọc / ghi trực tiếp) – defs: chỉ số + cỡ, anim.<quái>.extra: mỗi trạng thái 1 sheet
+//   trạng thái: idle · walk · run · attack · hurt · dead · dead2 (2 kiểu ngã, chết ngẫu nhiên 1 kiểu) · stone (ảnh đạn, chỉ quái bắn xa)
+//   mỗi trạng thái: { src, cols, rows, max, fps, hitAt? , scale?, dx?, dy? }   hitAt = khung thứ mấy thì trúng đòn / tung đạn
+//   scale / dx / dy: căn riêng từng trạng thái, tương đối so với walk (như pet) · số khung n = frames hoặc cols*rows · idle/walk/run tự lặp
+// Cỡ & điểm chân từ công cụ căn: h = 100*scale · ax = 0.5 - ox/(sw/sh) · anchor = 1 - oy  (quy đổi ngay dưới đây)
 // Chưa có file ảnh thì địch vẽ tạm bằng khối tròn đỏ.
-const EN_MAX = 240;   // cạnh dài tối đa của 1 khung quái sau khi cắt (px)
-const enSheet = (file, cols, rows, o) => Object.assign({src:'Enemy/'+file, cols, rows, frames:cols*rows, max:EN_MAX}, o);
-const ENEMY_TYPES = {
-  zombie: { name:'Zombie', hp:80, dmg:10, speed:44, h:100, anchor:.848, ax:.394, bar:77, range:95, cd:1.3, spriteLeft:true,
-    sheets: {
-      idle:   enSheet('ZOMBIE/01-Idle/01-Idle.png', 4, 3),
-      walk:   enSheet('ZOMBIE/02-Walk/02-Walk.png', 4, 3),
-      attack: enSheet('ZOMBIE/03-Attack/03-Attack.png', 4, 2),
-      hurt:   enSheet('ZOMBIE/04-Hurt/04-Hurt.png', 3, 2),
-      dead1:  enSheet('ZOMBIE/05-Dead/01-Dead.png', 5, 2),
-      dead2:  enSheet('ZOMBIE/05-Dead/02-Dead.png', 5, 2),
-    },
-    anim: {
-      idle:   {sheet:'idle',   n:12, fps:10, loop:true},
-      walk:   {sheet:'walk',   n:12, fps:12, loop:true},
-      attack: {sheet:'attack', n:8,  fps:12, hitAt:4},
-      hurt:   {sheet:'hurt',   n:6,  fps:14},
-      dead:   {sheet:'dead1',  n:10, fps:12},
-      dead2:  {sheet:'dead2',  n:10, fps:12},
-    },
-  },
-  skeleton: { name:'Skeleton', hp:55, dmg:8, speed:52, runMul:1.7, h:95, anchor:.879, ax:.422, bar:77, range:520, stop:330, cd:1.9, spriteLeft:true,
-    proj: {sheet:'stone', size:32, speed:430, dx:25, dy:32, life:2, spin:9},
-    sheets: {
-      idle:   enSheet('SKELETON/01-Idle/01-Idle.png', 4, 3),
-      walk:   enSheet('SKELETON/02-Walk/02-Walk.png', 4, 3),
-      run:    enSheet('SKELETON/03-Run/03-Run.png', 5, 2),
-      attack: enSheet('SKELETON/04-Throw/04-Throw.png', 4, 2),
-      hurt:   enSheet('SKELETON/05-Hurt/05-Hurt.png', 3, 2),
-      dead1:  enSheet('SKELETON/06-Dead/01-Dead.png', 5, 2),
-      dead2:  enSheet('SKELETON/06-Dead/02-Dead.png', 5, 2),
-      stone:  enSheet('SKELETON/STONE/Stone.png', 1, 1, {max:96}),
-    },
-    anim: {
-      idle:   {sheet:'idle',   n:12, fps:10, loop:true},
-      walk:   {sheet:'walk',   n:12, fps:12, loop:true},
-      run:    {sheet:'run',    n:10, fps:14, loop:true},
-      attack: {sheet:'attack', n:8,  fps:12, hitAt:3},   // khung 3: tay vung ra phía trước -> ném đá
-      hurt:   {sheet:'hurt',   n:6,  fps:14},
-      dead:   {sheet:'dead1',  n:10, fps:12},
-      dead2:  {sheet:'dead2',  n:10, fps:12},
-    },
-  },
-};
+const EN_LOOP = {idle:true, walk:true, run:true};
+const ENEMY_TYPES = Object.fromEntries(ENEMY_DATA.defs.map(d => {
+  const ex = ENEMY_DATA.anim[d.key].extra, T = {sheets:{}, anim:{}};
+  const {key, dir, scale, ox, oy, sw, sh, ...rest} = d;
+  Object.assign(T, rest, {h:100*scale, ax:.5 - ox/(sw/sh), anchor:1 - oy});
+  Object.entries(ex).forEach(([k, a]) => {
+    const n = a.frames || a.cols*a.rows;
+    T.sheets[k] = {src:a.src, cols:a.cols, rows:a.rows, frames:n, max:a.max};
+    if(k !== 'stone') T.anim[k] = {sheet:k, n, fps:a.fps, loop:!!EN_LOOP[k], hitAt:a.hitAt, scale:a.scale ?? 1, dx:a.dx || 0, dy:a.dy || 0};
+  });
+  return [key, T];
+}));
 // Chỉ số chiến đấu của pet (không khai = mặc định). range: tầm đánh · cd: giây giữa 2 đòn
 const PET_BATTLE_DEFAULT = {hp:100, dmg:12, range:170, cd:1.6};
 const PET_BATTLE = {

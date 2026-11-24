@@ -13,7 +13,7 @@ Tài liệu này liệt kê đầy đủ tính năng, nơi cài đặt từng t�
 - Ảnh nằm cạnh `index.html`, không thuộc mã nguồn:
   - `assets/` chỉ còn ảnh nền, map và ảnh trang trí: `assets/background/<id>.webp|png`
   - Pet: `Character/<TÊN>/` (01-Idle, 02-Throw, 03-Walk, 04-Run, 06-Jump, 07-Hurt, 08-Dead), khai báo ở `PET_DEF` (`js/config/pets.js`)
-  - Quái: `Enemy/<TÊN>/` (Zombie, Skeleton + đá `STONE`), khai báo ở `ENEMY_TYPES` (`js/config/battle.js`)
+  - Quái: `Enemy/<TÊN>/` (Zombie, Skeleton + đá `STONE`), dữ liệu ở `js/config/enemies.data.js` (JSON; `ENEMY_TYPES` trong `js/config/battle.js` dựng từ file này)
 - Có thể đặt ảnh trên máy chủ ngoài (Cloudinary…): chỉ cần đổi đường dẫn `src` / `bg` trong config.
 
 ## 2. Cấu trúc thư mục
@@ -25,7 +25,8 @@ js/
   config/   world.js   kích thước thế giới, vùng đi, MAPS, khóa lưu
             pets.data.js  DỮ LIỆU thú (công cụ căn đọc/ghi trực tiếp)
             pets.js    PET_DEF, PET_ANIM (từ pets.data.js), hằng số cỡ và tốc độ
-            battle.js  BATTLE_CFG, ENEMY_TYPES, PET_BATTLE
+            enemies.data.js  DỮ LIỆU quái (công cụ căn đọc/ghi trực tiếp)
+            battle.js  BATTLE_CFG, ENEMY_TYPES (dựng từ enemies.data.js), PET_BATTLE
   core/     canvas.js          canvas chính, quy đổi tọa độ chuột, bóng đổ
   data/     game-save.js       state, saveGame / loadGame, savedPet, savedActiveMap
   assets/   images.js          IMGS, tryImg (ưu tiên .webp), runPool, loadBg
@@ -134,7 +135,7 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 | Tốc độ đi | `KEY_SPEED_WALK`, `KEY_SPEED_OTHER`, `speed` của `walkSheet` |
 | Tốc độ / thời gian sống quả cầu | `FIREBALL_SPEED`, `FIREBALL_LIFESPAN` |
 | Map chiến đấu, số pet, thưởng, đợt | `BATTLE_CFG` trong `config/battle.js` |
-| Loại quái, máu, sát thương, hoạt ảnh | `ENEMY_TYPES` |
+| Loại quái, máu, sát thương, hoạt ảnh | `js/config/enemies.data.js` (sửa tay hoặc bằng công cụ căn: Mở thư mục game → Lưu vào game) |
 | Máu / sát thương / tầm / cd của pet | `PET_BATTLE` (không khai = `PET_BATTLE_DEFAULT`) |
 | Khóa lưu localStorage (đổi để reset dữ liệu) | `SAVE` trong `config/world.js` |
 
