@@ -23,7 +23,8 @@ index.html
 css/        base · hud · menu · battle · mobile
 js/
   config/   world.js   kích thước thế giới, vùng đi, MAPS, khóa lưu
-            pets.js    PET_DEF, PET_ANIM, hằng số cỡ và tốc độ
+            pets.data.js  DỮ LIỆU thú (công cụ căn đọc/ghi trực tiếp)
+            pets.js    PET_DEF, PET_ANIM (từ pets.data.js), hằng số cỡ và tốc độ
             battle.js  BATTLE_CFG, ENEMY_TYPES, PET_BATTLE
   core/     canvas.js          canvas chính, quy đổi tọa độ chuột, bóng đổ
   data/     game-save.js       state, saveGame / loadGame, savedPet, savedActiveMap
@@ -127,8 +128,8 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 |---|---|
 | Thêm / bớt map, map mở đầu | `MAPS` trong `config/world.js` |
 | Pet có sẵn ở map đầu hay nằm trong danh sách | `PETS_START_PLACED` |
-| Thêm pet, cỡ pet | `PET_DEF` (`name`, `dir`, `scale`, `ox`, `oy`, `barDY`…) trong `config/pets.js`; chép thư mục sprite vào `Character/` |
-| Hoạt ảnh pet | `PET_ANIM[tên]` trong `config/pets.js` |
+| Thêm pet, cỡ pet, hoạt ảnh pet | `js/config/pets.data.js` (`defs` + `anim`) – sửa bằng công cụ căn (repo `character`: Mở thư mục game → Lưu vào game) hoặc sửa tay; chép thư mục sprite vào `Character/` |
+| Logic nạp hoạt ảnh pet | `PET_ANIM` trong `config/pets.js` (đọc từ `pets.data.js`) |
 | Cỡ chung của mọi pet | `PET_BASE_SIZE` (mặc định 100) |
 | Tốc độ đi | `KEY_SPEED_WALK`, `KEY_SPEED_OTHER`, `speed` của `walkSheet` |
 | Tốc độ / thời gian sống quả cầu | `FIREBALL_SPEED`, `FIREBALL_LIFESPAN` |
