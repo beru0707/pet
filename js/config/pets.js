@@ -46,36 +46,17 @@ const PET_DIRS = ['front','back','left','right'];
 //   walk 4x3=12 · idle 4x3=12 · throw (đòn đánh) 4x2=8 · run 5x2=10 · jumpup / jumpfall 5x1=5 · jumpthrow 4x2=8 (đánh khi đang nhảy) · hurt 3x2=6 · dizzy 5x2=10 (bị đánh nặng, máu <30%%) · dead 5x2=10
 // Mọi sheet cùng 1 pet có cùng cỡ ô nên không cần scale / dx / dy riêng cho từng trạng thái (đã có ox, oy trong PET_DEF).
 // Ảnh .png nằm ngoài assets/ và không có bản .webp nên nạp thẳng .png (xem tryImg trong assets/images.js).
-// PET_ANIM – dán thẳng khối do công cụ căn (repo 'character') xuất ra: mỗi pet 1 khối gồm walkSheet / idleSheet / attackSheet + MỘT 'extra' chứa mọi trạng thái còn lại
-// (run, jumpup, jumpfall, jumpthrow, hurt, dizzy, dead). dx / dy / scale tính TƯƠNG ĐỐI so với Đi bộ (đã có ox, oy ở PET_DEF); không ghi = 0 / 1.
-// cols/rows/max ghi rõ cho chắc (max = cạnh dài tối đa 1 khung sau khi cắt, 176 đủ nét mà RAM vừa). Tên khối ('Teddy') phải trùng PET_DEF.name.
-const PET_ANIM = {
+// PET_ANIM – MỖI PET 1 KHỐI, mọi trạng thái nằm chung trong 'extra' (dễ quản lý, khớp khối xuất ra của công cụ căn ở repo 'character'):
+//   walk (BẮT BUỘC) · idle · attack · run · jumpup · jumpfall · jumpthrow · hurt · dizzy · dead   → mỗi trạng thái 1 dòng { src, cols, rows, max, ... }
+//   dx / dy / scale: căn riêng từng trạng thái, tính TƯƠNG ĐỐI so với walk (walk đã căn bằng ox, oy ở PET_DEF); không ghi = 0 / 1.
+//   stride / speed: chỉ dùng cho walk. fps: nhịp phát (mặc định idle 10, attack 12.5).  max = cạnh dài tối đa 1 khung sau khi cắt (176 đủ nét mà RAM vừa).
+//   Tên khối ('Teddy') phải trùng PET_DEF.name. Game tự đưa walk/idle/attack về walkSheet/idleSheet/attackSheet khi nạp (xem PET_ANIM ở cuối khối này).
+const PET_RAW = {
 // PET_DEF  scale: 1, ox: 0.115, oy: 0.109
-  'Chicken': {
-    walkSheet: {
-      src: 'Character/CHICKEN/03-Walk/03-Walk.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      stride: 0.705
-    },
-    idleSheet: {
-      src: 'Character/CHICKEN/01-Idle/02-Idle_Blink.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      fps: 10,
-      scale: 0.995
-    },
-    attackSheet: {
-      src: 'Character/CHICKEN/02-Throw/02-Throw.png',
-      cols: 4,
-      rows: 2,
-      max: 176,
-      fps: 12.5,
-      dx: 0.004
-    },
-    extra: {
+  'Chicken': { extra: {
+      walk: { src: 'Character/CHICKEN/03-Walk/03-Walk.png', cols: 4, rows: 3, max: 176, stride: 0.705 },
+      idle: { src: 'Character/CHICKEN/01-Idle/02-Idle_Blink.png', cols: 4, rows: 3, max: 176, fps: 10, scale: 0.995 },
+      attack: { src: 'Character/CHICKEN/02-Throw/02-Throw.png', cols: 4, rows: 2, max: 176, fps: 12.5, dx: 0.004 },
       run: { src: 'Character/CHICKEN/04-Run/04-Run.png', cols: 5, rows: 2, max: 176, dx: 0.004, dy: 0.012 },
       jumpup: { src: 'Character/CHICKEN/06-Jump/01-Jump_Up.png', cols: 5, rows: 1, max: 176, dx: 0.004 },
       jumpfall: { src: 'Character/CHICKEN/06-Jump/02-Jump_Fall.png', cols: 5, rows: 1, max: 176, dx: -0.008 },
@@ -83,36 +64,12 @@ const PET_ANIM = {
       hurt: { src: 'Character/CHICKEN/07-Hurt/01-Hurt.png', cols: 3, rows: 2, max: 176, dx: 0.02, dy: -0.008 },
       dizzy: { src: 'Character/CHICKEN/07-Hurt/02-Hurt_Dizzy.png', cols: 5, rows: 2, max: 176, dx: -0.012 },
       dead: { src: 'Character/CHICKEN/08-Dead/08-Dead.png', cols: 5, rows: 2, max: 176, dx: -0.123, dy: -0.008 },
-    },
-  },
+  } },
 // PET_DEF  scale: 1, ox: 0.104, oy: 0.109
-  'Ducky': {
-    walkSheet: {
-      src: 'Character/DUCKY/03-Walk/03-Walk.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      stride: 0.711
-    },
-    idleSheet: {
-      src: 'Character/DUCKY/01-Idle/02-Idle_Blink.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      fps: 10,
-      scale: 0.995,
-      dy: 0.004
-    },
-    attackSheet: {
-      src: 'Character/DUCKY/02-Throw/02-Throw.png',
-      cols: 4,
-      rows: 2,
-      max: 176,
-      fps: 12.5,
-      dx: 0.006,
-      dy: 0.004
-    },
-    extra: {
+  'Ducky': { extra: {
+      walk: { src: 'Character/DUCKY/03-Walk/03-Walk.png', cols: 4, rows: 3, max: 176, stride: 0.711 },
+      idle: { src: 'Character/DUCKY/01-Idle/02-Idle_Blink.png', cols: 4, rows: 3, max: 176, fps: 10, scale: 0.995, dy: 0.004 },
+      attack: { src: 'Character/DUCKY/02-Throw/02-Throw.png', cols: 4, rows: 2, max: 176, fps: 12.5, dx: 0.006, dy: 0.004 },
       run: { src: 'Character/DUCKY/04-Run/04-Run.png', cols: 5, rows: 2, max: 176, dx: 0.006, dy: 0.012 },
       jumpup: { src: 'Character/DUCKY/06-Jump/01-Jump_Up.png', cols: 5, rows: 1, max: 176, dx: 0.008 },
       jumpfall: { src: 'Character/DUCKY/06-Jump/02-Jump_Fall.png', cols: 5, rows: 1, max: 176, dx: -0.004 },
@@ -120,37 +77,12 @@ const PET_ANIM = {
       hurt: { src: 'Character/DUCKY/07-Hurt/01-Hurt.png', cols: 3, rows: 2, max: 176, dx: 0.022, dy: -0.004 },
       dizzy: { src: 'Character/DUCKY/07-Hurt/02-Hurt_Dizzy.png', cols: 5, rows: 2, max: 176, dx: -0.01, dy: 0.004 },
       dead: { src: 'Character/DUCKY/08-Dead/08-Dead.png', cols: 5, rows: 2, max: 176, dx: -0.108, dy: -0.008 },
-    },
-  },
+  } },
 // PET_DEF  scale: 1, ox: 0.106, oy: 0.109
-  'Penguin': {
-    walkSheet: {
-      src: 'Character/PENGUIN/03-Walk/03-Walk.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      stride: 0.708
-    },
-    idleSheet: {
-      src: 'Character/PENGUIN/01-Idle/02-Idle_Blink.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      fps: 10,
-      scale: 0.995,
-      dx: 0.002,
-      dy: 0.004
-    },
-    attackSheet: {
-      src: 'Character/PENGUIN/02-Throw/02-Throw.png',
-      cols: 4,
-      rows: 2,
-      max: 176,
-      fps: 12.5,
-      dx: 0.006,
-      dy: 0.004
-    },
-    extra: {
+  'Penguin': { extra: {
+      walk: { src: 'Character/PENGUIN/03-Walk/03-Walk.png', cols: 4, rows: 3, max: 176, stride: 0.708 },
+      idle: { src: 'Character/PENGUIN/01-Idle/02-Idle_Blink.png', cols: 4, rows: 3, max: 176, fps: 10, scale: 0.995, dx: 0.002, dy: 0.004 },
+      attack: { src: 'Character/PENGUIN/02-Throw/02-Throw.png', cols: 4, rows: 2, max: 176, fps: 12.5, dx: 0.006, dy: 0.004 },
       run: { src: 'Character/PENGUIN/04-Run/04-Run.png', cols: 5, rows: 2, max: 176, dx: 0.008, dy: 0.012 },
       jumpup: { src: 'Character/PENGUIN/06-Jump/01-Jump_Up.png', cols: 5, rows: 1, max: 176, dx: 0.008 },
       jumpfall: { src: 'Character/PENGUIN/06-Jump/02-Jump_Fall.png', cols: 5, rows: 1, max: 176, dx: 0.008 },
@@ -158,35 +90,12 @@ const PET_ANIM = {
       hurt: { src: 'Character/PENGUIN/07-Hurt/01-Hurt.png', cols: 3, rows: 2, max: 176, dx: 0.023, dy: -0.004 },
       dizzy: { src: 'Character/PENGUIN/07-Hurt/02-Hurt_Dizzy.png', cols: 5, rows: 2, max: 176, dx: -0.01, dy: 0.004 },
       dead: { src: 'Character/PENGUIN/08-Dead/08-Dead.png', cols: 5, rows: 2, max: 176, dx: -0.107, dy: -0.008 },
-    },
-  },
+  } },
 // PET_DEF  scale: 1, ox: 0.076, oy: 0.125
-  'Piggy': {
-    walkSheet: {
-      src: 'Character/PIGGY/03-Walk/03-Walk.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      stride: 0.681
-    },
-    idleSheet: {
-      src: 'Character/PIGGY/01-Idle/02-Idle_Blink.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      fps: 10,
-      dx: 0.004
-    },
-    attackSheet: {
-      src: 'Character/PIGGY/02-Throw/02-Throw.png',
-      cols: 4,
-      rows: 2,
-      max: 176,
-      fps: 12.5,
-      scale: 0.974,
-      dx: 0.018
-    },
-    extra: {
+  'Piggy': { extra: {
+      walk: { src: 'Character/PIGGY/03-Walk/03-Walk.png', cols: 4, rows: 3, max: 176, stride: 0.681 },
+      idle: { src: 'Character/PIGGY/01-Idle/02-Idle_Blink.png', cols: 4, rows: 3, max: 176, fps: 10, dx: 0.004 },
+      attack: { src: 'Character/PIGGY/02-Throw/02-Throw.png', cols: 4, rows: 2, max: 176, fps: 12.5, scale: 0.974, dx: 0.018 },
       run: { src: 'Character/PIGGY/04-Run/04-Run.png', cols: 5, rows: 2, max: 176, scale: 0.979, dx: 0.004, dy: 0.02 },
       jumpup: { src: 'Character/PIGGY/06-Jump/01-Jump_Up.png', cols: 5, rows: 1, max: 176, dx: 0.002 },
       jumpfall: { src: 'Character/PIGGY/06-Jump/02-Jump_Fall.png', cols: 5, rows: 1, max: 176, dx: -0.002 },
@@ -194,36 +103,12 @@ const PET_ANIM = {
       hurt: { src: 'Character/PIGGY/07-Hurt/01-Hurt.png', cols: 3, rows: 2, max: 176, dx: 0.043 },
       dizzy: { src: 'Character/PIGGY/07-Hurt/02-Hurt_Dizzy.png', cols: 5, rows: 2, max: 176, dx: -0.016 },
       dead: { src: 'Character/PIGGY/08-Dead/08-Dead.png', cols: 5, rows: 2, max: 176, dx: -0.102 },
-    },
-  },
+  } },
 // PET_DEF  scale: 1, ox: 0.106, oy: 0.117
-  'Polar': {
-    walkSheet: {
-      src: 'Character/POLAR/03-Walk/03-Walk.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      stride: 0.711
-    },
-    idleSheet: {
-      src: 'Character/POLAR/01-Idle/02-Idle_Blink.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      fps: 10,
-      scale: 0.995,
-      dx: -0.002
-    },
-    attackSheet: {
-      src: 'Character/POLAR/02-Throw/02-Throw.png',
-      cols: 4,
-      rows: 2,
-      max: 176,
-      fps: 12.5,
-      scale: 0.99,
-      dx: 0.004
-    },
-    extra: {
+  'Polar': { extra: {
+      walk: { src: 'Character/POLAR/03-Walk/03-Walk.png', cols: 4, rows: 3, max: 176, stride: 0.711 },
+      idle: { src: 'Character/POLAR/01-Idle/02-Idle_Blink.png', cols: 4, rows: 3, max: 176, fps: 10, scale: 0.995, dx: -0.002 },
+      attack: { src: 'Character/POLAR/02-Throw/02-Throw.png', cols: 4, rows: 2, max: 176, fps: 12.5, scale: 0.99, dx: 0.004 },
       run: { src: 'Character/POLAR/04-Run/04-Run.png', cols: 5, rows: 2, max: 176, dx: 0.004, dy: 0.016 },
       jumpup: { src: 'Character/POLAR/06-Jump/01-Jump_Up.png', cols: 5, rows: 1, max: 176, dx: 0.006 },
       jumpfall: { src: 'Character/POLAR/06-Jump/02-Jump_Fall.png', cols: 5, rows: 1, max: 176, dx: -0.006 },
@@ -231,34 +116,12 @@ const PET_ANIM = {
       hurt: { src: 'Character/POLAR/07-Hurt/01-Hurt.png', cols: 3, rows: 2, max: 176, dx: 0.025 },
       dizzy: { src: 'Character/POLAR/07-Hurt/02-Hurt_Dizzy.png', cols: 5, rows: 2, max: 176, dx: -0.012 },
       dead: { src: 'Character/POLAR/08-Dead/08-Dead.png', cols: 5, rows: 2, max: 176, dx: -0.11 },
-    },
-  },
+  } },
 // PET_DEF  scale: 1.212, ox: 0.063, oy: 0.215
-  'Reindeer': {
-    walkSheet: {
-      src: 'Character/REINDEER/03-Walk/03-Walk.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      stride: 0.554
-    },
-    idleSheet: {
-      src: 'Character/REINDEER/01-Idle/02-Idle_Blink.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      fps: 10
-    },
-    attackSheet: {
-      src: 'Character/REINDEER/02-Throw/02-Throw.png',
-      cols: 4,
-      rows: 2,
-      max: 176,
-      fps: 12.5,
-      scale: 0.97,
-      dx: 0.01
-    },
-    extra: {
+  'Reindeer': { extra: {
+      walk: { src: 'Character/REINDEER/03-Walk/03-Walk.png', cols: 4, rows: 3, max: 176, stride: 0.554 },
+      idle: { src: 'Character/REINDEER/01-Idle/02-Idle_Blink.png', cols: 4, rows: 3, max: 176, fps: 10 },
+      attack: { src: 'Character/REINDEER/02-Throw/02-Throw.png', cols: 4, rows: 2, max: 176, fps: 12.5, scale: 0.97, dx: 0.01 },
       run: { src: 'Character/REINDEER/04-Run/04-Run.png', cols: 5, rows: 2, max: 176, scale: 0.994, dx: 0.008, dy: 0.012 },
       jumpup: { src: 'Character/REINDEER/06-Jump/01-Jump_Up.png', cols: 5, rows: 1, max: 176, dx: 0.002 },
       jumpfall: { src: 'Character/REINDEER/06-Jump/02-Jump_Fall.png', cols: 5, rows: 1, max: 176, dx: 0.016 },
@@ -266,34 +129,12 @@ const PET_ANIM = {
       hurt: { src: 'Character/REINDEER/07-Hurt/01-Hurt.png', cols: 3, rows: 2, max: 176, dx: 0.043 },
       dizzy: { src: 'Character/REINDEER/07-Hurt/02-Hurt_Dizzy.png', cols: 5, rows: 2, max: 176, dx: -0.02 },
       dead: { src: 'Character/REINDEER/08-Dead/08-Dead.png', cols: 5, rows: 2, max: 176, dx: -0.102, dy: -0.102 },
-    },
-  },
+  } },
 // PET_DEF  scale: 1, ox: 0.066, oy: 0.117
-  'Tanuki': {
-    walkSheet: {
-      src: 'Character/TANUKI/03-Walk/03-Walk.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      stride: 0.699
-    },
-    idleSheet: {
-      src: 'Character/TANUKI/01-Idle/01-Idle.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      fps: 10,
-      dx: -0.002
-    },
-    attackSheet: {
-      src: 'Character/TANUKI/02-Throw/02-Throw.png',
-      cols: 4,
-      rows: 2,
-      max: 176,
-      fps: 12.5,
-      scale: 0.979
-    },
-    extra: {
+  'Tanuki': { extra: {
+      walk: { src: 'Character/TANUKI/03-Walk/03-Walk.png', cols: 4, rows: 3, max: 176, stride: 0.699 },
+      idle: { src: 'Character/TANUKI/01-Idle/01-Idle.png', cols: 4, rows: 3, max: 176, fps: 10, dx: -0.002 },
+      attack: { src: 'Character/TANUKI/02-Throw/02-Throw.png', cols: 4, rows: 2, max: 176, fps: 12.5, scale: 0.979 },
       run: { src: 'Character/TANUKI/04-Run/04-Run.png', cols: 5, rows: 2, max: 176, dy: 0.016 },
       jumpup: { src: 'Character/TANUKI/06-Jump/01-Jump_Up.png', cols: 5, rows: 1, max: 176, dx: 0.006 },
       jumpfall: { src: 'Character/TANUKI/06-Jump/02-Jump_Fall.png', cols: 5, rows: 1, max: 176, dx: 0.01 },
@@ -301,36 +142,12 @@ const PET_ANIM = {
       hurt: { src: 'Character/TANUKI/07-Hurt/01-Hurt.png', cols: 3, rows: 2, max: 176, dx: 0.016 },
       dizzy: { src: 'Character/TANUKI/07-Hurt/02-Hurt_Dizzy.png', cols: 5, rows: 2, max: 176, dx: -0.008 },
       dead: { src: 'Character/TANUKI/08-Dead/08-Dead.png', cols: 5, rows: 2, max: 176, dx: -0.086 },
-    },
-  },
+  } },
 // PET_DEF  scale: 1, ox: 0.106, oy: 0.117
-  'Teddy': {
-    walkSheet: {
-      src: 'Character/TEDDY/03-Walk/03-Walk.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      stride: 0.711
-    },
-    idleSheet: {
-      src: 'Character/TEDDY/01-Idle/02-Idle_Blink.png',
-      cols: 4,
-      rows: 3,
-      max: 176,
-      fps: 10,
-      scale: 0.995,
-      dx: -0.002
-    },
-    attackSheet: {
-      src: 'Character/TEDDY/02-Throw/02-Throw.png',
-      cols: 4,
-      rows: 2,
-      max: 176,
-      fps: 12.5,
-      scale: 0.99,
-      dx: 0.004
-    },
-    extra: {
+  'Teddy': { extra: {
+      walk: { src: 'Character/TEDDY/03-Walk/03-Walk.png', cols: 4, rows: 3, max: 176, stride: 0.711 },
+      idle: { src: 'Character/TEDDY/01-Idle/02-Idle_Blink.png', cols: 4, rows: 3, max: 176, fps: 10, scale: 0.995, dx: -0.002 },
+      attack: { src: 'Character/TEDDY/02-Throw/02-Throw.png', cols: 4, rows: 2, max: 176, fps: 12.5, scale: 0.99, dx: 0.004 },
       run: { src: 'Character/TEDDY/04-Run/04-Run.png', cols: 5, rows: 2, max: 176, dx: 0.004, dy: 0.016 },
       jumpup: { src: 'Character/TEDDY/06-Jump/01-Jump_Up.png', cols: 5, rows: 1, max: 176, dx: 0.006 },
       jumpfall: { src: 'Character/TEDDY/06-Jump/02-Jump_Fall.png', cols: 5, rows: 1, max: 176, dx: -0.006 },
@@ -338,9 +155,13 @@ const PET_ANIM = {
       hurt: { src: 'Character/TEDDY/07-Hurt/01-Hurt.png', cols: 3, rows: 2, max: 176, dx: 0.025 },
       dizzy: { src: 'Character/TEDDY/07-Hurt/02-Hurt_Dizzy.png', cols: 5, rows: 2, max: 176, dx: -0.012 },
       dead: { src: 'Character/TEDDY/08-Dead/08-Dead.png', cols: 5, rows: 2, max: 176, dx: -0.11 },
-    },
-  },
+  } },
 };
+// Đưa walk / idle / attack ra walkSheet / idleSheet / attackSheet cho loader (pet-loader.js); phần còn lại giữ trong extra.
+const PET_ANIM = Object.fromEntries(Object.entries(PET_RAW).map(([name, c]) => {
+  const { walk, idle, attack, ...extra } = c.extra;
+  return [name, { walkSheet: walk, idleSheet: idle, attackSheet: attack, extra }];
+}));
 
 // Cấu hình kỹ năng bắn lửa (thêm vào cuối config.js)
 const FIREBALL_SPEED = 750; // Tốc độ bay của quả cầu lửa
