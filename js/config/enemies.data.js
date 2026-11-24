@@ -7,18 +7,18 @@ const ENEMY_DATA = {
   ],
   "anim": {
     "zombie": { "extra": {
-      "idle": {"src":"Enemy/ZOMBIE/01-Idle/01-Idle.png","cols":4,"rows":3,"max":240,"fps":10},
       "walk": {"src":"Enemy/ZOMBIE/02-Walk/02-Walk.png","cols":4,"rows":3,"max":240,"fps":12},
+      "idle": {"src":"Enemy/ZOMBIE/01-Idle/01-Idle.png","cols":4,"rows":3,"max":240,"fps":10},
       "attack": {"src":"Enemy/ZOMBIE/03-Attack/03-Attack.png","cols":4,"rows":2,"max":240,"fps":12,"hitAt":4},
       "hurt": {"src":"Enemy/ZOMBIE/04-Hurt/04-Hurt.png","cols":3,"rows":2,"max":240,"fps":14},
       "dead": {"src":"Enemy/ZOMBIE/05-Dead/01-Dead.png","cols":5,"rows":2,"max":240,"fps":12},
       "dead2": {"src":"Enemy/ZOMBIE/05-Dead/02-Dead.png","cols":5,"rows":2,"max":240,"fps":12}
     } },
     "skeleton": { "extra": {
-      "idle": {"src":"Enemy/SKELETON/01-Idle/01-Idle.png","cols":4,"rows":3,"max":240,"fps":10},
       "walk": {"src":"Enemy/SKELETON/02-Walk/02-Walk.png","cols":4,"rows":3,"max":240,"fps":12},
-      "run": {"src":"Enemy/SKELETON/03-Run/03-Run.png","cols":5,"rows":2,"max":240,"fps":14},
+      "idle": {"src":"Enemy/SKELETON/01-Idle/01-Idle.png","cols":4,"rows":3,"max":240,"fps":10},
       "attack": {"src":"Enemy/SKELETON/04-Throw/04-Throw.png","cols":4,"rows":2,"max":240,"fps":12,"hitAt":3},
+      "run": {"src":"Enemy/SKELETON/03-Run/03-Run.png","cols":5,"rows":2,"max":240,"fps":14},
       "hurt": {"src":"Enemy/SKELETON/05-Hurt/05-Hurt.png","cols":3,"rows":2,"max":240,"fps":14},
       "dead": {"src":"Enemy/SKELETON/06-Dead/01-Dead.png","cols":5,"rows":2,"max":240,"fps":12},
       "dead2": {"src":"Enemy/SKELETON/06-Dead/02-Dead.png","cols":5,"rows":2,"max":240,"fps":12},
