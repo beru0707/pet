@@ -14,8 +14,8 @@ const PET_DATA = {
   "anim": {
     "Chicken": { "extra": {
       "walk": {"src":"Character/CHICKEN/03-Walk/03-Walk.png","cols":4,"rows":3,"max":176,"stride":0.705},
-      "idle": {"src":"Character/CHICKEN/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"scale":0.995},
-      "attack": {"src":"Character/CHICKEN/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"dx":0.004},
+      "idle": {"src":"Character/CHICKEN/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"fps":10,"scale":0.995},
+      "attack": {"src":"Character/CHICKEN/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"fps":12.5,"dx":0.004},
       "run": {"src":"Character/CHICKEN/04-Run/04-Run.png","cols":5,"rows":2,"max":176,"dx":0.004,"dy":0.012},
       "jumpup": {"src":"Character/CHICKEN/06-Jump/01-Jump_Up.png","cols":5,"rows":1,"max":176,"dx":0.004},
       "jumpfall": {"src":"Character/CHICKEN/06-Jump/02-Jump_Fall.png","cols":5,"rows":1,"max":176,"dx":-0.008},
@@ -26,8 +26,8 @@ const PET_DATA = {
     } },
     "Ducky": { "extra": {
       "walk": {"src":"Character/DUCKY/03-Walk/03-Walk.png","cols":4,"rows":3,"max":176,"stride":0.711},
-      "idle": {"src":"Character/DUCKY/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"scale":0.995,"dy":0.004},
-      "attack": {"src":"Character/DUCKY/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"dx":0.006,"dy":0.004},
+      "idle": {"src":"Character/DUCKY/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"fps":10,"scale":0.995,"dy":0.004},
+      "attack": {"src":"Character/DUCKY/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"fps":12.5,"dx":0.006,"dy":0.004},
       "run": {"src":"Character/DUCKY/04-Run/04-Run.png","cols":5,"rows":2,"max":176,"dx":0.006,"dy":0.012},
       "jumpup": {"src":"Character/DUCKY/06-Jump/01-Jump_Up.png","cols":5,"rows":1,"max":176,"dx":0.008},
       "jumpfall": {"src":"Character/DUCKY/06-Jump/02-Jump_Fall.png","cols":5,"rows":1,"max":176,"dx":-0.004},
@@ -38,8 +38,8 @@ const PET_DATA = {
     } },
     "Penguin": { "extra": {
       "walk": {"src":"Character/PENGUIN/03-Walk/03-Walk.png","cols":4,"rows":3,"max":176,"stride":0.708},
-      "idle": {"src":"Character/PENGUIN/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"scale":0.995,"dx":0.002,"dy":0.004},
-      "attack": {"src":"Character/PENGUIN/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"dx":0.006,"dy":0.004},
+      "idle": {"src":"Character/PENGUIN/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"fps":10,"scale":0.995,"dx":0.002,"dy":0.004},
+      "attack": {"src":"Character/PENGUIN/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"fps":12.5,"dx":0.006,"dy":0.004},
       "run": {"src":"Character/PENGUIN/04-Run/04-Run.png","cols":5,"rows":2,"max":176,"dx":0.008,"dy":0.012},
       "jumpup": {"src":"Character/PENGUIN/06-Jump/01-Jump_Up.png","cols":5,"rows":1,"max":176,"dx":0.008},
       "jumpfall": {"src":"Character/PENGUIN/06-Jump/02-Jump_Fall.png","cols":5,"rows":1,"max":176,"dx":0.008},
@@ -50,8 +50,8 @@ const PET_DATA = {
     } },
     "Piggy": { "extra": {
       "walk": {"src":"Character/PIGGY/03-Walk/03-Walk.png","cols":4,"rows":3,"max":176,"stride":0.681},
-      "idle": {"src":"Character/PIGGY/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"dx":0.004},
-      "attack": {"src":"Character/PIGGY/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"scale":0.974,"dx":0.018},
+      "idle": {"src":"Character/PIGGY/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"fps":10,"dx":0.004},
+      "attack": {"src":"Character/PIGGY/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"fps":12.5,"scale":0.974,"dx":0.018},
       "run": {"src":"Character/PIGGY/04-Run/04-Run.png","cols":5,"rows":2,"max":176,"scale":0.979,"dx":0.004,"dy":0.02},
       "jumpup": {"src":"Character/PIGGY/06-Jump/01-Jump_Up.png","cols":5,"rows":1,"max":176,"dx":0.002},
       "jumpfall": {"src":"Character/PIGGY/06-Jump/02-Jump_Fall.png","cols":5,"rows":1,"max":176,"dx":-0.002},
@@ -62,8 +62,8 @@ const PET_DATA = {
     } },
     "Polar": { "extra": {
       "walk": {"src":"Character/POLAR/03-Walk/03-Walk.png","cols":4,"rows":3,"max":176,"stride":0.711},
-      "idle": {"src":"Character/POLAR/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"scale":0.995,"dx":-0.002},
-      "attack": {"src":"Character/POLAR/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"scale":0.99,"dx":0.004},
+      "idle": {"src":"Character/POLAR/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"fps":10,"scale":0.995,"dx":-0.002},
+      "attack": {"src":"Character/POLAR/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"fps":12.5,"scale":0.99,"dx":0.004},
       "run": {"src":"Character/POLAR/04-Run/04-Run.png","cols":5,"rows":2,"max":176,"dx":0.004,"dy":0.016},
       "jumpup": {"src":"Character/POLAR/06-Jump/01-Jump_Up.png","cols":5,"rows":1,"max":176,"dx":0.006},
       "jumpfall": {"src":"Character/POLAR/06-Jump/02-Jump_Fall.png","cols":5,"rows":1,"max":176,"dx":-0.006},
@@ -74,8 +74,8 @@ const PET_DATA = {
     } },
     "Reindeer": { "extra": {
       "walk": {"src":"Character/REINDEER/03-Walk/03-Walk.png","cols":4,"rows":3,"max":176,"stride":0.554},
-      "idle": {"src":"Character/REINDEER/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176},
-      "attack": {"src":"Character/REINDEER/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"scale":0.97,"dx":0.01},
+      "idle": {"src":"Character/REINDEER/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"fps":10},
+      "attack": {"src":"Character/REINDEER/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"fps":12.5,"scale":0.97,"dx":0.01},
       "run": {"src":"Character/REINDEER/04-Run/04-Run.png","cols":5,"rows":2,"max":176,"scale":0.994,"dx":0.008,"dy":0.012},
       "jumpup": {"src":"Character/REINDEER/06-Jump/01-Jump_Up.png","cols":5,"rows":1,"max":176,"dx":0.002},
       "jumpfall": {"src":"Character/REINDEER/06-Jump/02-Jump_Fall.png","cols":5,"rows":1,"max":176,"dx":0.016},
@@ -86,8 +86,8 @@ const PET_DATA = {
     } },
     "Tanuki": { "extra": {
       "walk": {"src":"Character/TANUKI/03-Walk/03-Walk.png","cols":4,"rows":3,"max":176,"stride":0.699},
-      "idle": {"src":"Character/TANUKI/01-Idle/01-Idle.png","cols":4,"rows":3,"max":176,"dx":-0.002},
-      "attack": {"src":"Character/TANUKI/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"scale":0.979},
+      "idle": {"src":"Character/TANUKI/01-Idle/01-Idle.png","cols":4,"rows":3,"max":176,"fps":10,"dx":-0.002},
+      "attack": {"src":"Character/TANUKI/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"fps":12.5,"scale":0.979},
       "run": {"src":"Character/TANUKI/04-Run/04-Run.png","cols":5,"rows":2,"max":176,"dy":0.016},
       "jumpup": {"src":"Character/TANUKI/06-Jump/01-Jump_Up.png","cols":5,"rows":1,"max":176,"dx":0.006},
       "jumpfall": {"src":"Character/TANUKI/06-Jump/02-Jump_Fall.png","cols":5,"rows":1,"max":176,"dx":0.01},
@@ -98,8 +98,8 @@ const PET_DATA = {
     } },
     "Teddy": { "extra": {
       "walk": {"src":"Character/TEDDY/03-Walk/03-Walk.png","cols":4,"rows":3,"max":176,"stride":0.711},
-      "idle": {"src":"Character/TEDDY/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"scale":0.995,"dx":-0.002},
-      "attack": {"src":"Character/TEDDY/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"scale":0.99,"dx":0.004},
+      "idle": {"src":"Character/TEDDY/01-Idle/02-Idle_Blink.png","cols":4,"rows":3,"max":176,"fps":10,"scale":0.995,"dx":-0.002},
+      "attack": {"src":"Character/TEDDY/02-Throw/02-Throw.png","cols":4,"rows":2,"max":176,"fps":12.5,"scale":0.99,"dx":0.004},
       "run": {"src":"Character/TEDDY/04-Run/04-Run.png","cols":5,"rows":2,"max":176,"dx":0.004,"dy":0.016},
       "jumpup": {"src":"Character/TEDDY/06-Jump/01-Jump_Up.png","cols":5,"rows":1,"max":176,"dx":0.006},
       "jumpfall": {"src":"Character/TEDDY/06-Jump/02-Jump_Fall.png","cols":5,"rows":1,"max":176,"dx":-0.006},
