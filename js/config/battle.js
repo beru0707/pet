@@ -38,7 +38,7 @@ const BATTLE_CFG = {
 const EN_MAX = 240;   // cạnh dài tối đa của 1 khung quái sau khi cắt (px)
 const enSheet = (file, cols, rows, o) => Object.assign({src:'Enemy/'+file, cols, rows, frames:cols*rows, max:EN_MAX}, o);
 const ENEMY_TYPES = {
-  zombie: { name:'Zombie', hp:80, dmg:10, speed:44, h:158, anchor:.844, ax:.39, bar:122, range:95, cd:1.3, spriteLeft:true,
+  zombie: { name:'Zombie', hp:80, dmg:10, speed:44, h:114, anchor:.844, ax:.39, bar:88, range:95, cd:1.3, spriteLeft:true,
     sheets: {
       idle:   enSheet('ZOMBIE/01-Idle/01-Idle.png', 4, 3),
       walk:   enSheet('ZOMBIE/02-Walk/02-Walk.png', 4, 3),
@@ -56,8 +56,8 @@ const ENEMY_TYPES = {
       dead2:  {sheet:'dead2',  n:10, fps:12},
     },
   },
-  skeleton: { name:'Skeleton', hp:55, dmg:8, speed:52, runMul:1.7, h:158, anchor:.88, ax:.418, bar:128, range:520, stop:330, cd:1.9, spriteLeft:true,
-    proj: {sheet:'stone', size:46, speed:430, dx:42, dy:54, life:2, spin:9},
+  skeleton: { name:'Skeleton', hp:55, dmg:8, speed:52, runMul:1.7, h:108, anchor:.88, ax:.418, bar:88, range:520, stop:330, cd:1.9, spriteLeft:true,
+    proj: {sheet:'stone', size:36, speed:430, dx:29, dy:37, life:2, spin:9},
     sheets: {
       idle:   enSheet('SKELETON/01-Idle/01-Idle.png', 4, 3),
       walk:   enSheet('SKELETON/02-Walk/02-Walk.png', 4, 3),
