@@ -14,17 +14,18 @@
 //   vis       : phần chiều cao khung mà nhân vật thật sự chiếm (dùng để tính vùng bấm chọn pet)
 //   barDY     : độ cao thanh máu so với chân (nhân với scale)
 //   stride    : độ dài 1 chu kỳ bước (nhỏ hơn = chân bước nhanh hơn so với quãng đường đi)
+//   st        : căn chỉnh RIÊNG từng trạng thái so với đi bộ (đo bằng công cụ repo 'character': căn chân + tâm theo vùng nhìn thấy trung vị của các khung). Mỗi mục {scale, dx, dy} (nhóm jump* chỉ căn dx: ảnh đã có độ cao của cú nhảy); dx/dy tính theo chiều cao khung, trạng thái nào không ghi = 0 / scale 1
 //   sw, sh    : kích thước khung gốc (chỉ dùng làm tỉ lệ khi ảnh chưa nạp xong)
 // ox/oy/vis/stride/scale đo tự động từ ảnh (vùng nhìn thấy của từng khung); không vừa mắt thì chỉnh tay.
 const PET_DEF = [
-  {name:'Chicken', dir:'CHICKEN',  blink:true, scale:1.055, ox:0.115, oy:0.112, vis:0.759, barDY:83.4, stride:0.668, sw:174, sh:200, spriteLeft:true},
-  {name:'Ducky',   dir:'DUCKY',    blink:true, scale:1.066, ox:0.105, oy:0.114, vis:0.751, barDY:82.6, stride:0.667, sw:172, sh:200, spriteLeft:true},
-  {name:'Penguin', dir:'PENGUIN',  blink:true, scale:1.063, ox:0.108, oy:0.113, vis:0.753, barDY:82.8, stride:0.666, sw:173, sh:200, spriteLeft:true},
-  {name:'Piggy',   dir:'PIGGY',    blink:true, scale:1.107, ox:0.082, oy:0.130, vis:0.723, barDY:79.5, stride:0.615, sw:180, sh:200, spriteLeft:true},
-  {name:'Polar',   dir:'POLAR',    blink:true, scale:1.056, ox:0.105, oy:0.120, vis:0.757, barDY:83.3, stride:0.673, sw:172, sh:200, spriteLeft:true},
-  {name:'Reindeer', dir:'REINDEER', blink:true, scale:1.292, ox:0.065, oy:0.218, vis:0.619, barDY:68.1, stride:0.520, sw:182, sh:200, spriteLeft:true},
-  {name:'Tanuki',  dir:'TANUKI',   blink:false, scale:1.074, ox:0.065, oy:0.120, vis:0.745, barDY:81.9, stride:0.651, sw:175, sh:200, spriteLeft:true},
-  {name:'Teddy',   dir:'TEDDY',    blink:true, scale:1.056, ox:0.105, oy:0.120, vis:0.757, barDY:83.3, stride:0.673, sw:172, sh:200, spriteLeft:true},
+  {name:'Chicken', dir:'CHICKEN',  blink:true, scale:1.055, ox:0.115, oy:0.112, vis:0.759, barDY:83.4, stride:0.668, sw:174, sh:200, st:{idle:{scale:0.999,dy:0.003}, attack:{scale:1.001,dx:0.006,dy:0.003}, run:{scale:1.001,dx:0.004,dy:0.014}, jumpup:{dx:0.004}, jumpfall:{dx:-0.007}, jumpthrow:{dx:-0.028}, hurt:{dx:0.018,dy:-0.003}, dizzy:{dx:-0.005,dy:0.003}, dead:{dx:-0.119,dy:0.002}}, spriteLeft:true},
+  {name:'Ducky',   dir:'DUCKY',    blink:true, scale:1.066, ox:0.105, oy:0.114, vis:0.751, barDY:82.6, stride:0.667, sw:172, sh:200, st:{idle:{scale:0.997,dy:0.004}, attack:{scale:1.005,dx:0.006,dy:0.004}, run:{scale:1.003,dx:0.003,dy:0.014}, jumpup:{dx:0.004}, jumpfall:{dx:-0.008}, jumpthrow:{dx:-0.029}, hurt:{dx:0.019,dy:-0.003}, dizzy:{dx:-0.006,dy:0.004}, dead:{dx:-0.098,dy:0.002}}, spriteLeft:true},
+  {name:'Penguin', dir:'PENGUIN',  blink:true, scale:1.063, ox:0.108, oy:0.113, vis:0.753, barDY:82.8, stride:0.666, sw:173, sh:200, st:{idle:{scale:0.997,dy:0.004}, attack:{scale:1.001,dx:0.007,dy:0.004}, run:{scale:1.003,dx:0.004,dy:0.014}, jumpup:{dx:0.004}, jumpfall:{dx:0.004}, jumpthrow:{dx:-0.028}, hurt:{dx:0.019,dy:-0.003}, dizzy:{dx:-0.005,dy:0.004}, dead:{dx:-0.104,dy:0.002}}, spriteLeft:true},
+  {name:'Piggy',   dir:'PIGGY',    blink:true, scale:1.107, ox:0.082, oy:0.130, vis:0.723, barDY:79.5, stride:0.615, sw:180, sh:200, st:{idle:{scale:1.001,dx:-0.002}, attack:{scale:0.978,dx:0.016}, run:{scale:0.976,dx:-0.004,dy:0.016}, jumpup:{dx:-0.005}, jumpfall:{dx:-0.01}, jumpthrow:{dx:-0.034}, hurt:{dx:0.037}, dizzy:{dx:-0.008}, dead:{dx:-0.108}}, spriteLeft:true},
+  {name:'Polar',   dir:'POLAR',    blink:true, scale:1.056, ox:0.105, oy:0.120, vis:0.757, barDY:83.3, stride:0.673, sw:172, sh:200, st:{idle:{scale:0.996,dx:-0.002,dy:0.002}, attack:{scale:0.992,dx:0.006,dy:0.002}, run:{dx:0.002,dy:0.016}, jumpup:{dx:0.004}, jumpfall:{dx:-0.006}, jumpthrow:{dx:-0.03}, hurt:{dx:0.029}, dizzy:{dx:-0.005,dy:0.002}, dead:{dx:-0.11}}, spriteLeft:true},
+  {name:'Reindeer', dir:'REINDEER', blink:true, scale:1.292, ox:0.065, oy:0.218, vis:0.619, barDY:68.1, stride:0.520, sw:182, sh:200, st:{idle:{scale:1.003,dy:0.002}, attack:{scale:0.983,dx:0.012,dy:0.002}, run:{scale:0.999,dx:0.004,dy:0.013}, jumpup:{dx:-0.002}, jumpfall:{dx:0.011}, jumpthrow:{dx:-0.036}, hurt:{dx:0.043}, dizzy:{dx:-0.01,dy:0.002}, dead:{dx:-0.104,dy:-0.053}}, spriteLeft:true},
+  {name:'Tanuki',  dir:'TANUKI',   blink:false, scale:1.074, ox:0.065, oy:0.120, vis:0.745, barDY:81.9, stride:0.651, sw:175, sh:200, st:{idle:{scale:0.999,dx:-0.002}, attack:{scale:0.985,dx:0.003}, run:{scale:0.997,dy:0.016}, jumpup:{dx:0.004}, jumpfall:{dx:0.008}, jumpthrow:{dx:-0.021}, hurt:{dx:0.019}, dizzy:{dx:-0.004}, dead:{dx:-0.086}}, spriteLeft:true},
+  {name:'Teddy',   dir:'TEDDY',    blink:true, scale:1.056, ox:0.105, oy:0.120, vis:0.757, barDY:83.3, stride:0.673, sw:172, sh:200, st:{idle:{scale:0.996,dx:-0.002,dy:0.002}, attack:{scale:0.992,dx:0.006,dy:0.002}, run:{dx:0.002,dy:0.016}, jumpup:{dx:0.004}, jumpfall:{dx:-0.006}, jumpthrow:{dx:-0.03}, hurt:{dx:0.029}, dizzy:{dx:-0.005,dy:0.002}, dead:{dx:-0.11}}, spriteLeft:true},
 ];
 // spriteLeft: true = ảnh gốc nhìn sang TRÁI (game sẽ lật khi đi sang phải)
 // ============ CẤU HÌNH ANIMATION CHO TỪNG THÚ (bạn chỉnh ở đây) ============
@@ -52,17 +53,17 @@ const CHAR_MAX = 176;   // cạnh dài tối đa của 1 khung sau khi cắt (px
 const petSheets = d => {
   const S = (file, cols, rows, o) => Object.assign({src:'Character/'+d.dir+'/'+file, cols, rows, max:CHAR_MAX}, o);
   return {
-    walkSheet:   S('03-Walk/03-Walk.png', 4, 3, {stride:d.stride}),
-    idleSheet:   S(d.blink ? '01-Idle/02-Idle_Blink.png' : '01-Idle/01-Idle.png', 4, 3, {fps:10}),
-    attackSheet: S('02-Throw/02-Throw.png', 4, 2, {fps:12.5}),
+    walkSheet:   S('03-Walk/03-Walk.png', 4, 3, {stride:d.stride}),   // walk là mốc: ox/oy ở PET_DEF; các trạng thái khác căn theo d.st
+    idleSheet:   S(d.blink ? '01-Idle/02-Idle_Blink.png' : '01-Idle/01-Idle.png', 4, 3, Object.assign({fps:10}, d.st && d.st.idle)),
+    attackSheet: S('02-Throw/02-Throw.png', 4, 2, Object.assign({fps:12.5}, d.st && d.st.attack)),
     extra: {
-      run:       S('04-Run/04-Run.png', 5, 2),
-      jumpup:    S('06-Jump/01-Jump_Up.png', 5, 1),
-      jumpfall:  S('06-Jump/02-Jump_Fall.png', 5, 1),
-      jumpthrow: S('06-Jump/03-Jump_Throw.png', 4, 2),
-      hurt:      S('07-Hurt/01-Hurt.png', 3, 2),
-      dizzy:     S('07-Hurt/02-Hurt_Dizzy.png', 5, 2),
-      dead:      S('08-Dead/08-Dead.png', 5, 2),
+      run:       S('04-Run/04-Run.png', 5, 2, d.st && d.st.run),
+      jumpup:    S('06-Jump/01-Jump_Up.png', 5, 1, d.st && d.st.jumpup),
+      jumpfall:  S('06-Jump/02-Jump_Fall.png', 5, 1, d.st && d.st.jumpfall),
+      jumpthrow: S('06-Jump/03-Jump_Throw.png', 4, 2, d.st && d.st.jumpthrow),
+      hurt:      S('07-Hurt/01-Hurt.png', 3, 2, d.st && d.st.hurt),
+      dizzy:     S('07-Hurt/02-Hurt_Dizzy.png', 5, 2, d.st && d.st.dizzy),
+      dead:      S('08-Dead/08-Dead.png', 5, 2, d.st && d.st.dead),
     },
   };
 };
