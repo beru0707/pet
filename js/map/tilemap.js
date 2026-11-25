@@ -35,9 +35,13 @@ function tmCellOK(T, k, deck){ return deck ? (T.br[k] === 1 || (T.hi[k] === 1 &&
 // chừa lề cho thân: điểm cách chân TM_CFG.headMargin px về phía trên không được rơi vào vùng cấm (vách đá, nước, chân nhà...). Gốc cây / cầu coi như đi được
 function tmGround(T, k){ return T.walk[k] === 1 || T.br[k] === 1 || (T.rp !== undefined && T.rp[k] === 1); }
 function tmHeadClear(T, x, y, gy){
-  const m = TM_CFG.headMargin; if(!m) return true;
-  const hy = Math.floor((y - m) / T.ts); if(hy >= gy || hy < 0) return true;
-  const hx = Math.floor(x / T.ts); return tmGround(T, hy*T.mw + hx);
+  const hx = Math.floor(x / T.ts);
+  for(const m of [TM_CFG.headMargin, TM_CFG.bodyMargin]){   // điểm ngang thân và ngang đầu: cả hai phải nằm trên đất
+    if(!m) continue;
+    const hy = Math.floor((y - m) / T.ts); if(hy >= gy || hy < 0) continue;
+    if(!tmGround(T, hy*T.mw + hx)) return false;
+  }
+  return true;
 }
 // mức thân pet chồng lên vùng cấm (0..1), dùng để làm mờ nhẹ pet
 function tmWallOverlap(T, p){
