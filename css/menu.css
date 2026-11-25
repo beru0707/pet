@@ -11,24 +11,26 @@
 .tm-btn.on{filter:brightness(1.3);outline-color:#ffd54a}
 
 /* KHUNG MENU: ảnh khung gỗ viền đá (assets/ui/menu-frame.webp, nền trong suốt) phủ lên 2 ô nội dung.
-   Ảnh 1824x811: ô trái (danh sách) x76..1152, ô phải (chi tiết) x1242..1740, cùng y124..759, bảng tên x625..1205 y14..100.
+   Ảnh 1870x841: ô trái (danh sách) x108..1168, ô phải (chi tiết) x1274..1761, cùng y130..745, bảng tên x646..1227 y14..105.
    Mọi vị trí bên dưới tính theo % của khung nên co giãn theo ảnh; chữ trong khung tính theo em (gmFit đặt cỡ chữ gốc). */
 #gm{position:fixed;inset:0;z-index:40;box-sizing:border-box;padding:clamp(54px,9.5vh,70px) 1.5% 1.5%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);font-family:'Fredoka',sans-serif;color:#fff1d6}
 #gm.hidden{display:none}
-.gm-frame{position:relative;width:80em;max-width:100%;aspect-ratio:1824/811}
+.gm-frame{position:relative;width:80em;max-width:100%;aspect-ratio:1870/841}
 .gm-frame::after{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;background:url("../assets/ui/menu-frame.webp") center/100% 100% no-repeat;filter:drop-shadow(0 .3em .6em rgba(0,0,0,.55))}
 .gm-body{position:absolute;inset:0}
 
 /* tiêu đề nằm trên bảng gỗ + nút ĐÓNG tròn ở góc trên phải của khung */
-.gm-title{position:absolute;z-index:4;left:34.3%;width:31.8%;top:1.7%;height:11.5%;display:flex;align-items:center;justify-content:center;font-size:1.7em;font-weight:700;letter-spacing:.04em;color:#fff6dc;white-space:nowrap;
+.gm-title{position:absolute;z-index:4;left:34.5%;width:31.1%;top:1.7%;height:10.8%;display:flex;align-items:center;justify-content:center;font-size:1.7em;font-weight:700;letter-spacing:.04em;color:#fff6dc;white-space:nowrap;
   text-shadow:.07em .07em 0 #3a1d0c,-.07em .07em 0 #3a1d0c,.07em -.07em 0 #3a1d0c,-.07em -.07em 0 #3a1d0c,0 .12em 0 #3a1d0c}
-#gm-close{position:absolute;right:calc(2.2% - 1.3em);top:calc(9.4% - 1.3em);z-index:5;width:2.6em;height:2.6em;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:1em;line-height:1;border-color:#ffd68a;outline:.15em solid #3a1208;box-shadow:0 .25em .5em rgba(0,0,0,.55)}
+#gm-close{position:absolute;right:calc(1.9% - 2.2em);top:calc(5.4% - 2.2em);z-index:5;width:4.4em;height:4.4em;padding:0;border:0;background:url("../assets/ui/close-btn.webp") center/contain no-repeat;cursor:pointer;filter:drop-shadow(0 .2em .3em rgba(0,0,0,.55));transition:transform .12s,filter .12s}
+#gm-close:hover{transform:scale(1.08);filter:brightness(1.12) drop-shadow(0 .2em .3em rgba(0,0,0,.55))}
+#gm-close:active{transform:scale(.94)}
 
 /* Ô NỘI DUNG: nằm đúng trong lòng khung (nền gỗ tối; mép giấu dưới thanh gỗ của ảnh khung) */
-.gm-panel{position:absolute;top:calc(15.3% - .3em);height:calc(78.3% + .6em);box-sizing:border-box;display:flex;flex-direction:column;min-height:0;padding:1em 1.1em .8em;overflow:hidden;
+.gm-panel{position:absolute;top:calc(15.46% - .3em);height:calc(73.2% + .6em);box-sizing:border-box;display:flex;flex-direction:column;min-height:0;padding:1em 1.1em .8em;overflow:hidden;
   background:repeating-linear-gradient(90deg,rgba(0,0,0,.13) 0 .14em,transparent .14em 3.2em),linear-gradient(#7a4a22,#5a3216)}
-.gm-list{left:calc(4.17% - .3em);width:calc(59% + .6em)}
-.gm-detail{left:calc(68.1% - .3em);width:calc(27.3% + .6em);padding:1em .9em .8em}
+.gm-list{left:calc(5.78% - .3em);width:calc(56.7% + .6em)}
+.gm-detail{left:calc(68.13% - .3em);width:calc(26.1% + .6em);padding:1em .9em .8em}
 .gm-set{gap:.8em}
 .grow{display:flex;align-items:center;justify-content:space-between;gap:1em;font-weight:700;font-size:1.1em}
 
@@ -38,7 +40,7 @@
 .gf.on{background:linear-gradient(#f4b043,#d9801c);border-color:#7a4010;color:#fff}
 
 /* LƯỚI THẺ: 6 ô mỗi hàng, cao đúng 3 hàng (nhiều hơn 18 thẻ thì cuộn) */
-.gm-grid{flex:none;height:21.8em;overflow:auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:6.2em;gap:.9em .6em;align-content:start;padding:1em .5em .5em;border-radius:.4em;border:.2em solid #2b160a;
+.gm-grid{flex:none;height:20.2em;overflow:auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-auto-rows:5.6em;gap:.8em .6em;align-content:start;padding:1em .5em .5em;border-radius:.4em;border:.2em solid #2b160a;
   background:repeating-linear-gradient(90deg,rgba(0,0,0,.15) 0 .12em,transparent .12em 3em),#4a2812;box-shadow:inset 0 0 .8em rgba(0,0,0,.7)}
 .gcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:.2em;padding:.9em .3em .4em;border-radius:.4em;border:.2em solid #2b160a;background:linear-gradient(#b8702f,#8a4d22);box-shadow:inset 0 .12em 0 rgba(255,255,255,.22);text-align:center;cursor:pointer}
 .gcard.placed{background:linear-gradient(#ecae48,#c27a2a)}

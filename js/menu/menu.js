@@ -11,7 +11,7 @@ const gmEl = document.getElementById('gm');
 // cỡ chữ gốc của khung theo kích thước cửa sổ (mọi kích thước trong khung tính theo em)
 function gmFit(){
   const pad = parseFloat(getComputedStyle(gmEl).paddingTop) || 0;
-  gmEl.style.fontSize = Math.max(8, Math.min(18, (innerHeight - pad - 8) / 36.2, innerWidth * .96 / 80)) + 'px';   // khung = ảnh menu-frame.webp: rộng 80em, cao ~35.6em (tỉ lệ 1824:811)
+  gmEl.style.fontSize = Math.max(8, Math.min(18, (innerHeight - pad - 8) / 36.2, innerWidth * .96 / 80)) + 'px';   // khung = ảnh menu-frame.webp: rộng 80em, cao ~36em (tỉ lệ 1870:841)
 }
 function setMenuTab(tab){
   MENU.tab = tab;
