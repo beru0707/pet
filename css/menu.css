@@ -45,6 +45,12 @@
 .gcard.sel{border-color:#ffd54a;box-shadow:0 0 0 .15em #ffd54a99,inset 0 .12em 0 rgba(255,255,255,.22)}
 .gcard b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.95em}
 .gcard small{font-size:.72em;opacity:.85;line-height:1}
+/* THẺ PET: không nhãn trạng thái (đang thả chỉ thể hiện bằng nền sáng hơn); ảnh pet to, tên + Lv nhỏ */
+.gcard[data-pet]{padding:.35em .3em .3em;gap:.1em}
+.gcard[data-pet] b{font-size:.75em}
+.gcard[data-pet] small{font-size:.6em}
+.gcard[data-pet] .gth{background:none}
+.gcard[data-pet] .gth canvas,.gcard[data-pet] .gth img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;image-rendering:auto}
 .gbadge{position:absolute;top:-.7em;left:50%;transform:translateX(-50%);padding:.1em .7em;border-radius:99px;border:.15em solid #14210c;font-size:.68em;font-weight:700;white-space:nowrap}
 .gbadge.ok{background:#5cb82e;color:#fff}
 .gbadge.off{background:#5c7490;color:#e8f0ff}

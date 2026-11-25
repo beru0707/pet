@@ -32,11 +32,25 @@ const WB = id => { const T = tmGet(id); return T ? {w:T.w, h:T.h} : {w:CW, h:CH}
 // ---------- va chạm ----------
 // deck = pet đang đi TRÊN cầu. Trên cầu: chỉ ô cầu, hoặc ô mặt cao (đầu cầu). Dưới cầu / bình thường: lưới T.walk (ô cầu có cát bên dưới vẫn đi được)
 function tmCellOK(T, k, deck){ return deck ? (T.br[k] === 1 || (T.hi[k] === 1 && T.walk[k] === 1)) : T.walk[k] === 1; }
+// chừa lề cho thân: điểm cách chân TM_CFG.headMargin px về phía trên không được rơi vào vùng cấm (vách đá, nước, chân nhà...). Gốc cây / cầu coi như đi được
+function tmGround(T, k){ return T.walk[k] === 1 || T.br[k] === 1 || (T.rp !== undefined && T.rp[k] === 1); }
+function tmHeadClear(T, x, y, gy){
+  const m = TM_CFG.headMargin; if(!m) return true;
+  const hy = Math.floor((y - m) / T.ts); if(hy >= gy || hy < 0) return true;
+  const hx = Math.floor(x / T.ts); return tmGround(T, hy*T.mw + hx);
+}
+// mức thân pet chồng lên vùng cấm (0..1), dùng để làm mờ nhẹ pet
+function tmWallOverlap(T, p){
+  if(!TM_CFG.wallFade || p.deck) return 0;
+  const gx = Math.floor(p.x / T.ts); let n = 0;
+  for(const d of [18, 36, 54]){ const gy = Math.floor((p.y - d) / T.ts); if(gx >= 0 && gx < T.mw && gy >= 0 && gy < T.mh && !tmGround(T, gy*T.mw + gx)) n++; }
+  return n / 3;
+}
 function tmWalkable(T, x, y, deck){
   const gx = Math.floor(x / T.ts), gy = Math.floor(y / T.ts);
   if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) return false;
   const k = gy*T.mw + gx;
-  if(tmCellOK(T, k, deck)) return true;
+  if(tmCellOK(T, k, deck)) return deck || tmHeadClear(T, x, y, gy);
   // ô GỐC cây chỉ chặn TM_CFG.rootBlock (vd. 60%) phần DƯỚI của ô; phần trên đi vào được. Tìm đường (lưới ô) vẫn coi cả ô là vật cản nên đi vòng, còn đi tay / đi lang thang thì sát được thân cây
   return !deck && T.rp !== undefined && T.rp[k] === 1 && (y - gy*T.ts) < T.ts*(1 - TM_CFG.rootBlock);
 }
@@ -66,6 +80,12 @@ function tmBadMove(T, ax, ay, bx, by, deck){
   if(deck) return false;
   const ka = tmCellAt(T, ax, ay), kb = tmCellAt(T, bx, by);
   return ka >= 0 && kb >= 0 && tmLevelBlocked(T, ka, kb);
+}
+function tmDrawPetFaded(T, p, t){   // phần thân còn chồng lên vách / mép đảo: pet mờ nhẹ, mượt theo thời gian
+  const f = TM_CFG.wallFade ? tmWallOverlap(T, p) * TM_CFG.wallFade : 0;
+  p._fade = (p._fade || 0) + (f - (p._fade || 0)) * .2;
+  if(p._fade < .01){ drawPet(p, t); return; }
+  cx.save(); cx.globalAlpha = 1 - p._fade; drawPet(p, t); cx.restore();
 }
 // bọc walkable: movement.js gọi walkable(x,y) không kèm map / pet -> biết nhờ bọc updatePet
 let TM_CUR = null, TM_DECK = false;
@@ -281,7 +301,7 @@ drawMapScene = function(mid, t){
     items.push({y:(tr.oy + 2.5)*T.ts, run:{tree:tr}});
   });
   cx.imageSmoothingEnabled = false;
-  items.sort((a, b) => a.y - b.y).forEach(it => it.pet ? drawPet(it.pet, t) : it.enemy ? btDrawEnemy(it.enemy, t) : tmDrawRun(T, it.run));
+  items.sort((a, b) => a.y - b.y).forEach(it => it.pet ? tmDrawPetFaded(T, it.pet, t) : it.enemy ? btDrawEnemy(it.enemy, t) : tmDrawRun(T, it.run));
   cx.imageSmoothingEnabled = true;
   // pet đang đi DƯỚI cầu: vẽ lại cầu đè lên pet (chỉ phần ô cầu)
   const wb = WB(mid);
