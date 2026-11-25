@@ -45,7 +45,7 @@ function petsView(){
       <div class="gdesc">📍 ${place}</div>
       <div class="gact">${gBtn('red','recall','THU HỒI','',!p.map)}${here ? gBtn('green','select','CHỌN PET','Điều khiển') : gBtn('green','place','THẢ VÀO MAP', mapById(ACTIVE_MAP).name)}</div>`;
   }
-  return `<div class="gm-panel gm-list"><i class="vine tl"></i><i class="vine br"></i>${gFilters([['all','TẤT CẢ'],['placed','ĐANG THẢ'],['stash','TRONG KHO']], MENU.fp, 'fp')}<div class="gm-grid">${cards}</div><div class="gm-foot">Đang thả: ${placed}/${PETS.length}</div></div><div class="gm-panel gm-detail"><i class="vine tr"></i><i class="vine bl"></i>${detail}</div>`;
+  return `<div class="gm-panel gm-list">${gFilters([['all','TẤT CẢ'],['placed','ĐANG THẢ'],['stash','TRONG KHO']], MENU.fp, 'fp')}<div class="gm-grid">${cards}</div><div class="gm-foot">Đang thả: ${placed}/${PETS.length}</div></div><div class="gm-panel gm-detail">${detail}</div>`;
 }
 
 // ---------------- MAP ----------------
@@ -78,20 +78,19 @@ function mapsView(){
       <div class="gdesc">🧭 Trạng thái: <b>${on ? 'Đang xem' : 'Sẵn sàng'}</b><br>🐾 Pet đang thả: <b>${mine.length}</b> <span class="gmini" data-mini="${esc(m.id)}"></span><br>👾 Quái vật: <b>${isBattle ? esc(foes) : 'Chưa có'}</b></div>
       <div class="gact">${isBattle ? gBtn('red','battle','VÀO TRẬN') : ''}${gBtn('green','viewmap','XEM MAP')}</div>`;
   }
-  return `<div class="gm-panel gm-list"><i class="vine tl"></i><i class="vine br"></i>${gFilters([['all','TẤT CẢ'],['pets','CÓ PET'],['empty','TRỐNG']], MENU.fm, 'fm')}<div class="gm-grid">${cards}</div><div class="gm-foot">Số map: ${MAPS.length}</div></div><div class="gm-panel gm-detail"><i class="vine tr"></i><i class="vine bl"></i>${detail}</div>`;
+  return `<div class="gm-panel gm-list">${gFilters([['all','TẤT CẢ'],['pets','CÓ PET'],['empty','TRỐNG']], MENU.fm, 'fm')}<div class="gm-grid">${cards}</div><div class="gm-foot">Số map: ${MAPS.length}</div></div><div class="gm-panel gm-detail">${detail}</div>`;
 }
 
 // ---------------- CÀI ĐẶT ----------------
 function settingsView(){
   const canFS = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
-  return `<div class="gm-panel gm-set"><i class="vine tl"></i><i class="vine br"></i><div class="grow"><span>Toàn màn hình</span>${canFS ? gBtn('green sm','fs','BẬT / TẮT') : '<small>Thiết bị không hỗ trợ</small>'}</div>
-    <div class="gdesc">⌨️ WASD / mũi tên: đi · Enter: đánh · phím 1: skill 1 · Space: nhảy<br>🖱️ Bấm pet để chọn, bấm chỗ trống để pet đi tới đó.</div></div>`;
+  return `<div class="gm-panel gm-list gm-set"><div class="grow"><span>Toàn màn hình</span>${canFS ? gBtn('green sm','fs','BẬT / TẮT') : '<small>Thiết bị không hỗ trợ</small>'}</div></div>
+    <div class="gm-panel gm-detail"><div class="gname">ĐIỀU KHIỂN</div><div class="gdesc" style="margin-top:.6em">⌨️ WASD / mũi tên: đi · Enter: đánh · phím 1: skill 1 · Space: nhảy<br>🖱️ Bấm pet để chọn, bấm chỗ trống để pet đi tới đó.</div></div>`;
 }
 
 function renderMenu(){
   const b = document.getElementById('gm-body');
-  b.className = 'gm-body' + (MENU.tab === 'settings' ? ' set' : '');
-  b.parentNode.classList.toggle('small', MENU.tab === 'settings');   // khung Cài đặt gọn hơn
+  b.className = 'gm-body';
   b.innerHTML = MENU.tab === 'pets' ? petsView() : MENU.tab === 'maps' ? mapsView() : settingsView();
   if(MENU.tab === 'pets'){
     b.querySelectorAll('.gcard[data-pet]').forEach(c => { const p = PETS[+c.dataset.pet]; if(p) c.querySelector('.pth').replaceWith(thumbNode(p.def)); });
