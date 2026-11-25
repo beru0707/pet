@@ -8,6 +8,13 @@ const MENU = { open:false, tab:'pets', fp:'all', fm:'all', pet:null, map:null };
 const GM_TITLES = { pets:'DANH SÁCH PET', maps:'DANH SÁCH MAP', settings:'CÀI ĐẶT' };
 const gmEl = document.getElementById('gm');
 
+// khung + nút ĐÓNG tải cùng lúc: chỉ hiện menu khi cả 2 ảnh đã sẵn sàng (không thấy khung trước, nút sau)
+let gmImgsReady = false;
+const gmImgsLoad = Promise.all(['assets/ui/menu-frame.webp', 'assets/ui/close-btn.webp'].map(src => new Promise(res => {
+  const im = new Image(); im.onload = im.onerror = () => res(); im.src = src;
+  im.decode ? im.decode().then(res, res) : 0;
+}))).then(() => { gmImgsReady = true; if(MENU.open) setMenuTab(MENU.tab); });
+
 // cỡ chữ gốc của khung theo kích thước cửa sổ (mọi kích thước trong khung tính theo em)
 function gmFit(){
   const pad = parseFloat(getComputedStyle(gmEl).paddingTop) || 0;
@@ -15,7 +22,7 @@ function gmFit(){
 }
 function setMenuTab(tab){
   MENU.tab = tab;
-  gmEl.classList.toggle('hidden', !MENU.open);
+  gmEl.classList.toggle('hidden', !MENU.open || !gmImgsReady);
   document.getElementById('wrap').classList.toggle('menu-open', MENU.open);   // các nút nổi (cần ảo, ⚔️...) tránh khung menu
   document.querySelectorAll('#top-menu [data-m]').forEach(x => x.classList.toggle('on', MENU.open && x.dataset.m === tab));
   document.getElementById('gm-title').textContent = GM_TITLES[tab] || '';
