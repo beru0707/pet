@@ -28,7 +28,7 @@ const TM_CFG = {
   footKeep:  [                                     // vùng chặn CHÂN công trình chỉ chiếm `keep` (0..1) CHIỀU CAO của hàng ô chân, tính TỪ TRÊN XUỐNG (bề ngang giữ nguyên); phần dưới của ô (1 - keep) đi vào được. Nhận diện công trình theo số ô rộng (w) x cao (h)
     {name:'Lâu đài', w:5, h:4, keep:.8},
     {name:'Nhà',     w:2, h:3, keep:.6},
-    {name:'Tháp',    w:2, h:4, keep:.4},
+    {name:'Tháp',    w:2, h:4, keep:.5},
   ],
   rootBlock: .6,                                   // ô GỐC cây (giữa hàng dưới cùng của khối 3x3) chỉ chặn chừng này (tỉ lệ 0..1) phần DƯỚI của ô; phần trên đi vào được nên pet đứng sát sau thân cây. 1 = chặn cả ô. Ô chân nhà thì luôn chặn cả ô, kể cả khi thân cây đè lên
 };
