@@ -16,7 +16,6 @@ const TM_CFG = {
   trees:     ['Trees front', 'Trees back'],        // các layer chứa cây. Layer ĐẦU = cây phía trước (vẽ đè công trình); layer sau = cây phía sau (công trình đè lên cây)
   treeIds:   [[30, 57], [106, 120]],              // các dải id ô cây trong tileset (mỗi loại cây 1 dải). Mỗi cây là khối 3x3: ô góc trái trên có id 30 (ô đệm) và ô bên phải là ô cây khác 30. Mọi loại cây, ở mọi layer cây, đều xếp lớp theo trục y như nhau
   headMargin: 30,                                 // px: chân pet phải cách vách đá / mép đảo / nước / chân nhà ở PHÍA TRÊN ít nhất chừng này (chừa lề cho thân) -> thân pet không chồng lên vùng cấm. 0 = tắt. Không quá ~30 (tâm ô là 32)
-  bodyMargin: 62,                                 // px: như headMargin nhưng kiểm điểm CAO hơn (ngang đầu pet) -> pet không còn đứng đè nửa thân lên vách đá. 0 = tắt. Tăng = pet đứng xa vách hơn (quá lớn có thể bít lối hẹp)
   wallFade:  .35,                                 // 0..1: phần thân pet vẫn chồng lên vùng cấm thì pet mờ đi tối đa chừng này (0 = không mờ)
   flat:      ['Miscs', 'Small rocks', 'Shadows'],   // vật nhỏ (bụi cỏ, đá, nấm, xương...): luôn vẽ ở nền, dưới pet, kể cả khi nằm chung ô với cây / nhà
   footprint: ['Buildings'],                        // chỉ chặn hàng ô DƯỚI CÙNG của mỗi cột (chân nhà / tháp); phần trên đi vòng ra sau được
