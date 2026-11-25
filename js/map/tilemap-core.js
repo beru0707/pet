@@ -29,7 +29,7 @@ const TM_CFG = {
     {name:'Lâu đài', w:5, h:4, keep:.8},
     {name:'Nhà',     w:2, h:3, keep:.6},
     {name:'Tháp',    w:2, h:4, keep:.5},
-    {name:'Mỏ vàng', w:3, h:2, keep:.55},
+    {name:'Mỏ vàng', w:3, h:2, keep:.6},
   ],
   rootBlock: .6,                                   // ô GỐC cây (giữa hàng dưới cùng của khối 3x3) chỉ chặn chừng này (tỉ lệ 0..1) phần DƯỚI của ô; phần trên đi vào được nên pet đứng sát sau thân cây. 1 = chặn cả ô. Ô chân nhà thì luôn chặn cả ô, kể cả khi thân cây đè lên
 };
