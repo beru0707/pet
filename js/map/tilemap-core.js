@@ -25,6 +25,11 @@ const TM_CFG = {
   stairWallPad: 0,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng dài bằng mép viền của 1 ô (64px), không có dải
   stairWallY: [.25, 1],                              // đoạn của đường chặn theo chiều dọc ô cầu thang: [đầu, cuối] tính theo tỉ lệ chiều cao ô. [0,1] = đủ 1 mép ô (64px); [0,.5] = nửa trên; [.5,1] = nửa dưới; [.25,.75] = đoạn giữa
   walkOver:  ['Stairs'],                           // luôn đi được, kể cả đè lên vách
+  footKeep:  [                                     // vùng chặn CHÂN công trình chỉ chiếm `keep` (0..1) bề ngang của công trình, canh giữa; hai bên chừa lối đi. Nhận diện công trình theo số ô rộng (w) x cao (h)
+    {name:'Lâu đài', w:5, h:4, keep:.8},
+    {name:'Nhà',     w:2, h:3, keep:.6},
+    {name:'Tháp',    w:2, h:4, keep:.4},
+  ],
   rootBlock: .6,                                   // ô GỐC cây (giữa hàng dưới cùng của khối 3x3) chỉ chặn chừng này (tỉ lệ 0..1) phần DƯỚI của ô; phần trên đi vào được nên pet đứng sát sau thân cây. 1 = chặn cả ô. Ô chân nhà thì luôn chặn cả ô, kể cả khi thân cây đè lên
 };
 
@@ -172,6 +177,25 @@ function tmBuild(T, j, img){
     const mx = new Map();
     T.runs.forEach((r, i) => { const g = find(i); mx.set(g, Math.max(mx.get(g) ?? -Infinity, r.mark)); });
     T.runs.forEach((r, i) => { r.mark = mx.get(find(i)); });
+    // Chân công trình chỉ chặn TM_CFG.footKeep bề ngang (canh giữa). Ô nằm hẳn ngoài vùng chặn thành đi được; ô nằm một phần thì T.fp = 1 và T.fa / T.fb = đoạn bị chặn (px, tính từ mép trái ô).
+    // T.walk của ô một phần vẫn = 0 nên tìm đường (lưới ô) coi cả ô là vật cản và đi vòng; còn đi tay / đi lang thang thì tmWalkable cho lách vào phần chừa trống. Gốc cây trùng chân nhà thì giữ chặn cả ô.
+    T.fp = new Uint8Array(N); T.fa = new Float32Array(N); T.fb = new Float32Array(N); T.feet = [];
+    if(TM_CFG.footKeep){
+      const groups = new Map(), roots = new Set(T.trees.map(tr => (tr.oy + 2)*W + tr.ox + 1));
+      T.runs.forEach((r, i) => { const g = find(i); if(!groups.has(g)) groups.set(g, []); groups.get(g).push(r); });
+      for(const rs of groups.values()){
+        const xa = Math.min(...rs.map(r => r.x)), xb = Math.max(...rs.map(r => r.x)), w = xb - xa + 1, h = Math.max(...rs.map(r => r.y1 - r.y0 + 1));
+        const rule = TM_CFG.footKeep.find(q => q.w === w && q.h === h); if(!rule) continue;
+        const mid = (xa + xb + 1)*ts/2, half = rule.keep*w*ts/2, bl = mid - half, br = mid + half;
+        T.feet.push({name:rule.name, x:xa, w, h, y:Math.max(...rs.map(r => r.y1)), x0:bl, x1:br});
+        for(const r of rs){
+          const k = r.y1*W + r.x; if(roots.has(k) || !(ps[k] || walkTop.has(top[k]))) continue;
+          const a = Math.max(bl, r.x*ts) - r.x*ts, z = Math.min(br, (r.x + 1)*ts) - r.x*ts;
+          if(z - a <= .5) T.walk[k] = 1;                                   // nằm hẳn ngoài vùng chặn: đi được
+          else if(a > .5 || z < ts - .5){ T.fp[k] = 1; T.fa[k] = a; T.fb[k] = z; }   // chặn một phần ô
+        }
+      }
+    }
   }
   // Lớp không có ô nào thì thu còn 1x1 (vẽ một canvas 1x1 trong suốt = không vẽ gì, nên hình không đổi)
   [[overT, gT], [overTB, gTB], [overTBu, gTBu], [overTBs, gTBs], [overB, gB], [overBr, gBr]].forEach(([c, g]) => { if(!used.has(g)){ c.width = 1; c.height = 1; } });

@@ -35,7 +35,6 @@ const sv = (s,k) => (s && typeof s === 'object') ? s[k] : undefined;
 function petOpts(c){
   return {
     stride: (sv(c.walkSheet,'stride') ?? c.stride) || 1, speedMul: (sv(c.walkSheet,'speed') ?? c.speed) || 1,
-    idleFit: sv(c.idleSheet,'fit') ?? c.idleFit, attackFit: sv(c.attackSheet,'fit') ?? c.attackFit,
     idleScale: sv(c.idleSheet,'scale') ?? c.idleScale, walkScale: sv(c.walkSheet,'scale') ?? 1, attackScale: sv(c.attackSheet,'scale') ?? c.attackScale, fireballScale: sv(c.fireballSheet,'scale') ?? 1, explosionScale: sv(c.explosionSheet,'scale') ?? 1,
     idleFps: sv(c.idleSheet,'fps') ?? c.idleFps ?? 12, attackFps: sv(c.attackSheet,'fps') ?? c.attackFps, fireballFps: sv(c.fireballSheet,'fps') ?? 6.67, explosionFps: sv(c.explosionSheet,'fps') ?? 16.7,
     attackFireFrame: sv(c.attackSheet,'fireFrame') ?? c.attackFireFrame,
@@ -119,7 +118,6 @@ Object.entries(PET_ANIM).forEach(([name,c])=>{
 const petsOnMap = id => PETS.filter(p=>p.map===id).map(p=>p.def.name);
 const ensurePet = p => loadPetWalk(p.def.name).then(()=>loadPetLook(p.def.name)).then(()=>loadPetSkills(p.def.name));
 function ensureMap(id){
-  const names = petsOnMap(id);
   return Promise.all([
     loadBg(id),
     typeof loadTilemap === 'function' ? loadTilemap(id) : null,   // map dạng ô: dựng khi cần (xem map/tilemap.js)

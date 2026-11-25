@@ -10,7 +10,7 @@ const gmEl = document.getElementById('gm');
 
 // ảnh khung (đã gồm nút ✕) tải xong mới hiện menu
 let gmImgsReady = false;
-const gmImgsLoad = Promise.all(['assets/ui/menu-frame.webp'].map(src => new Promise(res => {
+Promise.all(['assets/ui/menu-frame.webp'].map(src => new Promise(res => {
   const im = new Image(); im.onload = im.onerror = () => res(); im.src = src;
   im.decode ? im.decode().then(res, res) : 0;
 }))).then(() => { gmImgsReady = true; if(MENU.open) setMenuTab(MENU.tab); });

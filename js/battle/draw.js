@@ -7,7 +7,7 @@
 // Thanh máu kiểu khung đá + khe tối + các ô màu chia vạch. kind: 'pet' (xanh lá) | 'enemy' (đỏ -> cam)
 const BAR_COLS = { pet:['#1c6e2c','#2f9e3f','#55c84a','#9be45a'], enemy:['#9b1c2c','#cf3a2e','#e8742a','#f6a53a'] };
 function btBar(x, y, w, frac, kind){
-  const h = Math.round(w*.2), r = h*.3, x0 = x - w/2, N = 8;
+  const h = Math.round(w*.2), r = h*.3, x0 = x - w/2;
   frac = Math.max(0, Math.min(1, frac));
   const rr = (a,b,c,d,e) => { oc.beginPath(); if(oc.roundRect) oc.roundRect(a,b,c,d,e); else oc.rect(a,b,c,d); };
   oc.save();

@@ -55,14 +55,13 @@ function drawPet(p, t){
   }
   const lt = t - (p._stT0 || 0);   // thời gian kể từ khi vào trạng thái hiện tại
 
-  const src = IMGS.pets;
   // Lấy ảnh đúng: animation frame hoặc ảnh đơn
-  let customImg = null, fitImg = null, fitMode = null, userK = 1;
+  let customImg = null, userK = 1;
   if (p.isAttacking) {
     // Ưu tiên lấy ảnh từ thư mục attack
     const kind = p.atkKind || 'attack', atkKey = p.def.name.toLowerCase() + '_' + kind + '_';
     customImg = IMGS[atkKey + (p.attackFrame + 1)];
-    fitImg = IMGS[atkKey + '1']; fitMode = p.def[kind+'Fit'] || 'height'; userK = p.def[kind+'Scale'] || 1;   // cân theo khung 1 để các khung không bị lúc to lúc nhỏ
+    userK = p.def[kind+'Scale'] || 1;
   } else if (p.def.animFrames) {
     const walkKey = p.def.imgKey.replace('_anim','_');
     if (p.moving) {                                                                       // đang đi: khung đi bộ
@@ -70,9 +69,9 @@ function drawPet(p, t){
     } else {                                                                                     // đứng yên
       const IF = p.def.idleFrames;
       if (IF && IF.length > 1) {                                                                 // animation chớp mắt (thư mục idle)
-        customImg = IF[Math.floor(lt * (p.def.idleFps || 12)) % IF.length]; fitImg = IF[0];
+        customImg = IF[Math.floor(lt * (p.def.idleFps || 12)) % IF.length];
       } else customImg = p.def.idleImg || IMGS[walkKey + 1];
-      if (customImg !== IMGS[walkKey + 1]) { fitMode = p.def.idleFit || 'none'; userK = p.def.idleScale || 1; }
+      if (customImg !== IMGS[walkKey + 1]) userK = p.def.idleScale || 1;
     }
   } else if (p.def.imgKey) {
     customImg = IMGS[p.def.imgKey];
@@ -81,7 +80,7 @@ function drawPet(p, t){
   // Nhân vật 4 hướng: chọn khung theo p.dir (front/back/left/right), không lật ảnh
   if (p.def.dWalk) {
     const dr = p.dir || 'front';
-    fitImg = null; fitMode = null; userK = 1;
+    userK = 1;
     if (p.isAttacking) { const A = p.def.dAttack && p.def.dAttack[dr]; customImg = A ? A[Math.min(p.attackFrame, A.length-1)] : null; }
     else if (p.moving) { const W = p.def.dWalk[dr]; customImg = W ? W[p.animFrame % W.length] : null; }
     else { const I = p.def.dIdle && p.def.dIdle[dr]; customImg = I ? I[Math.floor(lt * (p.def.idleFps || 12)) % I.length] : null; }
@@ -91,7 +90,7 @@ function drawPet(p, t){
   if (exKey) {
     const e = EX[exKey], n = e.frames.length;
     customImg = e.frames[exFrame >= 0 ? exFrame : Math.floor(lt * 14) % n];
-    fitImg = null; fitMode = null; userK = e.scale; exDX = e.dx; exDY = e.dy;
+    userK = e.scale; exDX = e.dx; exDY = e.dy;
   }
 
   // ĐỒNG BỘ KÍCH THƯỚC: Tính tỷ lệ nguyên gốc của ảnh để không bị bóp méo
@@ -104,7 +103,6 @@ function drawPet(p, t){
   // Pet có animation thật thì dùng nhún nhẹ hơn (animation đã có chuyển động chân)
   const bobScale = p.def.walker ? 0 : (p.def.animFrames ? 0.4 : 1.0);
   const dh = sz * br * petScale;
-  const dw = dh * ratio;
   const actualBob = bob * bobScale;
 
   // Kích thước CỐ ĐỊNH: chiều cao khung = dh * scale của sheet (không tự đo vùng nhìn thấy để phóng to / thu nhỏ). Chân đặt ở đáy khung, giữa theo chiều ngang.

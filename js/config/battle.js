@@ -58,8 +58,5 @@ const LEVEL_CFG = {max:20, expBase:40, expStep:20, expKill:6, expWin:30, expLose
 const petExpNeed = lv => LEVEL_CFG.expBase + LEVEL_CFG.expStep * (lv - 1);
 // Chỉ số gốc (cấp 1) của pet; chỉ số thật = gốc x hệ số cấp, xem btStat (battle/state.js)
 const PET_BATTLE_DEFAULT = {hp:100, dmg:12, range:170, cd:1.6};
-const PET_BATTLE = {
-  'Shibav3_1': {hp:90,  dmg:22, range:650, cd:1.5},   // có fireball: bắn xa, nổ lan
-  'Wukong':    {hp:140, dmg:16, range:200, cd:1.4},
-  'Wukongv3':  {hp:160, dmg:20, range:230, cd:1.4},
-};
+// Ví dụ: 'Chicken': {hp:90, dmg:14, range:200, cd:1.4}. Pet nào không khai thì dùng PET_BATTLE_DEFAULT.
+const PET_BATTLE = {};

@@ -4,7 +4,6 @@
    ================================================================== */
 
 // INTERACTION
-let clickMarker = null;   // vòng tròn báo điểm vừa bấm
 function tileAt(pos){ return VIEW.tiles.find(q=>pos.x>=q.x && pos.x<=q.x+q.w && pos.y>=q.y && pos.y<=q.y+q.h); }
 const toMapXY = (pos,tl)=>({ x:Math.max(100,Math.min(CW-100,(pos.x-tl.x)/tl.w*CW)), y:Math.max(180,Math.min(950,(pos.y-tl.y)/tl.h*CH)) });
 const inLabel=(pos,tl)=>pos.x<=tl.x+tl.lw && pos.y<=tl.y+54 && pos.x>=tl.x && pos.y>=tl.y;
@@ -64,6 +63,5 @@ cv.addEventListener('pointerdown', e => {
     const wb = WB(ACTIVE_MAP);
     cur.target = {x: Math.max(100,Math.min(wb.w-100,pos.x)), y: Math.max(180,Math.min(wb.h-74,pos.y))};
     cur.idleUntil = 0; cur.nextTurn = 0;
-    clickMarker = {x:cur.target.x, y:cur.target.y, t:performance.now()};
   }
 });
