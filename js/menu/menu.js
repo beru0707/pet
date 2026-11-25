@@ -8,9 +8,9 @@ const MENU = { open:false, tab:'pets', fp:'all', fm:'all', pet:null, map:null };
 const GM_TITLES = { pets:'DANH SÁCH PET', maps:'DANH SÁCH MAP', settings:'CÀI ĐẶT' };
 const gmEl = document.getElementById('gm');
 
-// khung + nút ĐÓNG tải cùng lúc: chỉ hiện menu khi cả 2 ảnh đã sẵn sàng (không thấy khung trước, nút sau)
+// ảnh khung (đã gồm nút ✕) tải xong mới hiện menu
 let gmImgsReady = false;
-const gmImgsLoad = Promise.all(['assets/ui/menu-frame.webp', 'assets/ui/close-btn.webp'].map(src => new Promise(res => {
+const gmImgsLoad = Promise.all(['assets/ui/menu-frame.webp'].map(src => new Promise(res => {
   const im = new Image(); im.onload = im.onerror = () => res(); im.src = src;
   im.decode ? im.decode().then(res, res) : 0;
 }))).then(() => { gmImgsReady = true; if(MENU.open) setMenuTab(MENU.tab); });
