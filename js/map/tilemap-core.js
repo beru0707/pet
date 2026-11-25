@@ -31,6 +31,13 @@ const TM_CFG = {
     {name:'Tháp',    w:2, h:4, keep:.55},
     {name:'Mỏ vàng', w:3, h:2, keep:.65},
   ],
+  wander:    {                                     // đi lang thang theo map (map/tilemap.js, tmWanderTick). chance = xác suất mỗi lần đổi hướng là chọn 1 điểm hẹn (không thì đi ngẫu nhiên kiểu cũ)
+    chance: .6,
+    w:     {door:3, tree:2, far:2, friend:1.5},    // trọng số từng loại điểm hẹn: door = sát chân / trước công trình · tree = sau / trước cây · far = điểm xa bất kỳ · friend = cạnh pet khác
+    dwell: {door:[3, 7], tree:[3, 7], far:[1, 3.5], friend:[2.5, 6]},   // giây đứng nghỉ khi tới nơi [ngắn, dài]
+    speed: [.7, 1.25],                              // hệ số tốc độ mỗi chuyến đi (nhân với tốc độ đi bình thường)
+    minDist: 140,                                   // px: điểm hẹn gần hơn mức này thì bỏ qua
+  },
   rootBlock: .6,                                   // ô GỐC cây (giữa hàng dưới cùng của khối 3x3) chỉ chặn chừng này (tỉ lệ 0..1) phần DƯỚI của ô; phần trên đi vào được nên pet đứng sát sau thân cây. 1 = chặn cả ô. Ô chân nhà thì luôn chặn cả ô, kể cả khi thân cây đè lên
 };
 

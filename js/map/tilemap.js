@@ -114,8 +114,11 @@ walkable = function(x, y){ const T = tmGet(TM_CUR || ACTIVE_MAP); return T ? tmW
 // ---------- TÌM ĐƯỜNG: bấm điểm đến -> pet tự đi vòng vật cản tới điểm đi được gần nhất ----------
 // Ô GỐC cây chỉ bị chặn phần dưới (TM_CFG.rootBlock) nên tìm đường coi nó là ô đi được ở dải phía TRÊN: điểm đứng đại diện của ô gốc cây nằm giữa dải đó, ô khác là tâm ô.
 // Ra / vào ô gốc cây chỉ từ phía trên hoặc hai bên (đi ngang qua dải trên được); từ phía dưới thì phải đi vòng vì phần dưới bị chặn.
+// Ô CHÂN công trình ngược lại: chỉ bị chặn dải TRÊN (từ mép trên xuống T.fa), dải DƯỚI đi được -> điểm đứng đại diện nằm giữa dải dưới; ra / vào từ phía dưới hoặc hai bên, không xuyên dải trên từ ô phía trên.
 const tmRootOK = (T, k) => T.rp !== undefined && T.rp[k] === 1 && TM_CFG.rootBlock < 1;
-function tmCellPt(T, k){ const x = k % T.mw, y = (k / T.mw) | 0; return {x:(x + .5)*T.ts, y:(y + (tmRootOK(T, k) ? (1 - TM_CFG.rootBlock)/2 : .5))*T.ts}; }
+const tmFootOK = (T, k) => T.fp !== undefined && T.fp[k] === 1 && T.fa[k] < T.ts;
+const tmPartial = (T, k) => tmRootOK(T, k) || tmFootOK(T, k);   // ô chỉ đi được một phần (dải)
+function tmCellPt(T, k){ const x = k % T.mw, y = (k / T.mw) | 0; return {x:(x + .5)*T.ts, y:(y + (tmRootOK(T, k) ? (1 - TM_CFG.rootBlock)/2 : tmFootOK(T, k) ? (T.fa[k]/T.ts + 1)/2 : .5))*T.ts}; }
 function tmHeapPush(h, c, i){ h.push([c, i]); let k = h.length - 1; while(k > 0){ const q = (k - 1) >> 1; if(h[q][0] <= h[k][0]) break; [h[q], h[k]] = [h[k], h[q]]; k = q; } }
 function tmHeapPop(h){
   const top = h[0], last = h.pop();
@@ -154,7 +157,7 @@ function tmFindPath(T, sx, sy, tx, ty, deck0){
   dist[s0] = 0; tmHeapPush(heap, 0, s0);
   // trạng thái mới khi bước từ trạng thái d vào ô n; -1 nếu không bước được
   const step0 = (d, X, Y) => X < 0 || Y < 0 || X >= W || Y >= H || !tmCellOK(T, Y*W + X, d) ? -1 : (tmDeckAt(T, Y*W + X, d) ? 1 : 0);   // ô đi được hoàn toàn
-  const step = (d, X, Y) => (d === 0 && X >= 0 && Y >= 0 && X < W && Y < H && tmRootOK(T, Y*W + X) && !tmCellOK(T, Y*W + X, d)) ? 0 : step0(d, X, Y);   // + ô gốc cây (dải trên đi được)
+  const step = (d, X, Y) => (d === 0 && X >= 0 && Y >= 0 && X < W && Y < H && tmPartial(T, Y*W + X) && !tmCellOK(T, Y*W + X, d)) ? 0 : step0(d, X, Y);   // + ô gốc cây (dải trên đi được) và ô chân công trình (dải dưới đi được)
   while(heap.length){
     const [c, st] = tmHeapPop(heap); if(c > dist[st]) continue;
     const k = st >> 1, d = st & 1, x = k % W, y = (k / W) | 0;
@@ -163,7 +166,8 @@ function tmFindPath(T, sx, sy, tx, ty, deck0){
       const X = x + dx, Y = y + dy, nd2 = step(d, X, Y); if(nd2 < 0) continue;
       if(dx && dy && (step0(d, x + dx, y) < 0 || step0(d, x, y + dy) < 0)) continue;   // không cắt góc vật cản (ô gốc cây cũng tính là vật cản ở đây)
       if(!d && ((tmRootOK(T, k) && Y > y) || (tmRootOK(T, Y*W + X) && y > Y))) continue;   // ô gốc cây: không ra / vào từ phía dưới (phần dưới bị chặn)
-      if(!d && (tmRootOK(T, k) || tmRootOK(T, Y*W + X)) && !tmLOS(T, tmCellPt(T, k), tmCellPt(T, Y*W + X), false)) continue;   // cạnh nối ô gốc cây: kiểm đúng bằng tmLOS
+      if(!d && ((tmFootOK(T, k) && Y < y) || (tmFootOK(T, Y*W + X) && y < Y))) continue;   // ô chân công trình: không ra / vào từ phía trên (dải trên bị chặn)
+      if(!d && (tmPartial(T, k) || tmPartial(T, Y*W + X)) && !tmLOS(T, tmCellPt(T, k), tmCellPt(T, Y*W + X), false)) continue;   // cạnh nối ô gốc cây / chân công trình: kiểm đúng bằng tmLOS
       if(dx && dy && T.cn && (T.cn[y*W + x + dx] || T.cn[(y + dy)*W + x] || T.cn[Y*W + X] !== T.cn[k])) continue;   // gần cầu thang: chỉ đi thẳng, không đi chéo sượt qua góc
       if(T.bc && (T.bc[k] || T.bc[Y*W + X]) && !tmLOS(T, tmCellPt(T, k), tmCellPt(T, Y*W + X), !!d)) continue;   // gần dải chặn: kiểm đúng bằng tmLOS
       if(!d && tmLevelBlocked(T, k, Y*W + X)) continue;                                // không đổi tầng cao <-> thấp, trừ qua cầu thang
@@ -180,6 +184,11 @@ function tmFindPath(T, sx, sy, tx, ty, deck0){
   if(tgx >= 0 && tgy >= 0 && tgx < W && tgy < H && tmRootOK(T, tgy*W + tgx)){
     const f = (ty - tgy*ts)/ts, free = 1 - TM_CFG.rootBlock;
     if(f >= free && f - free > 1 - f) skip = tgy*W + tgx;
+  }
+  // bấm vào phần TRÊN của ô chân công trình (bị chặn): nếu gần mép trên hơn dải dưới thì đích gần nhất là ô phía trên (sau công trình), nên bỏ ô chân đó; ngược lại đi tới dải dưới
+  if(tgx >= 0 && tgy >= 0 && tgx < W && tgy < H && tmFootOK(T, tgy*W + tgx)){
+    const f = (ty - tgy*ts)/ts, keep = T.fa[tgy*W + tgx]/ts;
+    if(f < keep && f < keep - f) skip = tgy*W + tgx;
   }
   if(skip < 0 && tgx >= 0 && tgy >= 0 && tgx < W && tgy < H && cd(tgy*W + tgx) < Infinity){ goal = tgy*W + tgx; exact = true; }
   else {
@@ -208,6 +217,69 @@ function tmFindPath(T, sx, sy, tx, ty, deck0){
   }
   return out;
 }
+// ---------- ĐI LANG THANG THEO MAP (chế độ tự động đi) ----------
+// Mỗi lần pet "đổi hướng", với xác suất TM_CFG.wander.chance nó chọn 1 điểm hẹn có nghĩa trên map rồi tìm đường tới đó (như bấm chuột), tới nơi thì đứng nghỉ một lúc; không thì đi ngẫu nhiên kiểu cũ (movement.js).
+// Loại điểm hẹn: door = dải đi được sát chân công trình hoặc ngay trước công trình · tree = sau thân cây (dải trên ô gốc) hoặc trước cây · far = điểm đi được bất kỳ ở xa · friend = cạnh 1 pet khác trong map.
+function tmWanderSpots(T){
+  if(T._spots) return T._spots;
+  const ts = T.ts, W = T.mw, S = {door:[], tree:[], cells:[]};
+  for(const f of T.feet || []){
+    const spots = [];
+    for(let x = f.x; x < f.x + f.w; x++){
+      const k = f.y*W + x; if(T.fp[k] !== 1) continue;
+      spots.push({x:(x + .5)*ts, y:f.y*ts + (T.fa[k] + ts)/2}, {x:(x + .5)*ts, y:(f.y + 1)*ts + ts*.45});   // dải dưới sát công trình · ngay trước công trình
+    }
+    if(spots.length) S.door.push(spots);
+  }
+  for(const tr of T.trees || []){
+    const k = (tr.oy + 2)*W + tr.ox + 1, x = (tr.ox + 1.5)*ts, spots = [];
+    if(T.rp && T.rp[k] === 1) spots.push({x, y:(tr.oy + 2)*ts + ts*(1 - TM_CFG.rootBlock)/2});   // sau thân cây
+    if(tr.oy + 3 < T.mh) spots.push({x, y:(tr.oy + 3.4)*ts});                                    // trước cây
+    if(spots.length) S.tree.push(spots);
+  }
+  for(let k = 0; k < W*T.mh; k++) if(T.walk[k] === 1 && !T.br[k] && !(T.cn && T.cn[k])) S.cells.push(k);
+  return T._spots = S;
+}
+const tmRand = (a, b) => a + Math.random()*(b - a);
+function tmWanderGoal(T, p, kind){
+  const S = tmWanderSpots(T), ts = T.ts, minD = TM_CFG.wander.minDist;
+  const pick = list => list[(Math.random()*list.length) | 0];
+  for(let tries = 0; tries < 8; tries++){
+    let q = null;
+    if(kind === 'door' && S.door.length) q = pick(pick(S.door));
+    else if(kind === 'tree' && S.tree.length) q = pick(pick(S.tree));
+    else if(kind === 'far' && S.cells.length){ const k = pick(S.cells); q = {x:(k % T.mw + .5)*ts, y:(((k / T.mw) | 0) + .5)*ts}; }
+    else if(kind === 'friend'){
+      const fr = PETS.filter(o => o !== p && o.map === p.map && !o.bdead && !o.deck);
+      if(fr.length){ const o = pick(fr); q = {x:o.x + (Math.random() < .5 ? -1 : 1)*tmRand(40, 75), y:o.y + tmRand(-8, 12)}; }
+    }
+    if(!q) return null;
+    q = {x:q.x + tmRand(-10, 10), y:q.y};
+    if(Math.hypot(q.x - p.x, q.y - p.y) < minD || !tmStandOK(T, q.x, q.y, false)) continue;
+    return q;
+  }
+  return null;
+}
+function tmWanderTick(T, p, t){
+  const C = TM_CFG.wander; if(!C) return;
+  const g = p._wg;
+  if(g){
+    if(p._dest ? (p._dest.x === g.x && p._dest.y === g.y && (p.target || (p._path && p._path.length))) : (p.target && t - g.t < .25)) return;   // vẫn đang đi tới điểm hẹn (qua điểm trung gian p.target có thể rỗng 1 khung hình, nhưng p._path còn)
+    p._wg = null; p._stroll = 1;
+    if(!p.target && !p.manual){
+      if(Math.hypot(p.x - g.x, p.y - g.y) < 45){ const d = C.dwell[g.kind] || [1, 3]; p.idleUntil = Math.max(p.idleUntil || 0, t + tmRand(d[0], d[1])); }   // tới nơi: đứng nghỉ một lúc
+      else p.nextTurn = t + .3;                                                                                                                              // không tới được / kẹt: thử lại sớm
+    }
+    return;
+  }
+  if(p.target || p.manual || p.isAttacking || p.bdead || p._autoGo || t < (p.idleUntil || 0) || t <= (p.nextTurn || 0)) return;
+  if(typeof BT !== 'undefined' && BT.phase !== 'off' && BT.map === p.map) return;   // đang có trận ở map này: pet đứng giữ chỗ
+  if(Math.random() > C.chance) return;                                              // không chọn điểm hẹn: đi ngẫu nhiên kiểu cũ
+  let r = Object.entries(C.w).reduce((a, [, w]) => a + w, 0)*Math.random(), kind = null;
+  for(const [k, w] of Object.entries(C.w)){ r -= w; if(r <= 0){ kind = k; break; } }
+  const q = kind && tmWanderGoal(T, p, kind); if(!q) return;
+  p.target = q; p._wg = {x:q.x, y:q.y, t, kind}; p._stroll = tmRand(C.speed[0], C.speed[1]); p.idleUntil = 0; p.nextTurn = t + 1;
+}
 function tmSteerBefore(T, p){
   if(p._autoGo || p.isAttacking){ p._path = null; p._wp = null; p._dest = null; return; }
   const tg = p.target;
@@ -219,17 +291,21 @@ function tmSteerBefore(T, p){
   }
   if(p._path && p._path.length){ p._wp = p._path[0]; p.target = p._wp; } else p._wp = null;
 }
-function tmSteerAfter(p){
+function tmSteerAfter(T, p){
   if(!p._wp || p.target === p._wp) return;   // vẫn đang đi tới điểm trung gian
   const near = Math.hypot(p._wp.x - p.x, p._wp.y - p.y) < 14;
-  if(p.target === null && near && p._path && p._path.length > 1){ p._path.shift(); return; }   // tới điểm trung gian: sang điểm kế
+  if(p.target === null && near && p._path && p._path.length > 1){
+    // tới điểm trung gian: ghim pet vào đúng điểm đó (nếu chỉ lệch vài px) để đoạn kế tiếp đi đúng đường đã kiểm tra bằng tmLOS. Lệch 0.1px cũng đủ để luật lề đầu chặn pet đứng kẹt dưới vật cản phía trên
+    if(Math.hypot(p._wp.x - p.x, p._wp.y - p.y) < 6 && tmStandOK(T, p._wp.x, p._wp.y, !!p._wp.d)){ p.x = p._wp.x; p.y = p._wp.y; }
+    p._path.shift(); return;   // sang điểm kế
+  }
   p._path = null; p._wp = null; p._dest = null;   // tới đích cuối, hoặc bị hủy (phím di chuyển, kẹt...)
 }
 const _updatePet = updatePet;
 updatePet = function(p, t, dt){
   const T = tmGet(p.map);
   let ox = p.x, oy = p.y;
-  if(T){ if(!tmStandOK(T, p.x, p.y, !!p.deck)) tmSnap(T, p); ox = p.x; oy = p.y; TM_CUR = p.map; TM_DECK = !!p.deck; tmSteerBefore(T, p); }
+  if(T){ if(!tmStandOK(T, p.x, p.y, !!p.deck)) tmSnap(T, p); ox = p.x; oy = p.y; TM_CUR = p.map; TM_DECK = !!p.deck; tmWanderTick(T, p, t); tmSteerBefore(T, p); }
   try{ return _updatePet(p, t, dt); } finally {
     TM_CUR = null;
     if(T){
@@ -250,7 +326,7 @@ updatePet = function(p, t, dt){
         if([tmWalkable(T, nx2, p.y, false), tmWalkable(T, nx2 - 15, p.y, false), tmWalkable(T, nx2 + 15, p.y, false)].filter(Boolean).length >= 2) p.x = nx2;
         break;
       }
-      tmSteerAfter(p);
+      tmSteerAfter(T, p);
     }
   }
 };
