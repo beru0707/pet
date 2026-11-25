@@ -31,7 +31,7 @@ function petsView(){
   const list = PETS.map((p,i) => ({p,i})).filter(({p}) => MENU.fp === 'all' || (MENU.fp === 'placed') === !!p.map);
   if(MENU.pet == null || !PETS[MENU.pet]) MENU.pet = list.length ? list[0].i : (PETS.length ? 0 : null);
   const placed = PETS.filter(p => p.map).length;
-  const cards = list.map(({p,i}) => `<div class="gcard ${p.map?'placed':''} ${MENU.pet===i?'sel':''}" data-pet="${i}"><span class="gbadge ${p.map?'ok':'off'}">${p.map?'ĐANG THẢ':'TRONG KHO'}</span><div class="gth"><span class="pth"></span></div><b>${esc(p.def.name)}</b><small class="glv">Lv ${petLv(p.def.name).lv}</small></div>`).join('')
+  const cards = list.map(({p,i}) => `<div class="gcard ${p.map?'placed':''} ${MENU.pet===i?'sel':''}" data-pet="${i}"><div class="gth"><span class="pth"></span></div><b>${esc(p.def.name)}</b><small class="glv">Lv ${petLv(p.def.name).lv}</small></div>`).join('')
     || '<div class="gempty">Không có pet nào</div>';
   let detail = '<div class="gempty">Chưa có pet</div>';
   const p = PETS[MENU.pet];
