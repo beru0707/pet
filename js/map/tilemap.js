@@ -87,6 +87,19 @@ function tmBadMove(T, ax, ay, bx, by, deck){
   const ka = tmCellAt(T, ax, ay), kb = tmCellAt(T, bx, by);
   return ka >= 0 && kb >= 0 && tmLevelBlocked(T, ka, kb);
 }
+// Khóa xếp lớp theo y của pet. Công trình xếp theo mốc r.mark (gần đáy công trình), nên pet đứng ở dải dưới ĐƯỢC ĐI của ô chân (T.fp, từ độ sâu fa xuống đáy ô)
+// có thể có y < mark và bị công trình vẽ đè dù đang đứng TRƯỚC vùng cấm. Pet ở dải đó (kiểm cả hai mép thân) thì được đẩy lên ngay sau mốc công trình -> vẽ đè lên công trình.
+function tmPetSortY(T, p){
+  if(p.deck || T.fp === undefined) return p.y;
+  const gy = Math.floor(p.y / T.ts); if(gy < 0 || gy >= T.mh) return p.y;
+  let y = p.y;
+  for(const dx of [-15, 0, 15]){
+    const gx = Math.floor((p.x + dx) / T.ts); if(gx < 0 || gx >= T.mw) continue;
+    const k = gy*T.mw + gx; if(T.fp[k] !== 1 || p.y - gy*T.ts < T.fa[k]) continue;
+    const r = T.runs.find(q => q.x === gx && gy >= q.y0 && gy <= q.y1); if(r) y = Math.max(y, r.mark + 1);
+  }
+  return y;
+}
 function tmDrawPetFaded(T, p, t){   // phần thân còn chồng lên vách / mép đảo: pet mờ nhẹ, mượt theo thời gian
   const f = TM_CFG.wallFade ? tmWallOverlap(T, p) * TM_CFG.wallFade : 0;
   p._fade = (p._fade || 0) + (f - (p._fade || 0)) * .2;
@@ -294,7 +307,7 @@ drawMapScene = function(mid, t){
   if(TM_CFG.petOnTop){ cx.drawImage(T.overTBu, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overTBs, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overB, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overTB, cam.x, cam.y, CW, CH, 0, 0, CW, CH); cx.drawImage(T.overT, cam.x, cam.y, CW, CH, 0, 0, CW, CH); }   // cây, nhà vẽ liền vào nền; pet vẽ sau nên nằm trên
   cx.restore();
   cx.save(); cx.translate(-cam.x, -cam.y);
-  const items = PETS.filter(p => p.map === mid).map(p => ({y:p.y, pet:p}));
+  const items = PETS.filter(p => p.map === mid).map(p => ({y:tmPetSortY(T, p), pet:p}));
   if(typeof BT !== 'undefined' && mid === BT.map && (BT.phase === 'fight' || BT.phase === 'result') && typeof btDrawEnemy === 'function')
     BT.enemies.forEach(e => items.push({y:e.y, enemy:e}));
   if(!TM_CFG.petOnTop) T.runs.forEach(r => {   // khối công trình đang nằm trong khung nhìn
