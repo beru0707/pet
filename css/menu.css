@@ -22,7 +22,7 @@
 /* tiêu đề nằm trên bảng gỗ + nút ĐÓNG tròn ở góc trên phải của khung */
 .gm-title{position:absolute;z-index:4;left:34.5%;width:31.1%;top:1.7%;height:10.8%;display:flex;align-items:center;justify-content:center;font-size:1.7em;font-weight:700;letter-spacing:.04em;color:#fff6dc;white-space:nowrap;
   text-shadow:.07em .07em 0 #3a1d0c,-.07em .07em 0 #3a1d0c,.07em -.07em 0 #3a1d0c,-.07em -.07em 0 #3a1d0c,0 .12em 0 #3a1d0c}
-#gm-close{position:absolute;right:calc(1.9% - 2.2em);top:calc(5.4% - 2.2em);z-index:5;width:4.4em;height:4.4em;padding:0;border:0;background:url("../assets/ui/close-btn.webp") center/contain no-repeat;cursor:pointer;filter:drop-shadow(0 .2em .3em rgba(0,0,0,.55));transition:transform .12s,filter .12s}
+#gm-close{position:absolute;right:calc(3.5% - 2.2em);top:calc(8% - 2.2em);z-index:5;width:4.4em;height:4.4em;padding:0;border:0;background:url("../assets/ui/close-btn.webp") center/contain no-repeat;cursor:pointer;filter:drop-shadow(0 .2em .3em rgba(0,0,0,.55));transition:transform .12s,filter .12s}
 #gm-close:hover{transform:scale(1.08);filter:brightness(1.12) drop-shadow(0 .2em .3em rgba(0,0,0,.55))}
 #gm-close:active{transform:scale(.94)}
 
