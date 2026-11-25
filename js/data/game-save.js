@@ -4,10 +4,18 @@
    ================================================================== */
 
 // GAME STATE
-let state = { petsData:[], activeMap:null };   // activeMap: map đang xem, mở lại game vào đúng map này
+let state = { petsData:[], activeMap:null };
+// Cấp độ + EXP của từng pet, tra theo tên: PET_LV['Chicken'] = {lv, exp}. Lưu cùng game; chưa có = cấp 1, 0 EXP.
+const PET_LV = {};
+function petLv(name){ return PET_LV[name] || (PET_LV[name] = {lv:1, exp:0}); }   // activeMap: map đang xem, mở lại game vào đúng map này
 function saveGame(){
   state.petsData = PETS.map(p=>({id:p.def.name, x:p.x, y:p.y, map:p.map}));
+  state.petLv = PET_LV;
   localStorage.setItem(SAVE, JSON.stringify(state));
+}
+// Lưu riêng cấp độ (kể cả khi đang trong trận, lúc saveGame bị chặn) để không mất EXP nếu tải lại ở màn kết quả
+function savePetLv(){
+  try { const s = JSON.parse(localStorage.getItem(SAVE) || '{}'); s.petLv = PET_LV; localStorage.setItem(SAVE, JSON.stringify(s)); } catch(e){}
 }
 function loadGame(){
   try {
@@ -15,6 +23,7 @@ function loadGame(){
     const s = JSON.parse(raw);
     if(s.petsData) state.petsData = s.petsData;
     if(s.activeMap) state.activeMap = s.activeMap;
+    if(s.petLv) Object.keys(s.petLv).forEach(k => { const v = s.petLv[k]; if(v && v.lv) PET_LV[k] = {lv:Math.max(1, v.lv|0), exp:Math.max(0, v.exp|0)}; });
     _savedById = null;
   } catch(e){}
 }

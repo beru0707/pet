@@ -135,6 +135,7 @@ Luồng: **bấm ⚔️ Vào trận → màn hình chờ nạp (map chiến đ�
 | Tốc độ đi | `KEY_SPEED_WALK`, `KEY_SPEED_OTHER`, `speed` của `walkSheet` |
 | Tốc độ / thời gian sống quả cầu | `FIREBALL_SPEED`, `FIREBALL_LIFESPAN` |
 | Map chiến đấu, số pet, thưởng, đợt | `BATTLE_CFG` trong `config/battle.js` |
+| Cấp độ pet: EXP mỗi trận, EXP cần để lên cấp, % tăng HP / sát thương mỗi cấp, cấp tối đa | `LEVEL_CFG`, `petExpNeed` trong `config/battle.js` (cấp + EXP lưu trong `PET_LV`, `data/game-save.js`) |
 | Loại quái, máu, sát thương, hoạt ảnh | `js/config/enemies.data.js` (sửa tay hoặc bằng công cụ căn: Mở thư mục game → Lưu vào game) |
 | Máu / sát thương / tầm / cd của pet | `PET_BATTLE` (không khai = `PET_BATTLE_DEFAULT`) |
 | Khóa lưu localStorage (đổi để reset dữ liệu) | `SAVE` trong `config/world.js` |

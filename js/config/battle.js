@@ -50,6 +50,13 @@ const ENEMY_TYPES = Object.fromEntries(ENEMY_DATA.defs.map(d => {
   return [key, T];
 }));
 // Chỉ số chiến đấu của pet (không khai = mặc định). range: tầm đánh · cd: giây giữa 2 đòn
+// Cấp độ pet: đánh xong trận (thắng hay thua) mọi pet đã tham chiến đều nhận EXP; đủ EXP thì lên cấp, chỉ số chiến đấu tăng theo cấp.
+//   max      : cấp tối đa · expNeed(lv) : EXP cần để từ cấp lv lên lv+1 = expBase + expStep*(lv-1)
+//   expKill  : EXP cho mỗi địch bị hạ trong trận (tính chung cho cả đội) · expWin : thưởng thêm khi thắng · expLose : hệ số nhân EXP khi thua
+//   hpPerLv / dmgPerLv : mỗi cấp tăng bấy nhiêu % so với chỉ số gốc ở cấp 1 (0.12 = +12% HP mỗi cấp; áp cho cả sát thương skill)
+const LEVEL_CFG = {max:20, expBase:40, expStep:20, expKill:6, expWin:30, expLose:.5, hpPerLv:.12, dmgPerLv:.10};
+const petExpNeed = lv => LEVEL_CFG.expBase + LEVEL_CFG.expStep * (lv - 1);
+// Chỉ số gốc (cấp 1) của pet; chỉ số thật = gốc x hệ số cấp, xem btStat (battle/state.js)
 const PET_BATTLE_DEFAULT = {hp:100, dmg:12, range:170, cd:1.6};
 const PET_BATTLE = {
   'Shibav3_1': {hp:90,  dmg:22, range:650, cd:1.5},   // có fireball: bắn xa, nổ lan

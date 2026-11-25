@@ -63,6 +63,11 @@
 .gprev.gmap{background:#10200a;overflow:hidden}
 .gprev canvas,.gprev img{width:auto;height:auto;max-width:90%;max-height:92%;object-fit:contain}
 .gname{font-size:1.7em;font-weight:700;letter-spacing:.02em;line-height:1.1}
+.glv{font-size:.72em;font-weight:700;color:#ffe08a;line-height:1}
+.glvbig{display:inline-block;vertical-align:middle;margin-left:.4em;padding:.1em .55em;border-radius:99px;border:.12em solid #2b160a;background:#f4b043;color:#3a1d0c;font-size:.5em}
+.gexp{position:relative;height:1.3em;margin:.35em 0 .1em;border-radius:99px;border:.15em solid #2b160a;background:#2a160a;overflow:hidden}
+.gexp i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(#7be04a,#3d9a1e)}
+.gexp span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.72em;font-weight:700;text-shadow:0 .08em 0 #000}
 .gchips{display:flex;gap:.4em;margin:.5em 0}
 .gchip{flex:1;padding:.35em .2em;border-radius:.4em;border:.15em solid #2b160a;background:#3f2010;font-size:.8em;font-weight:700;text-align:center;white-space:nowrap}
 .gdesc{flex:1;min-height:4em;overflow:auto;padding:.5em .7em;border-radius:.4em;border:.15em solid #2b160a;background:#3f2010;font-size:.9em;line-height:1.5;box-shadow:inset 0 0 .6em rgba(0,0,0,.5)}

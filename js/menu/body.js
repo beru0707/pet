@@ -31,16 +31,17 @@ function petsView(){
   const list = PETS.map((p,i) => ({p,i})).filter(({p}) => MENU.fp === 'all' || (MENU.fp === 'placed') === !!p.map);
   if(MENU.pet == null || !PETS[MENU.pet]) MENU.pet = list.length ? list[0].i : (PETS.length ? 0 : null);
   const placed = PETS.filter(p => p.map).length;
-  const cards = list.map(({p,i}) => `<div class="gcard ${p.map?'placed':''} ${MENU.pet===i?'sel':''}" data-pet="${i}"><span class="gbadge ${p.map?'ok':'off'}">${p.map?'ĐANG THẢ':'TRONG KHO'}</span><div class="gth"><span class="pth"></span></div><b>${esc(p.def.name)}</b></div>`).join('')
+  const cards = list.map(({p,i}) => `<div class="gcard ${p.map?'placed':''} ${MENU.pet===i?'sel':''}" data-pet="${i}"><span class="gbadge ${p.map?'ok':'off'}">${p.map?'ĐANG THẢ':'TRONG KHO'}</span><div class="gth"><span class="pth"></span></div><b>${esc(p.def.name)}</b><small class="glv">Lv ${petLv(p.def.name).lv}</small></div>`).join('')
     || '<div class="gempty">Không có pet nào</div>';
   let detail = '<div class="gempty">Chưa có pet</div>';
   const p = PETS[MENU.pet];
   if(p){
-    const bs = Object.assign({}, PET_BATTLE_DEFAULT, PET_BATTLE[p.def.name] || {}), sp = +((p.def.speedMul || 1).toFixed(2));
+    const bs = btStat(p.def), L = petLv(p.def.name), need = L.lv >= LEVEL_CFG.max ? 0 : petExpNeed(L.lv), sp = +((p.def.speedMul || 1).toFixed(2));
     const here = p.map === ACTIVE_MAP && !VIEW.overview;
     const place = !p.map ? 'Đang ở trong kho' : p.map === ACTIVE_MAP ? 'Đang thả ở map này (' + esc(mapById(p.map).name) + ')' : 'Đang thả ở ' + esc(mapById(p.map).name);
     detail = `<div class="gprev"><span class="pth big"></span></div>
-      <div class="gname">${esc(p.def.name.toUpperCase())}</div>
+      <div class="gname">${esc(p.def.name.toUpperCase())} <span class="glvbig">Lv ${L.lv}</span></div>
+      <div class="gexp" title="EXP nhận sau mỗi trận, đủ thì lên cấp"><i style="width:${need ? Math.min(100, L.exp / need * 100) : 100}%"></i><span>${need ? 'EXP ' + L.exp + ' / ' + need : 'CẤP TỐI ĐA'}</span></div>
       <div class="gchips"><span class="gchip">❤️ HP ${bs.hp}</span><span class="gchip">⚔️ ATK ${bs.dmg}</span><span class="gchip">👟 Tốc độ ×${sp}</span></div>
       <div class="gdesc">📍 ${place}</div>
       <div class="gact">${gBtn('red','recall','THU HỒI','',!p.map)}${here ? gBtn('green','select','CHỌN PET','Điều khiển') : gBtn('green','place','THẢ VÀO MAP', mapById(ACTIVE_MAP).name)}</div>`;

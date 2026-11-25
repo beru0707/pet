@@ -133,12 +133,18 @@ function btEnd(win){
   BT.phase = 'result'; BT.shots = []; $b('bt-hud').style.display = 'none';
   const mm = Math.floor(BT.elapsed/60), ss = Math.floor(BT.elapsed%60);
   const used = PETS.filter(p => BT.stat[p.def.name] && p.bmax);
-  const rows = used.map(p => `<tr><td>${esc(p.def.name)}</td><td>${Math.round(BT.stat[p.def.name].dmg)}</td><td>${p.bdead ? '✖' : Math.round(p.bhp) + '/' + p.bmax}</td></tr>`).join('');
+  // EXP: mọi pet tham chiến (kể cả pet đã ngã) nhận như nhau; thua thì nhân hệ số expLose
+  const expGain = Math.round((BT.kills * LEVEL_CFG.expKill + (win ? LEVEL_CFG.expWin : 0)) * (win ? 1 : LEVEL_CFG.expLose));
+  const lvUp = {}; used.forEach(p => { lvUp[p.def.name] = petAddExp(p.def.name, expGain); });
+  savePetLv();
+  const rows = used.map(p => { const u = lvUp[p.def.name], up = u.to > u.from;
+    return `<tr><td>${esc(p.def.name)}</td><td>${Math.round(BT.stat[p.def.name].dmg)}</td><td>${p.bdead ? '✖' : Math.round(p.bhp) + '/' + p.bmax}</td><td>${up ? `<b style="color:#ffd54a">⬆ Lv ${u.from}→${u.to}</b>` : 'Lv ' + u.to}${u.need ? ` <small style="opacity:.75">${u.exp}/${u.need}</small>` : ' <small style="opacity:.75">MAX</small>'}</td></tr>`; }).join('');
   $b('bt-res').innerHTML = `<div class="card"><h2>${win ? '🏆 Chiến thắng!' : '💀 Thất bại'}</h2>
     <div>⏱ Thời gian: <b>${mm}:${String(ss).padStart(2,'0')}</b></div>
     <div>👾 Hạ gục: <b>${BT.kills}/${BT.total}</b> địch</div>
     <div>🐾 Pet sống sót: <b>${used.filter(p=>!p.bdead).length}/${used.length}</b></div>
-    <table><tr><th>Pet</th><th>Sát thương</th><th>Máu</th></tr>${rows}</table>
+    <div>✨ Mỗi pet nhận: <b style="color:#ffd54a">+${expGain} EXP</b></div>
+    <table><tr><th>Pet</th><th>Sát thương</th><th>Máu</th><th>Cấp</th></tr>${rows}</table>
     <button class="bt-btn" id="bt-back" style="background:linear-gradient(180deg,#6fd13e,#3d9a1e)">Về phòng chờ</button></div>`;
   $b('bt-res').style.display = 'flex';
   $b('bt-back').onclick = btExit;
