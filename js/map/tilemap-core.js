@@ -25,7 +25,7 @@ const TM_CFG = {
   stairWallPad: 0,                                // px: nới đường chặn thành dải rộng chừng này ở hai bên (tâm pet cách mép cầu thang ít nhất chừng này). 0 = đúng 1 đường thẳng dài bằng mép viền của 1 ô (64px), không có dải
   stairWallY: [.25, 1],                              // đoạn của đường chặn theo chiều dọc ô cầu thang: [đầu, cuối] tính theo tỉ lệ chiều cao ô. [0,1] = đủ 1 mép ô (64px); [0,.5] = nửa trên; [.5,1] = nửa dưới; [.25,.75] = đoạn giữa
   walkOver:  ['Stairs'],                           // luôn đi được, kể cả đè lên vách
-  footKeep:  [                                     // vùng chặn CHÂN công trình chỉ chiếm `keep` (0..1) CHIỀU CAO của hàng ô chân, tính từ đáy lên (bề ngang giữ nguyên); phần trên của ô đi vào được. Nhận diện công trình theo số ô rộng (w) x cao (h)
+  footKeep:  [                                     // vùng chặn CHÂN công trình chỉ chiếm `keep` (0..1) CHIỀU CAO của hàng ô chân, tính TỪ TRÊN XUỐNG (bề ngang giữ nguyên); phần dưới của ô (1 - keep) đi vào được. Nhận diện công trình theo số ô rộng (w) x cao (h)
     {name:'Lâu đài', w:5, h:4, keep:.8},
     {name:'Nhà',     w:2, h:3, keep:.6},
     {name:'Tháp',    w:2, h:4, keep:.4},
@@ -177,8 +177,8 @@ function tmBuild(T, j, img){
     const mx = new Map();
     T.runs.forEach((r, i) => { const g = find(i); mx.set(g, Math.max(mx.get(g) ?? -Infinity, r.mark)); });
     T.runs.forEach((r, i) => { r.mark = mx.get(find(i)); });
-    // Chân công trình chỉ chặn TM_CFG.footKeep chiều cao ô (từ đáy lên). Ô đó đánh dấu T.fp = 1, T.fa = độ cao (px, tính từ mép TRÊN ô) bắt đầu bị chặn.
-    // T.walk vẫn = 0 nên tìm đường (lưới ô) coi cả ô là vật cản và đi vòng; còn đi tay / đi lang thang thì tmWalkable cho bước vào dải phía trên. Gốc cây trùng chân nhà thì giữ chặn cả ô.
+    // Chân công trình chỉ chặn TM_CFG.footKeep chiều cao ô, tính từ mép TRÊN ô xuống. Ô đó đánh dấu T.fp = 1, T.fa = độ sâu (px, tính từ mép TRÊN ô) mà dải chặn kéo tới; từ đó xuống đáy ô là đất đi được.
+    // T.walk vẫn = 0 nên tìm đường (lưới ô) coi cả ô là vật cản và đi vòng; còn đi tay / đi lang thang thì tmWalkable cho bước vào dải phía dưới. Gốc cây trùng chân nhà thì giữ chặn cả ô.
     T.fp = new Uint8Array(N); T.fa = new Float32Array(N); T.feet = [];
     if(TM_CFG.footKeep){
       const groups = new Map(), roots = new Set(T.trees.map(tr => (tr.oy + 2)*W + tr.ox + 1));
@@ -189,7 +189,7 @@ function tmBuild(T, j, img){
         T.feet.push({name:rule.name, x:xa, w, h, y:Math.max(...rs.map(r => r.y1)), keep:rule.keep});
         for(const r of rs){
           const k = r.y1*W + r.x; if(roots.has(k) || !(ps[k] || walkTop.has(top[k])) || rule.keep >= 1) continue;
-          T.fp[k] = 1; T.fa[k] = ts*(1 - rule.keep);
+          T.fp[k] = 1; T.fa[k] = ts*rule.keep;
         }
       }
     }
