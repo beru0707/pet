@@ -124,10 +124,9 @@ function draw(){
     else if(T.br[k]){ if(O.oBridge.checked){ cx.fillStyle = 'rgba(190,90,255,.34)'; cx.fillRect(x, y, ts, ts); } }
     else if(!cellOK(T, k, false) && !cellOK(T, k, true)){
       if(O.oBlock.checked){
-        const part = T.rp && T.rp[k] ? TM_CFG.rootBlock : 1, by = y + ts*(1 - part), bh = ts*part;   // ô gốc cây chỉ chặn rootBlock phần dưới
-        const fpx = T.fp && T.fp[k], bx = fpx ? x + T.fa[k] : x, bw = fpx ? T.fb[k] - T.fa[k] : ts;   // ô chân công trình chặn một phần: chỉ tô đoạn bị chặn
-        cx.fillStyle = 'rgba(255,0,40,.5)'; cx.fillRect(bx, by, bw, bh);
-        if(big && bw > 24){ cx.strokeStyle = 'rgba(255,255,255,.55)'; cx.lineWidth = 2*px; cx.beginPath(); cx.moveTo(bx + 10, by + 10); cx.lineTo(bx + bw - 10, by + bh - 10); cx.moveTo(bx + bw - 10, by + 10); cx.lineTo(bx + 10, by + bh - 10); cx.stroke(); }
+        const part = T.rp && T.rp[k] ? TM_CFG.rootBlock : T.fp && T.fp[k] ? 1 - T.fa[k]/ts : 1, by = y + ts*(1 - part), bh = ts*part;   // ô gốc cây / chân công trình chỉ chặn phần dưới
+        cx.fillStyle = 'rgba(255,0,40,.5)'; cx.fillRect(x, by, ts, bh);
+        if(big){ cx.strokeStyle = 'rgba(255,255,255,.55)'; cx.lineWidth = 2*px; cx.beginPath(); cx.moveTo(x + 10, by + 10); cx.lineTo(x + ts - 10, by + bh - 10); cx.moveTo(x + ts - 10, by + 10); cx.lineTo(x + 10, by + bh - 10); cx.stroke(); }
       }
     }
     else if(T.hi[k] && O.oHigh.checked){ cx.fillStyle = 'rgba(255,220,40,.14)'; cx.fillRect(x, y, ts, ts); }

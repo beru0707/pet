@@ -33,21 +33,21 @@ const WB = id => { const T = tmGet(id); return T ? {w:T.w, h:T.h} : {w:CW, h:CH}
 // deck = pet đang đi TRÊN cầu. Trên cầu: chỉ ô cầu, hoặc ô mặt cao (đầu cầu). Dưới cầu / bình thường: lưới T.walk (ô cầu có cát bên dưới vẫn đi được)
 function tmCellOK(T, k, deck){ return deck ? (T.br[k] === 1 || (T.hi[k] === 1 && T.walk[k] === 1)) : T.walk[k] === 1; }
 // chừa lề cho thân: điểm cách chân TM_CFG.headMargin px về phía trên không được rơi vào vùng cấm (vách đá, nước, chân nhà...). Gốc cây / cầu coi như đi được
-function tmGround(T, k, x){
+function tmGround(T, k, y){
   if(T.walk[k] === 1 || T.br[k] === 1 || (T.rp !== undefined && T.rp[k] === 1)) return true;
-  if(T.fp !== undefined && T.fp[k] === 1 && x !== undefined){ const dx = x - (k % T.mw)*T.ts; return dx < T.fa[k] || dx > T.fb[k]; }   // ô chân công trình chỉ chặn một phần: phần chừa trống là đất đi được
+  if(T.fp !== undefined && T.fp[k] === 1 && y !== undefined) return y - ((k / T.mw) | 0)*T.ts < T.fa[k];   // ô chân công trình chỉ chặn dải dưới: dải trên là đất đi được
   return false;
 }
 function tmHeadClear(T, x, y, gy){
   const m = TM_CFG.headMargin; if(!m) return true;
   const hy = Math.floor((y - m) / T.ts); if(hy >= gy || hy < 0) return true;
-  const hx = Math.floor(x / T.ts); return tmGround(T, hy*T.mw + hx, x);
+  const hx = Math.floor(x / T.ts); return tmGround(T, hy*T.mw + hx, y - m);
 }
 // mức thân pet chồng lên vùng cấm (0..1), dùng để làm mờ nhẹ pet
 function tmWallOverlap(T, p){
   if(!TM_CFG.wallFade || p.deck) return 0;
   const gx = Math.floor(p.x / T.ts); let n = 0;
-  for(const d of [18, 36, 54]){ const gy = Math.floor((p.y - d) / T.ts); if(gx >= 0 && gx < T.mw && gy >= 0 && gy < T.mh && !tmGround(T, gy*T.mw + gx, p.x)) n++; }
+  for(const d of [18, 36, 54]){ const gy = Math.floor((p.y - d) / T.ts); if(gx >= 0 && gx < T.mw && gy >= 0 && gy < T.mh && !tmGround(T, gy*T.mw + gx, p.y - d)) n++; }
   return n / 3;
 }
 function tmWalkable(T, x, y, deck){
@@ -55,8 +55,8 @@ function tmWalkable(T, x, y, deck){
   if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh) return false;
   const k = gy*T.mw + gx;
   if(tmCellOK(T, k, deck)) return deck || tmHeadClear(T, x, y, gy);
-  // ô chân công trình bị chặn MỘT PHẦN (T.fp): chỉ đoạn [fa, fb] tính từ mép trái ô là cấm, hai bên đi được. Tìm đường vẫn coi cả ô là vật cản nên đi vòng
-  if(!deck && T.fp !== undefined && T.fp[k] === 1){ const dx = x - gx*T.ts; return (dx < T.fa[k] || dx > T.fb[k]) && tmHeadClear(T, x, y, gy); }
+  // ô chân công trình chỉ bị chặn dải DƯỚI (T.fp, từ độ cao fa trở xuống); dải trên đi được. Tìm đường vẫn coi cả ô là vật cản nên đi vòng
+  if(!deck && T.fp !== undefined && T.fp[k] === 1) return (y - gy*T.ts) < T.fa[k] && tmHeadClear(T, x, y, gy);
   // ô GỐC cây chỉ chặn TM_CFG.rootBlock (vd. 60%) phần DƯỚI của ô; phần trên đi vào được. Tìm đường (lưới ô) vẫn coi cả ô là vật cản nên đi vòng, còn đi tay / đi lang thang thì sát được thân cây
   return !deck && T.rp !== undefined && T.rp[k] === 1 && (y - gy*T.ts) < T.ts*(1 - TM_CFG.rootBlock);
 }
