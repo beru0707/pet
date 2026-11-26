@@ -10,7 +10,7 @@ const dirOf = (vx, vy) => Math.abs(vx) >= Math.abs(vy) ? (vx < 0 ? 'left' : 'rig
 function updateWalker(p, t, dt){
   const depth = pSize(p.y) / 100;                 // = 1 (cỡ cố định)
   if(p.tvx===undefined){ p.tvx=0; p.tvy=0; p.animPhase=0; }
-  const idle = t < p.idleUntil;
+  const idle = t < p.idleUntil || (p.selected && !p.manual);   // pet đang chọn chỉ đi khi người chơi điều khiển, không tự đi
   if(!idle && t > p.nextTurn){
     if(Math.random() < .3){ p.idleUntil = t + 1.2 + Math.random()*2.4; p.tvx = 0; p.tvy = 0; }
     else {
@@ -112,7 +112,7 @@ function updatePet(p, t, dt){
   } else p._stuck = 0;
   p._lx = p.x; p._ly = p.y;
   if(p.def.walker){ updateWalker(p, t, dt); return; }
-  if(t<p.idleUntil){p.vx*=.85;p.vy*=.85;return;}
+  if(t<p.idleUntil || (p.selected && !p.manual)){p.vx*=.85;p.vy*=.85;return;}   // pet đang chọn không tự đi
   if(t>p.nextTurn){
     if(Math.random()<.25){ p.idleUntil=t+1+Math.random()*2; p.vx=0;p.vy=0; }
     else {

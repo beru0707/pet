@@ -262,6 +262,10 @@ function tmWanderGoal(T, p, kind){
 }
 function tmWanderTick(T, p, t){
   const C = TM_CFG.wander; if(!C) return;
+  if(p.selected){   // pet đang chọn không tự đi: hủy chuyến lang thang đang dở (cả đường đi), lệnh bấm chuột của người chơi giữ nguyên
+    if(p._wg){ p._wg = null; p._stroll = 1; p.target = null; p._path = null; p._wp = null; p._dest = null; }
+    return;
+  }
   const g = p._wg;
   if(g){
     if(p._dest ? (p._dest.x === g.x && p._dest.y === g.y && (p.target || (p._path && p._path.length))) : (p.target && t - g.t < .25)) return;   // vẫn đang đi tới điểm hẹn (qua điểm trung gian p.target có thể rỗng 1 khung hình, nhưng p._path còn)

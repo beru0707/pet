@@ -6,11 +6,11 @@
 // vòng tròn đánh dấu điểm đến của thú đang chọn
 function drawTargetMarkers(mid, t){
   PETS.forEach(p=>{
-    if(!p.target || p.map!==mid || p._autoGo) return;   // pet tự đi tới địch trong trận thì không hiện vòng tròn
-    const k=(t*2)%1;
+    if(!p.selected || !p.target || p.map!==mid || p._autoGo || p._wg) return;   // chỉ pet đang chọn đi tới điểm người chơi bấm; pet tự đi (lang thang / tới địch trong trận) không hiện vòng tròn
+    const d = p._dest || p.target, k=(t*2)%1;   // đích cuối (không nhảy theo điểm trung gian của đường đi)
     cx.save(); cx.strokeStyle='rgba(255,230,90,'+(0.9-k*0.6)+')'; cx.lineWidth=4;
-    cx.beginPath(); cx.ellipse(p.target.x,p.target.y,14+k*16,(14+k*16)*.4,0,0,Math.PI*2); cx.stroke();
-    cx.fillStyle='rgba(255,230,90,.9)'; cx.beginPath(); cx.ellipse(p.target.x,p.target.y,5,2.5,0,0,Math.PI*2); cx.fill(); cx.restore();
+    cx.beginPath(); cx.ellipse(d.x,d.y,14+k*16,(14+k*16)*.4,0,0,Math.PI*2); cx.stroke();
+    cx.fillStyle='rgba(255,230,90,.9)'; cx.beginPath(); cx.ellipse(d.x,d.y,5,2.5,0,0,Math.PI*2); cx.fill(); cx.restore();
   });
 }
 
