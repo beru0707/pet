@@ -81,15 +81,22 @@ function loadPetLook(n){
     loadSheet(idleSpec).then(fr=>{ if(fr){ def.idleFrames = fr; def.idleImg = fr[0]; } else if(c.idleSheet) warnMissing(n,'idleSheet',idleSpec); })
   ]).then(refreshPetMenu);
 }
+// 1 hoạt ảnh phụ (run / jump / hurt / dead ...), nạp đúng 1 lần
+function loadPetEx(n, k){
+  const j = petJob(n), key = 'ex_'+k; if(j[key]) return j[key];
+  const o = petCfg(n), e = o && o.c.extra && o.c.extra[k]; if(!e) return j[key] = Promise.resolve();
+  return j[key] = loadSheet(e).then(fr => {
+    if(!fr){ warnMissing(n, k, e); return; }
+    const def = o.def; def.ex = def.ex || {}; def.ex[k] = {frames: fr, scale: e.scale || 1, dx: e.dx || 0, dy: e.dy || 0};
+  });
+}
+const loadPetRun = n => loadPetEx(n, 'run');   // lúc vào game chỉ nạp: walk + idle + run; còn lại nạp ngầm
 function loadPetSkills(n){
   const j = petJob(n); if(j.skills) return j.skills;
   const o = petCfg(n); if(!o) return j.skills = Promise.resolve();
   const {c, def} = o, base = c._base, jobs = [];
   if(c.dirs) return j.skills = loadDirSheets(o, 'attack', 'dAttack').then(()=>{ const A = def.dAttack && def.dAttack.front; if(A) def.attackAnimFrames = A.length; });
-  if(c.extra) Object.entries(c.extra).forEach(([k, e]) => jobs.push(loadSheet(e).then(fr => {   // run / jump / hurt / dead ...
-    if(!fr){ warnMissing(n, k, e); return; }
-    def.ex = def.ex || {}; def.ex[k] = {frames: fr, scale: e.scale || 1, dx: e.dx || 0, dy: e.dy || 0};
-  })));
+  if(c.extra) Object.keys(c.extra).forEach(k => jobs.push(loadPetEx(n, k)));   // run / jump / hurt / dead ... (run thường đã nạp sẵn lúc vào game)
   const atkSpec = c.attackSheet || (c.fireballSheet ? base+'/attack.png' : null);
   if(atkSpec) jobs.push(loadSheet(atkSpec).then(fr=>{
     if(!fr){ if(c.attackSheet) warnMissing(n,'attackSheet',atkSpec); return; }
