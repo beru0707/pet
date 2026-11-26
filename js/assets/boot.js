@@ -24,7 +24,7 @@ async function bootAssets(){
   const L = makeLoader(), bar = L.querySelector('#ld-bar'), txt = L.querySelector('#ld-txt'), pct = L.querySelector('#ld-pct');
   const jobs = [ {label:'Đang tải bản đồ…', run:()=>loadBg(first)},
     {label:'Đang dựng bản đồ…', run:()=>typeof loadTilemap === 'function' ? loadTilemap(first) : null},   // dựng tilemap ngay trong màn hình chờ, không để khựng sau khi vào game
-    ...names.map(n=>({label:'Đang tải '+n+'…', run:()=>loadPetWalk(n)})) ];
+    ...names.map(n=>({label:'Đang tải '+n+'…', run:()=>loadPetWalk(n).then(()=>loadPetLook(n)).then(()=>loadPetSkills(n))})) ];   // đủ đi bộ + đứng yên + đòn đánh / nhảy / bị đánh: vào game là pet đầy đủ, không còn đổi hình hay chưa đánh được
   let done = 0; const upd = () => { const p = Math.round(done/jobs.length*100); bar.style.width = p+'%'; pct.textContent = p+'%'; };
   await runPool(jobs.map(j => async () => { txt.textContent = j.label; await j.run(); }), LOAD_PARALLEL, () => { done++; upd(); });
   txt.textContent = 'Sẵn sàng!'; bar.style.width = '100%'; pct.textContent = '100%';
