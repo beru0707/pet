@@ -404,13 +404,17 @@ drawMapScene = function(mid, t){
   cx.imageSmoothingEnabled = true;
   // pet đang đi DƯỚI cầu: vẽ lại cầu đè lên pet (chỉ phần ô cầu)
   const wb = WB(mid);
+  let bridgeRedrawn = false;
   PETS.forEach(p => {
     if(p.map !== mid || p.deck) return;
     const gx = Math.floor(p.x / T.ts), gy = Math.floor(p.y / T.ts);
     if(gx < 0 || gy < 0 || gx >= T.mw || gy >= T.mh || !T.br[gy*T.mw + gx]) return;
     const x0 = Math.max(0, Math.floor(p.x - 90)), y0 = Math.max(0, Math.floor(p.y - 150)), x1 = Math.min(wb.w, Math.ceil(p.x + 90)), y1 = Math.min(wb.h, Math.ceil(p.y + 40));
     cx.imageSmoothingEnabled = false; cx.drawImage(T.overBr, x0, y0, x1 - x0, y1 - y0, x0, y0, x1 - x0, y1 - y0); cx.imageSmoothingEnabled = true;
+    bridgeRedrawn = true;
   });
+  // lớp cầu vừa vẽ đè cũng phủ cả pet đang đi TRÊN cầu (nằm trong vùng 150px phía trên pet đi dưới) -> vẽ lại pet trên cầu lên trên cùng
+  if(bridgeRedrawn) PETS.forEach(p => { if(p.map === mid && p.deck) tmDrawPetFaded(T, p, t); });
   // vòng tròn đánh dấu hiện ở ĐÍCH cuối, không phải điểm trung gian của đường đi
   const sw = PETS.filter(p => p._wp && p.target === p._wp && p._dest);
   sw.forEach(p => { p._wpSave = p.target; p.target = p._dest; });
