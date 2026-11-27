@@ -5,12 +5,13 @@
 
 const IMGS = {};
 const PREFER_WEBP = true;   // ưu tiên .webp cạnh .png; không có thì tự dùng .png
+const PNG_ONLY = /assets\/(maps\/spritesheet|background\/jura)\.png$/;   // chỉ có .png, không có .webp: khỏi thử .webp (tránh 404). Thêm .webp cho file nào thì xoá khỏi đây
 const LOAD_PARALLEL = 3;    // số sheet giải nén cùng lúc
 
 function tryImg(src){
   // decode() giải nén ảnh ở luồng khác; nếu không có thì lần drawImage đầu tiên sẽ giải nén ngay trên luồng chính (gây khựng với sheet 2048px)
   const load = s => new Promise(r=>{ const im=new Image(); im.decoding='async'; im.onload=()=>{ (im.decode ? im.decode() : Promise.resolve()).catch(()=>{}).then(()=>r(im)); }; im.onerror=()=>r(null); im.src=s; });
-  const probeWebp = PREFER_WEBP && /\.png$/i.test(src) && !/^(Character|Enemy)\//.test(src);   // Character/ và Enemy/ chỉ có .png: khỏi thử .webp (đỡ hàng chục yêu cầu 404)
+  const probeWebp = PREFER_WEBP && /\.png$/i.test(src) && !/^(Character|Enemy)\//.test(src) && !PNG_ONLY.test(src);   // Character/ và Enemy/ chỉ có .png: khỏi thử .webp (đỡ hàng chục yêu cầu 404)
   return probeWebp ? load(src.replace(/\.png$/i,'.webp')).then(im => im || load(src)) : load(src);
 }
 async function runPool(tasks, n, onEach){
