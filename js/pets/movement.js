@@ -9,7 +9,8 @@ const dirOf = (vx, vy) => Math.abs(vx) >= Math.abs(vy) ? (vx < 0 ? 'left' : 'rig
 // ---- Thú đi bộ: mượt, chân khớp quãng đường ----
 function updateWalker(p, t, dt){
   const depth = pSize(p.y) / 100;                 // = 1 (cỡ cố định)
-  if(p.tvx===undefined){ p.tvx=0; p.tvy=0; p.animPhase=0; }
+  if(p.tvx===undefined){ p.tvx=0; p.tvy=0; }
+  if(!(p.animPhase >= 0)) p.animPhase = 0;   // khởi tạo riêng (tvx có thể đã được gán trước đó): animPhase undefined -> NaN -> animFrame NaN -> pet không có khung để vẽ (lúc ẩn lúc hiện)
   const idle = t < p.idleUntil || (p.selected && !p.manual);   // pet đang chọn chỉ đi khi người chơi điều khiển, không tự đi
   if(!idle && t > p.nextTurn){
     if(Math.random() < .3){ p.idleUntil = t + 1.2 + Math.random()*2.4; p.tvx = 0; p.tvy = 0; }
